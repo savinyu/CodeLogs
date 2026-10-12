@@ -278,7 +278,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Sign-in UI + app shell, Connect platforms page (format-only `validateHandleStub`), CI + Vitest (36 tests)
   - [x] Verified: build passes; signed-out redirects work; GitHub authorize URL uses the registered callback; add/list/remove persist in Neon and cascade on delete
   - [ ] 👤 Owner: real GitHub login in the browser, add the 3 handles
-- [ ] M2 adapters + sync (branch `m2-adapters-sync`, PR in progress)
+- [ ] M2 adapters + sync (branch `m2-adapters-sync`, PR #2)
   - [x] `lib/adapters/http.ts` (timeout, retry/backoff on 429/5xx/network + CF call limit, per-host pacing); CF, AtCoder, LC adapters + catalog adapters with fixture tests
   - [x] Connect form validates handles against the platform (`lib/adapters/validate.ts`)
   - [x] `lib/sync/`: difficulty bands (1–5), cursors, idempotent upserts, run bookkeeping, atomic claim with a 5-min "Sync now" cooldown; migration `0001` (`sync_requested_at`)
