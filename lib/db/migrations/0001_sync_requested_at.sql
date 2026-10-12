@@ -1,0 +1,1 @@
+ALTER TABLE "platform_accounts" ADD COLUMN "sync_requested_at" timestamp with time zone;

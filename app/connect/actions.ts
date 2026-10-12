@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { addPlatformAccount, removePlatformAccount } from "@/lib/accounts";
-import { validateHandleStub } from "@/lib/adapters/validate-stub";
+import { validateHandle } from "@/lib/adapters/validate";
 import { PLATFORMS } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
 
@@ -32,7 +32,7 @@ export async function connectPlatform(
   }
   const { platform, handle } = parsed.data;
 
-  const validation = await validateHandleStub(platform, handle);
+  const validation = await validateHandle(platform, handle);
   if (validation.result !== "valid") return { ok: false, error: validation.message, handle };
 
   const result = await addPlatformAccount(user.id, platform, validation.canonicalHandle);

@@ -1,6 +1,5 @@
-// M1 stand-in for real handle validation: format checks only, no network.
-// M2 replaces this with each adapter's `validateHandle`, which also returns "retry"
-// (network error, 5xx or rate limit) and checks that the account actually exists.
+// Offline handle checks: accepts a pasted profile URL or "@handle", then checks the format.
+// lib/adapters/validate.ts runs this first, then asks the platform whether the account exists.
 // Keep this file free of server-only and "@/" runtime imports so tests can load it directly.
 
 import { PLATFORM_META } from "../platforms";
@@ -31,7 +30,7 @@ function extractHandle(platform: PlatformId, raw: string): string {
   return value.replace(/^@/, "").trim();
 }
 
-export async function validateHandleStub(
+export async function checkHandleFormat(
   platform: PlatformId,
   rawHandle: string,
 ): Promise<ValidateResult> {
