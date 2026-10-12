@@ -1,3 +1,4 @@
+import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { codeforcesAdapter, codeforcesCatalog } from "@/lib/adapters/codeforces";
 import { HttpError, isRetryableError } from "@/lib/adapters/http";
@@ -94,9 +95,9 @@ describe("fetchPage", () => {
 
   it("page null: unknown handle throws a clear error", async () => {
     mockHttp([{ match: "user.info", status: unknownHandle.httpStatus, json: unknownHandle.body }]);
-    await expect(codeforcesAdapter.fetchPage("nobody", null, null)).rejects.toThrow(
-      /"nobody" not found/,
-    );
+    const err = codeforcesAdapter.fetchPage("nobody", null, null);
+    await expect(err).rejects.toThrow(/"nobody" not found/);
+    await expect(err).rejects.toBeInstanceOf(PlatformUserNotFoundError);
   });
 
   it("first sync: whole history in one call, 46 unique solves, one request without from/count", async () => {

@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M1) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 12 Oct 2026
+Status: building (M3 next) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 12 Oct 2026
 
 ---
 
@@ -271,11 +271,20 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - AtCoder pages overlap at the boundary, and kenkoooo can't validate handles
   - the LC calendar is a rolling year, and the LC catalog page size is capped at 100
 - [x] 👤 LeetCode backfill check: `"status": "ac"` present when logged in (12 Oct 2026)
-- [ ] M1 foundation (branch `m1-foundation`, PR #1)
+- [x] M1 foundation (branch `m1-foundation`, PR #1, merged)
   - [x] Next.js 16.4 + Tailwind 4 + shadcn/ui + ESLint/Prettier scaffold
   - [x] `lib/adapters/types.ts`, `lib/db/schema.ts`, migration `0000_init` applied to Neon
   - [x] Better Auth server config (GitHub), `lib/session.ts`
   - [x] Sign-in UI + app shell, Connect platforms page (format-only `validateHandleStub`), CI + Vitest (36 tests)
   - [x] Verified: build passes; signed-out redirects work; GitHub authorize URL uses the registered callback; add/list/remove persist in Neon and cascade on delete
   - [ ] 👤 Owner: real GitHub login in the browser, add the 3 handles
-- [ ] M2 adapters + sync (next)
+- [ ] M2 adapters + sync (branch `m2-adapters-sync`, PR in progress)
+  - [x] `lib/adapters/http.ts` (timeout, retry/backoff on 429/5xx/network + CF call limit, per-host pacing); CF, AtCoder, LC adapters + catalog adapters with fixture tests
+  - [x] Connect form validates handles against the platform (`lib/adapters/validate.ts`)
+  - [x] `lib/sync/`: difficulty bands (1–5), cursors, idempotent upserts, run bookkeeping, atomic claim with a 5-min "Sync now" cooldown; migration `0001` (`sync_requested_at`)
+  - [x] Inngest: `syncAccount` (fetch + write in one step per page, `step.sleep(minDelayMs)`), `syncCatalog` + daily `syncCatalogs` cron (LC Sundays only); both share an env-scoped per-platform concurrency limit of 1
+  - [x] Connect page: Sync now / Sync all, last-synced time, errors, auto-refresh while syncing; a new handle syncs right away
+  - [x] Verified live (test user, then deleted): catalogs CF 11,450 / AtCoder 9,752 / LC 4,081 rows; first sync CF 46, AtCoder `chokudai` 893 (5 pages, 23 s), LC 17 recent + 174 activity days (`partial`); second sync wrote 0 rows (row `xmin` unchanged); a missing CF handle fails in 1 s without retries while AtCoder and LC stay `ok`; a catalog sync and an account sync on one platform ran one after the other
+  - [ ] 👤 Owner: add `INNGEST_DEV=1` to `.env.local`, run `pnpm dev` + `pnpm inngest:dev`, sign in, connect the 3 handles, press Sync all
+  - Known limits: Inngest concurrency counts running steps, so two accounts on one platform can interleave requests across serverless instances (in-process pacing covers one instance; CF's call limit is retried). AtCoder AHC `_b` problems aren't in kenkoooo's catalog and stay as stubs. Solves keep the first time seen (`DO NOTHING`); the M5 backfill may need "keep the earliest" instead (§4 decision, ask first).
+- [ ] M3 dashboard + public profile (next)

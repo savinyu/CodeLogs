@@ -1,3 +1,4 @@
+import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HttpError, httpRuntime } from "@/lib/adapters/http";
 import { leetcodeAdapter, leetcodeCatalog } from "@/lib/adapters/leetcode";
@@ -92,9 +93,9 @@ describe("fetchPage stats (token null / 0)", () => {
 
   it("throws for an unknown user", async () => {
     mockHttp([{ ...STATS, json: UNKNOWN }]);
-    await expect(leetcodeAdapter.fetchPage("nobody", null, 0)).rejects.toThrow(
-      'No LeetCode user named "nobody".',
-    );
+    const err = leetcodeAdapter.fetchPage("nobody", null, 0);
+    await expect(err).rejects.toThrow('No LeetCode user named "nobody".');
+    await expect(err).rejects.toBeInstanceOf(PlatformUserNotFoundError);
   });
 
   it("throws when the response has errors and no data", async () => {

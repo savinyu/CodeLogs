@@ -29,6 +29,8 @@ pnpm test              # vitest run (no DB or network needed)
 pnpm db:generate --name <change>   # after editing lib/db/schema.ts → SQL in lib/db/migrations/
 pnpm db:migrate        # apply migrations to the DATABASE_URL in .env.local
 pnpm db:studio
+pnpm db:state          # row counts, platform accounts, recent sync and catalog runs
+pnpm inngest:dev       # Inngest dev server (http://localhost:8288); needs INNGEST_DEV=1 in .env.local
 pnpm spike:cf | spike:atcoder | spike:leetcode   # M0 probe scripts (live API calls)
 ```
 Before calling work done, run `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test`. CI (`.github/workflows/ci.yml`) runs the same checks.
@@ -44,7 +46,9 @@ lib/env.ts              zod-validated env(), lazy so tests and adapters don't ne
 lib/auth.ts             Better Auth server config  · lib/auth-client.ts for client hooks
 lib/session.ts          getCurrentUser() / requireUser(): the only way pages read the session
 lib/db/                 schema.ts, client.ts, migrations/
-lib/adapters/           types.ts (the platform contract); one adapter per platform from M2
+lib/adapters/           types.ts (contract), http.ts, errors.ts, {codeforces,atcoder,leetcode}.ts, index.ts (registry), validate.ts
+lib/sync/               upsert.ts, runs.ts (DB writes, server-only); cursor.ts, rows.ts, difficulty.ts (pure); request.ts
+lib/inngest/            client.ts, functions/ (syncAccount, syncCatalog, syncCatalogs); served at app/api/inngest
 lib/platforms.ts        per-platform display metadata and handle patterns
 fixtures/<platform>/    saved real API responses for adapter tests
 tests/                  vitest
@@ -54,7 +58,8 @@ scripts/spike/          M0 probes + FINDINGS.md
 ## Rules
 - **Cache Components:** a component that reads `headers()`, `cookies()` or the session must render inside `<Suspense>`. Never await the session at the top level of a layout. Read `node_modules/next/dist/docs/` for any Next API you're unsure of; this version differs from older training data (`middleware` is now `proxy.ts`, and so on).
 - **Auth:** server actions and route handlers re-check `getCurrentUser()`. `proxy.ts` is only an optimistic redirect. Every query on user data is scoped by `userId`.
-- **Adapters are pure:** HTTP in, normalized data (`lib/adapters/types.ts`) out. No DB imports, so fixture tests run offline. `validateHandle` returns `valid | invalid | retry`.
+- **Adapters are pure:** HTTP in, normalized data (`lib/adapters/types.ts`) out. No DB imports, so fixture tests run offline. All HTTP goes through `lib/adapters/http.ts`; tests mock it with `tests/helpers/mock-http.ts`. `validateHandle` returns `valid | invalid | retry`. Throw `PlatformUserNotFoundError` for a missing handle so the sync fails without retries.
+- **Inngest steps:** fetch and write inside one `step.run` and return only small plain data (step outputs are size-limited and JSON round-tripped). Keep DB imports out of `sync-account-core.ts` so it stays unit-testable.
 - **Platform politeness:** respect `minDelayMs` (CF 2000 ms, AtCoder 1100, LC 1000). LeetCode is fetched only on demand or daily. No scraping of HackerRank, CodeChef or GFG, and never ask for platform passwords or cookies.
 - **Schema changes:** edit `lib/db/schema.ts`, run `pnpm db:generate --name …`, review the SQL and commit it with the schema. Don't rename Better Auth's columns (`users`, `sessions`, `accounts`, `verifications`). `accounts` holds OAuth links; platform handles live in `platform_accounts`.
 - **Secrets:** only in `.env.local` (gitignored). Keep `.env.example` in sync with `lib/env.ts`. Never print secret values.

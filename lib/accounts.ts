@@ -11,6 +11,8 @@ export type PlatformAccountRow = {
   status: "pending" | "syncing" | "ok" | "partial" | "error";
   verified: boolean;
   lastSyncedAt: Date | null;
+  lastError: string | null;
+  syncRequestedAt: Date | null;
   createdAt: Date;
 };
 
@@ -24,6 +26,8 @@ export async function listPlatformAccounts(userId: string): Promise<PlatformAcco
       status: platformAccounts.status,
       verified: platformAccounts.verified,
       lastSyncedAt: platformAccounts.lastSyncedAt,
+      lastError: platformAccounts.lastError,
+      syncRequestedAt: platformAccounts.syncRequestedAt,
       createdAt: platformAccounts.createdAt,
     })
     .from(platformAccounts)

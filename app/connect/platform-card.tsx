@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlatformId } from "@/lib/adapters/types";
 import { connectPlatform, disconnectPlatform, type ActionState } from "./actions";
+import { SyncButton } from "./sync-button";
 
 type Status = "pending" | "syncing" | "ok" | "partial" | "error";
 
@@ -33,7 +34,30 @@ export interface PlatformCardProps {
   name: string;
   handleHint: string;
   note: string | null;
-  account: { handle: string; profileUrl: string; status: Status; verified: boolean } | null;
+  account: {
+    handle: string;
+    profileUrl: string;
+    status: Status;
+    verified: boolean;
+    /** ISO timestamp, so it survives the server-to-client boundary. */
+    lastSyncedAt: string | null;
+    lastError: string | null;
+  } | null;
+}
+
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["day", 86_400_000],
+  ["hour", 3_600_000],
+  ["minute", 60_000],
+];
+
+function formatRelative(iso: string): string {
+  const diff = new Date(iso).getTime() - Date.now();
+  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  for (const [unit, ms] of RELATIVE_UNITS) {
+    if (Math.abs(diff) >= ms) return formatter.format(Math.round(diff / ms), unit);
+  }
+  return "just now";
 }
 
 export function PlatformCard({ platform, name, handleHint, note, account }: PlatformCardProps) {
@@ -88,34 +112,51 @@ function ConnectedView({
       <Badge variant={account.verified ? "default" : "outline"}>
         {account.verified ? "Verified" : "Unverified"}
       </Badge>
-      <form action={action} className="ml-auto flex items-center gap-2">
-        <input type="hidden" name="platform" value={platform} />
-        {confirming ? (
-          <>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={pending}
-              onClick={() => setConfirming(false)}
-            >
-              Cancel
+      <div className="ml-auto flex items-start gap-2">
+        <SyncButton
+          platform={platform}
+          label="Sync now"
+          disabled={account.status === "syncing" || pending}
+        />
+        <form action={action} className="flex items-center gap-2">
+          <input type="hidden" name="platform" value={platform} />
+          {confirming ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={pending}
+                onClick={() => setConfirming(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+                {pending ? "Removing..." : "Confirm remove"}
+              </Button>
+            </>
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={() => setConfirming(true)}>
+              Remove
             </Button>
-            <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-              {pending ? "Removing..." : "Confirm remove"}
-            </Button>
-          </>
-        ) : (
-          <Button type="button" variant="outline" size="sm" onClick={() => setConfirming(true)}>
-            Remove
-          </Button>
-        )}
-      </form>
+          )}
+        </form>
+      </div>
       {state && !state.ok && (
         <p role="alert" className="basis-full text-sm text-destructive">
           {state.error}
         </p>
       )}
+      {account.status === "error" && account.lastError && (
+        <p role="alert" className="basis-full text-sm text-destructive">
+          {account.lastError}
+        </p>
+      )}
+      <p className="basis-full text-xs text-muted-foreground" suppressHydrationWarning>
+        {account.lastSyncedAt
+          ? `Last synced ${formatRelative(account.lastSyncedAt)}`
+          : "Never synced"}
+      </p>
       <p className="basis-full text-xs text-muted-foreground">
         Removing a handle also deletes its synced solves.
       </p>

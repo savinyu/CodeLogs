@@ -20,6 +20,7 @@ import {
   type HttpResponse,
   type RequestOptions,
 } from "@/lib/adapters/http";
+import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import type {
   CatalogAdapter,
   CatalogProblem,
@@ -121,6 +122,9 @@ function unwrap<T>(method: string, api: ApiResult<T>): T {
     const status = isCallLimit(api.res) ? 429 : httpStatus; // so HttpError.retryable is true
     throw new HttpError("status", api.url, `Codeforces ${method} unavailable: ${detail}`, status);
   }
+  if (httpStatus === 400 && /not found/i.test(detail)) {
+    throw new PlatformUserNotFoundError(`Codeforces ${method} failed: ${detail}`);
+  }
   throw new Error(`Codeforces ${method} failed: ${detail}`);
 }
 
@@ -193,7 +197,9 @@ function emptySnapshot(extras: PlatformExtra[] = []) {
 async function fetchUserInfo(handle: string): Promise<CfUser> {
   const api = await callApi<CfUser[]>("user.info", { handles: handle });
   if (api.body?.status === "FAILED" && api.httpStatus === 400) {
-    throw new Error(`Codeforces user "${handle}" not found (${api.body.comment ?? "HTTP 400"})`);
+    throw new PlatformUserNotFoundError(
+      `Codeforces user "${handle}" not found (${api.body.comment ?? "HTTP 400"})`,
+    );
   }
   const user = unwrap("user.info", api)[0];
   if (!user) throw new Error(`Codeforces user.info returned no user for "${handle}"`);

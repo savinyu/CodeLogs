@@ -17,9 +17,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "db:state": "tsx scripts/dev/db-state.ts",
     "spike:cf": "tsx scripts/spike/cf.ts",
     "spike:atcoder": "tsx scripts/spike/atcoder.ts",
-    "spike:leetcode": "tsx scripts/spike/leetcode.ts"
+    "spike:leetcode": "tsx scripts/spike/leetcode.ts",
+    "inngest:dev": "pnpm dlx inngest-cli@1.46.0 dev -u http://localhost:3000/api/inngest"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -28,6 +30,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "drizzle-orm": "0.45.4",
+    "inngest": "4.23.0",
     "lucide-react": "^1.55.0",
     "next": "16.4.0",
     "next-themes": "^0.4.6",

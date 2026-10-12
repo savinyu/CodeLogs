@@ -6,6 +6,7 @@ import { addPlatformAccount, removePlatformAccount } from "@/lib/accounts";
 import { validateHandle } from "@/lib/adapters/validate";
 import { PLATFORMS } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
+import { requestSync } from "@/lib/sync/request";
 
 /** On error, `handle` echoes what the user typed so the form can keep it (React resets forms after an action). */
 export type ActionState = { ok: true } | { ok: false; error: string; handle?: string } | null;
@@ -16,6 +17,10 @@ const connectSchema = z.object({
   handle: z.string().min(1, "Enter your handle.").max(200, "That handle is too long."),
 });
 const disconnectSchema = z.object({ platform: platformSchema });
+const syncSchema = z.object({ platform: platformSchema.optional() });
+
+/** `queued` is how many accounts were sent to the sync queue; 0 means all were synced recently. */
+export type SyncState = { ok: true; queued: number } | { ok: false; error: string } | null;
 
 export async function connectPlatform(
   _prevState: ActionState,
@@ -38,6 +43,13 @@ export async function connectPlatform(
   const result = await addPlatformAccount(user.id, platform, validation.canonicalHandle);
   if (!result.ok) return { ...result, handle };
 
+  // Best effort: sync the new handle right away, but never fail the connect because of it.
+  try {
+    await requestSync(user.id, { platforms: [platform], ignoreCooldown: true });
+  } catch (err) {
+    console.error("Could not queue the first sync", err);
+  }
+
   refresh();
   return { ok: true };
 }
@@ -57,4 +69,24 @@ export async function disconnectPlatform(
 
   refresh();
   return { ok: true };
+}
+
+export async function syncNow(_prevState: SyncState, formData: FormData): Promise<SyncState> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Sign in to sync your platforms." };
+
+  // An empty or missing platform field means every connected account.
+  const rawPlatform = formData.get("platform");
+  const parsed = syncSchema.safeParse({ platform: rawPlatform === "" ? undefined : rawPlatform });
+  if (!parsed.success) return { ok: false, error: "Unknown platform." };
+  const { platform } = parsed.data;
+
+  try {
+    const result = await requestSync(user.id, platform ? { platforms: [platform] } : {});
+    refresh();
+    return result;
+  } catch (err) {
+    console.error("Could not request a sync", err);
+    return { ok: false, error: "Couldn't start the sync. Try again in a moment." };
+  }
 }

@@ -19,6 +19,7 @@
 //                                                                     next = largest activeYear < Y, or null
 
 import { isRetryableError, requestJson } from "@/lib/adapters/http";
+import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import type {
   CatalogAdapter,
   CatalogProblem,
@@ -197,7 +198,7 @@ function requireData<T>(res: GqlResponse<T>, what: string): T {
 }
 
 function unknownUser(handle: string): Error {
-  return new Error(`No LeetCode user named "${handle}".`);
+  return new PlatformUserNotFoundError(`No LeetCode user named "${handle}".`);
 }
 
 function titleCase(s: string): string {
