@@ -1,0 +1,7 @@
+{
+  "httpStatus": 400,
+  "body": {
+    "status": "FAILED",
+    "comment": "handle: User with handle zz9_nobody_here_qq not found"
+  }
+}

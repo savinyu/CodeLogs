@@ -1,0 +1,154 @@
+[
+  {
+    "tag": "greedy",
+    "count": 3589
+  },
+  {
+    "tag": "math",
+    "count": 3523
+  },
+  {
+    "tag": "implementation",
+    "count": 3069
+  },
+  {
+    "tag": "dp",
+    "count": 2544
+  },
+  {
+    "tag": "constructive algorithms",
+    "count": 2135
+  },
+  {
+    "tag": "data structures",
+    "count": 2061
+  },
+  {
+    "tag": "brute force",
+    "count": 2013
+  },
+  {
+    "tag": "binary search",
+    "count": 1305
+  },
+  {
+    "tag": "sortings",
+    "count": 1262
+  },
+  {
+    "tag": "graphs",
+    "count": 1234
+  },
+  {
+    "tag": "dfs and similar",
+    "count": 1083
+  },
+  {
+    "tag": "trees",
+    "count": 982
+  },
+  {
+    "tag": "number theory",
+    "count": 908
+  },
+  {
+    "tag": "combinatorics",
+    "count": 847
+  },
+  {
+    "tag": "strings",
+    "count": 825
+  },
+  {
+    "tag": "bitmasks",
+    "count": 719
+  },
+  {
+    "tag": "two pointers",
+    "count": 661
+  },
+  {
+    "tag": "*special",
+    "count": 560
+  },
+  {
+    "tag": "geometry",
+    "count": 431
+  },
+  {
+    "tag": "dsu",
+    "count": 419
+  },
+  {
+    "tag": "divide and conquer",
+    "count": 368
+  },
+  {
+    "tag": "interactive",
+    "count": 313
+  },
+  {
+    "tag": "games",
+    "count": 309
+  },
+  {
+    "tag": "shortest paths",
+    "count": 295
+  },
+  {
+    "tag": "probabilities",
+    "count": 269
+  },
+  {
+    "tag": "hashing",
+    "count": 239
+  },
+  {
+    "tag": "flows",
+    "count": 162
+  },
+  {
+    "tag": "matrices",
+    "count": 142
+  },
+  {
+    "tag": "fft",
+    "count": 117
+  },
+  {
+    "tag": "graph matchings",
+    "count": 106
+  },
+  {
+    "tag": "string suffix structures",
+    "count": 102
+  },
+  {
+    "tag": "ternary search",
+    "count": 71
+  },
+  {
+    "tag": "meet-in-the-middle",
+    "count": 52
+  },
+  {
+    "tag": "2-sat",
+    "count": 42
+  },
+  {
+    "tag": "expression parsing",
+    "count": 41
+  },
+  {
+    "tag": "chinese remainder theorem",
+    "count": 26
+  },
+  {
+    "tag": "schedules",
+    "count": 16
+  },
+  {
+    "tag": "communication",
+    "count": 10
+  }
+]

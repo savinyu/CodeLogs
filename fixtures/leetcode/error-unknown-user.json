@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "body": {
+    "errors": [
+      {
+        "message": "That user does not exist.",
+        "locations": [
+          {
+            "line": 1,
+            "column": 9
+          }
+        ],
+        "path": [
+          "matchedUser"
+        ],
+        "extensions": {
+          "handled": true,
+          "skip_sentry": true
+        }
+      }
+    ],
+    "data": {
+      "matchedUser": null
+    }
+  }
+}

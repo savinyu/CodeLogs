@@ -1,0 +1,17 @@
+{
+  "name": "codelogs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spike:cf": "tsx scripts/spike/cf.ts",
+    "spike:atcoder": "tsx scripts/spike/atcoder.ts",
+    "spike:leetcode": "tsx scripts/spike/leetcode.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

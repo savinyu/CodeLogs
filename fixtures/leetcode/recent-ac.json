@@ -1,0 +1,126 @@
+{
+  "data": {
+    "recentAcSubmissionList": [
+      {
+        "id": "2165981755",
+        "title": "Validate Binary Search Tree",
+        "titleSlug": "validate-binary-search-tree",
+        "timestamp": "1791437578"
+      },
+      {
+        "id": "2159006416",
+        "title": "Binary Tree Inorder Traversal",
+        "titleSlug": "binary-tree-inorder-traversal",
+        "timestamp": "1790843572"
+      },
+      {
+        "id": "2158994875",
+        "title": "Kth Smallest Element in a BST",
+        "titleSlug": "kth-smallest-element-in-a-bst",
+        "timestamp": "1790842644"
+      },
+      {
+        "id": "2158969230",
+        "title": "Minimum Absolute Difference in BST",
+        "titleSlug": "minimum-absolute-difference-in-bst",
+        "timestamp": "1790840378"
+      },
+      {
+        "id": "2158959484",
+        "title": "Binary Tree Preorder Traversal",
+        "titleSlug": "binary-tree-preorder-traversal",
+        "timestamp": "1790839588"
+      },
+      {
+        "id": "2158947741",
+        "title": "Minimum Absolute Difference in BST",
+        "titleSlug": "minimum-absolute-difference-in-bst",
+        "timestamp": "1790838693"
+      },
+      {
+        "id": "2158701962",
+        "title": "Binary Tree Zigzag Level Order Traversal",
+        "titleSlug": "binary-tree-zigzag-level-order-traversal",
+        "timestamp": "1790821406"
+      },
+      {
+        "id": "2158012884",
+        "title": "Binary Tree Level Order Traversal",
+        "titleSlug": "binary-tree-level-order-traversal",
+        "timestamp": "1790760746"
+      },
+      {
+        "id": "2158006598",
+        "title": "Average of Levels in Binary Tree",
+        "titleSlug": "average-of-levels-in-binary-tree",
+        "timestamp": "1790760307"
+      },
+      {
+        "id": "2158002708",
+        "title": "Binary Tree Right Side View",
+        "titleSlug": "binary-tree-right-side-view",
+        "timestamp": "1790760035"
+      },
+      {
+        "id": "2157980216",
+        "title": "Lowest Common Ancestor of a Binary Tree",
+        "titleSlug": "lowest-common-ancestor-of-a-binary-tree",
+        "timestamp": "1790758450"
+      },
+      {
+        "id": "2157874821",
+        "title": "Count Complete Tree Nodes",
+        "titleSlug": "count-complete-tree-nodes",
+        "timestamp": "1790750018"
+      },
+      {
+        "id": "2157830436",
+        "title": "Binary Search Tree Iterator",
+        "titleSlug": "binary-search-tree-iterator",
+        "timestamp": "1790747321"
+      },
+      {
+        "id": "2156885560",
+        "title": "Binary Tree Inorder Traversal",
+        "titleSlug": "binary-tree-inorder-traversal",
+        "timestamp": "1790672143"
+      },
+      {
+        "id": "2156594251",
+        "title": "Binary Tree Maximum Path Sum",
+        "titleSlug": "binary-tree-maximum-path-sum",
+        "timestamp": "1790652512"
+      },
+      {
+        "id": "2156578451",
+        "title": "Diameter of Binary Tree",
+        "titleSlug": "diameter-of-binary-tree",
+        "timestamp": "1790650980"
+      },
+      {
+        "id": "2141411374",
+        "title": "Sum Root to Leaf Numbers",
+        "titleSlug": "sum-root-to-leaf-numbers",
+        "timestamp": "1789378631"
+      },
+      {
+        "id": "2137103537",
+        "title": "Path Sum",
+        "titleSlug": "path-sum",
+        "timestamp": "1789018642"
+      },
+      {
+        "id": "2136967122",
+        "title": "Flatten Binary Tree to Linked List",
+        "titleSlug": "flatten-binary-tree-to-linked-list",
+        "timestamp": "1789008214"
+      },
+      {
+        "id": "2135781190",
+        "title": "Binary Tree Preorder Traversal",
+        "titleSlug": "binary-tree-preorder-traversal",
+        "timestamp": "1788923862"
+      }
+    ]
+  }
+}

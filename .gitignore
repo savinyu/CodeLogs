@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.env*
+!.env.example
+# full-size API dumps from spikes (trimmed copies live in fixtures/)
+spike-output/
+.DS_Store
+.claude/settings.local.json

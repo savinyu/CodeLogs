@@ -1,0 +1,202 @@
+{
+  "data-stream": {
+    "tagName": "Data Stream",
+    "problemsSolved": 1,
+    "level": "advanced"
+  },
+  "backtracking": {
+    "tagName": "Backtracking",
+    "problemsSolved": 16,
+    "level": "advanced"
+  },
+  "bitmask": {
+    "tagName": "Bitmask",
+    "problemsSolved": 2,
+    "level": "advanced"
+  },
+  "quickselect": {
+    "tagName": "Quickselect",
+    "problemsSolved": 1,
+    "level": "advanced"
+  },
+  "dynamic-programming": {
+    "tagName": "Dynamic Programming",
+    "problemsSolved": 52,
+    "level": "advanced"
+  },
+  "divide-and-conquer": {
+    "tagName": "Divide and Conquer",
+    "problemsSolved": 11,
+    "level": "advanced"
+  },
+  "trie": {
+    "tagName": "Trie",
+    "problemsSolved": 6,
+    "level": "advanced"
+  },
+  "union-find": {
+    "tagName": "Union-Find",
+    "problemsSolved": 16,
+    "level": "advanced"
+  },
+  "binary-indexed-tree": {
+    "tagName": "Binary Indexed Tree",
+    "problemsSolved": 2,
+    "level": "advanced"
+  },
+  "segment-tree": {
+    "tagName": "Segment Tree",
+    "problemsSolved": 2,
+    "level": "advanced"
+  },
+  "monotonic-stack": {
+    "tagName": "Monotonic Stack",
+    "problemsSolved": 11,
+    "level": "advanced"
+  },
+  "monotonic-queue": {
+    "tagName": "Monotonic Queue",
+    "problemsSolved": 2,
+    "level": "advanced"
+  },
+  "topological-sort": {
+    "tagName": "Topological Sort",
+    "problemsSolved": 4,
+    "level": "advanced"
+  },
+  "shortest-path": {
+    "tagName": "Shortest Path",
+    "problemsSolved": 6,
+    "level": "advanced"
+  },
+  "tree": {
+    "tagName": "Tree",
+    "problemsSolved": 42,
+    "level": "intermediate"
+  },
+  "binary-tree": {
+    "tagName": "Binary Tree",
+    "problemsSolved": 42,
+    "level": "intermediate"
+  },
+  "hash-table": {
+    "tagName": "Hash Table",
+    "problemsSolved": 60,
+    "level": "intermediate"
+  },
+  "ordered-set": {
+    "tagName": "Ordered Set",
+    "problemsSolved": 2,
+    "level": "intermediate"
+  },
+  "graph": {
+    "tagName": "Graph Theory",
+    "problemsSolved": 17,
+    "level": "intermediate"
+  },
+  "greedy": {
+    "tagName": "Greedy",
+    "problemsSolved": 20,
+    "level": "intermediate"
+  },
+  "binary-search": {
+    "tagName": "Binary Search",
+    "problemsSolved": 42,
+    "level": "intermediate"
+  },
+  "depth-first-search": {
+    "tagName": "Depth-First Search",
+    "problemsSolved": 55,
+    "level": "intermediate"
+  },
+  "breadth-first-search": {
+    "tagName": "Breadth-First Search",
+    "problemsSolved": 49,
+    "level": "intermediate"
+  },
+  "recursion": {
+    "tagName": "Recursion",
+    "problemsSolved": 10,
+    "level": "intermediate"
+  },
+  "sliding-window": {
+    "tagName": "Sliding Window",
+    "problemsSolved": 14,
+    "level": "intermediate"
+  },
+  "bit-manipulation": {
+    "tagName": "Bit Manipulation",
+    "problemsSolved": 19,
+    "level": "intermediate"
+  },
+  "math": {
+    "tagName": "Math",
+    "problemsSolved": 32,
+    "level": "intermediate"
+  },
+  "randomized": {
+    "tagName": "Randomized",
+    "problemsSolved": 1,
+    "level": "intermediate"
+  },
+  "design": {
+    "tagName": "Design",
+    "problemsSolved": 10,
+    "level": "intermediate"
+  },
+  "iterator": {
+    "tagName": "Iterator",
+    "problemsSolved": 1,
+    "level": "intermediate"
+  },
+  "array": {
+    "tagName": "Array",
+    "problemsSolved": 183,
+    "level": "fundamental"
+  },
+  "matrix": {
+    "tagName": "Matrix",
+    "problemsSolved": 36,
+    "level": "fundamental"
+  },
+  "string": {
+    "tagName": "String",
+    "problemsSolved": 54,
+    "level": "fundamental"
+  },
+  "simulation": {
+    "tagName": "Simulation",
+    "problemsSolved": 7,
+    "level": "fundamental"
+  },
+  "enumeration": {
+    "tagName": "Enumeration",
+    "problemsSolved": 3,
+    "level": "fundamental"
+  },
+  "sorting": {
+    "tagName": "Sorting",
+    "problemsSolved": 36,
+    "level": "fundamental"
+  },
+  "stack": {
+    "tagName": "Stack",
+    "problemsSolved": 27,
+    "level": "fundamental"
+  },
+  "queue": {
+    "tagName": "Queue",
+    "problemsSolved": 4,
+    "level": "fundamental"
+  },
+  "linked-list": {
+    "tagName": "Linked List",
+    "problemsSolved": 24,
+    "level": "fundamental"
+  },
+  "two-pointers": {
+    "tagName": "Two Pointers",
+    "problemsSolved": 43,
+    "level": "fundamental"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "httpStatus": 400,
+  "body": {
+    "status": "FAILED",
+    "comment": "handle: Field should contain between 3 and 24 characters, inclusive"
+  }
+}

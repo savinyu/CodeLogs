@@ -1,0 +1,48 @@
+{
+  "data": {
+    "allQuestionsCount": [
+      {
+        "difficulty": "All",
+        "count": 4081
+      },
+      {
+        "difficulty": "Easy",
+        "count": 971
+      },
+      {
+        "difficulty": "Medium",
+        "count": 2128
+      },
+      {
+        "difficulty": "Hard",
+        "count": 982
+      }
+    ],
+    "matchedUser": {
+      "submitStatsGlobal": {
+        "acSubmissionNum": [
+          {
+            "difficulty": "All",
+            "count": 319,
+            "submissions": 611
+          },
+          {
+            "difficulty": "Easy",
+            "count": 81,
+            "submissions": 159
+          },
+          {
+            "difficulty": "Medium",
+            "count": 195,
+            "submissions": 372
+          },
+          {
+            "difficulty": "Hard",
+            "count": 43,
+            "submissions": 80
+          }
+        ]
+      }
+    }
+  }
+}

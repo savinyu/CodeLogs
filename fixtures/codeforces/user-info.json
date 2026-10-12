@@ -1,0 +1,23 @@
+{
+  "status": "OK",
+  "result": [
+    {
+      "lastName": "Pant",
+      "country": "India",
+      "lastOnlineTimeSeconds": 1791787219,
+      "city": "Roorkee",
+      "rating": 839,
+      "friendOfCount": 11,
+      "titlePhoto": "https://userpic.codeforces.org/2749640/title/dcd525cd9ff1f315.jpg",
+      "handle": "savinyu",
+      "avatar": "https://userpic.codeforces.org/2749640/avatar/6f013ec84c8e6f56.jpg",
+      "firstName": "Savinyu",
+      "contribution": 0,
+      "organization": "IIT Rookee",
+      "rank": "newbie",
+      "maxRating": 1062,
+      "registrationTimeSeconds": 1661781994,
+      "maxRank": "newbie"
+    }
+  ]
+}
