@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+fixtures/
+spike-output/
+lib/db/migrations/
+.next/
+*.md

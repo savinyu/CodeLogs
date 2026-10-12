@@ -1,8 +1,8 @@
 # CodeLogs: Project Plan
 
-> Building starts only after this plan is reviewed and approved. Open choices are listed in §4.
+> Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: planning · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 12 Oct 2026
+Status: building (M1) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 12 Oct 2026
 
 ---
 
@@ -33,24 +33,24 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 - **Background sync:** **Inngest**, a serverless step-function queue that calls our Next.js route via webhook. This replaces pg-boss, which needs a long-running worker and can't run on Vercel (see §11). Every page fetch is its own `step.run`, and `step.sleep` handles the rate-limit delays. Free tier is about 50k step runs a month.
 - **Catalog sync is separate from user sync:** a daily Inngest cron, `syncCatalogs`, refreshes the global `problems` table (CF `problemset.problems`, AtCoder `problems.json` + `problem-models.json`). The LeetCode catalog refreshes weekly. A user sync only writes that user's solves, stats and activity, and adds a stub problem row if one is missing.
 - **Incremental sync:** each account stores a `sync_cursor` (CF: last submission id; AtCoder: last `epoch_second`; LC: last recent-AC timestamp). Later syncs only process newer submissions. Inserts use `ON CONFLICT DO NOTHING`.
-- **Auth for CodeLogs itself:** Auth.js with **GitHub** login.
+- **Auth for CodeLogs itself:** **Better Auth** with **GitHub** login (Drizzle adapter). It replaced Auth.js on 12 Oct 2026: Auth.js v5 never left beta and is now maintained by the Better Auth team.
 - **Hosting:** Vercel Hobby (functions run up to 300 s with Fluid Compute) + Neon + Inngest Cloud. Locally: the Inngest dev server.
 - **Package manager:** pnpm.
 - **v1 platforms:** Codeforces (full), AtCoder (full, no tags), LeetCode (public counts and the 20 most recent solves, labelled "partial").
 - **LeetCode access:** the server fetches public data **only on demand**: when the user clicks Sync, plus at most once a day. Responses are cached. Never passwords or cookies.
 - **First differentiator:** a shared topic list, weak-topic scoring, and "solve next" recommendations.
+- **UI kit:** Tailwind 4 + shadcn/ui (`base-nova` style, on Base UI). This was the default for open question #2 and was adopted in M1.
+- **LeetCode backfill:** confirmed by the owner on 12 Oct 2026. Logged in, `leetcode.com/api/problems/all/` marks solved problems `"status": "ac"`, so the user-triggered JSON import (M5) is viable.
 - **Later:** Chrome extension for full LeetCode history. HackerRank, CodeChef and GFG come after that, and only through the extension, never by server-side scraping.
 
 **Still open (I'll ask when we reach them)**
 | # | Question | My default |
 |---|---|---|
 | 1 | Chart library | shadcn/ui charts (Recharts inside client components) + a custom SVG heatmap |
-| 2 | UI kit | Tailwind + shadcn/ui |
 | 3 | Topic list granularity | **Two levels:** 10 macro topics for the UI (radar/bar chart), with about 30 micro topics underneath for scoring and recommendations |
 | 4 | Recommendation rule | Weakest macro topics → unsolved CF problems at rating +100–200 (primary). LC recommendations only for users with full LC history (backfill); otherwise marked "may already be solved" |
 | 5 | Public profiles: opt-in or on by default | Opt-in |
 | 6 | Final product name | CodeLogs for now |
-| 7 | LeetCode backfill method | User-triggered JSON import from their own logged-in browser (to be verified in M0, needs you), otherwise the extension (M6) |
 
 ## 5. Platform data facts (re-verified 12 Oct 2026; full detail and design impact in `scripts/spike/FINDINGS.md`)
 - **Codeforces (official API):**
@@ -95,11 +95,8 @@ type HistoryCompleteness = "full" | "recent_only" | "counts_only";
 interface NormalizedSolve {
   platform: PlatformId;
   externalProblemId: string;   // "1850A", "abc138_a", "two-sum"
-  title: string; url: string;
-  difficultyRaw?: string | number;
-  rawTags: string[];
   firstSolvedAt?: Date;
-  raw: unknown;
+  problemFallback?: { title; url; difficultyRaw?; rawTags };  // stub row when the catalog misses it
 }
 interface PlatformSnapshot {
   solves: NormalizedSolve[];
@@ -107,7 +104,8 @@ interface PlatformSnapshot {
 }
 interface SyncPage {
   snapshot: PlatformSnapshot;
-  nextCursor: SyncCursor | null;   // null = done; otherwise Inngest runs another step
+  nextPage: PageToken | null;      // null = done; otherwise Inngest runs another step
+  resumeCursor: SyncCursor | null; // persisted only after every page succeeds
 }
 interface PlatformAdapter {
   platform: PlatformId;
@@ -117,13 +115,13 @@ interface PlatformAdapter {
   validateHandle(handle: string): Promise<{ result: "valid" | "invalid" | "retry";
                                             canonicalHandle?: string; message?: string }>;
   readVerificationField(handle: string): Promise<string | null>; // CF org, AtCoder affiliation, LC summary
-  fetchPage(handle: string, cursor: SyncCursor | null): Promise<SyncPage>;
+  fetchPage(handle: string, cursor: SyncCursor | null, page: PageToken | null): Promise<SyncPage>;
 }
 interface CatalogAdapter {
   fetchCatalog(): Promise<CatalogProblem[]>;            // used only by syncCatalogs
 }
 ```
-Adapters are **pure**: they make HTTP calls and normalize the results. They never touch the DB, so the fixture tests need no database.
+The full, current contract is in `lib/adapters/types.ts`. Adapters are **pure**: they make HTTP calls and normalize the results. They never touch the DB, so the fixture tests need no database.
 
 ### Data model (Drizzle)
 ```
@@ -183,7 +181,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 ### M1: Foundation
 - 🧭 Scaffold Next.js + TS + Tailwind + ESLint/Prettier (pnpm)
 - 🧭 `lib/adapters/types.ts`, `lib/db/schema.ts`, first migration
-- 🤖 Auth.js GitHub login + `users` row creation
+- 🤖 Better Auth GitHub login + `users` row creation
 - 🤖 "Connect platforms" page: add or remove a handle, with a `validateHandle` stub
 - 🤖 CI workflow (lint, typecheck, vitest)
 - **Done when:** you can log in, add your 3 handles, and the rows persist.
@@ -272,5 +270,12 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - CF catalog misses some problems, so the join needs a fallback
   - AtCoder pages overlap at the boundary, and kenkoooo can't validate handles
   - the LC calendar is a rolling year, and the LC catalog page size is capped at 100
-- [ ] 👤 LeetCode backfill check (owner's browser)
-- [ ] M1 foundation
+- [x] 👤 LeetCode backfill check: `"status": "ac"` present when logged in (12 Oct 2026)
+- [ ] M1 foundation (branch `m1-foundation`, PR #1)
+  - [x] Next.js 16.4 + Tailwind 4 + shadcn/ui + ESLint/Prettier scaffold
+  - [x] `lib/adapters/types.ts`, `lib/db/schema.ts`, migration `0000_init` applied to Neon
+  - [x] Better Auth server config (GitHub), `lib/session.ts`
+  - [x] Sign-in UI + app shell, Connect platforms page (format-only `validateHandleStub`), CI + Vitest (36 tests)
+  - [x] Verified: build passes; signed-out redirects work; GitHub authorize URL uses the registered callback; add/list/remove persist in Neon and cascade on delete
+  - [ ] 👤 Owner: real GitHub login in the browser, add the 3 handles
+- [ ] M2 adapters + sync (next)

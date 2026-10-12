@@ -1,8 +1,33 @@
+# dependencies
 node_modules/
+.pnp
+.pnp.*
+
+# next.js
 .next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# testing
+coverage/
+
+# env files (only the example is committed)
 .env*
 !.env.example
+
+# vercel
+.vercel
+
 # full-size API dumps from spikes (trimmed copies live in fixtures/)
 spike-output/
-.DS_Store
+
+# local Claude Code settings
 .claude/settings.local.json
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+.pnpm-debug.log*
