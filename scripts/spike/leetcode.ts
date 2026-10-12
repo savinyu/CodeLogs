@@ -11,7 +11,8 @@ const probes: ProbeResult[] = [];
 const findings: string[] = [];
 let count = 0;
 
-// deno-lint-ignore no-explicit-any
+// Spike script: raw GraphQL responses are untyped on purpose.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
 async function gql(name: string, query: string, variables?: Record<string, unknown>) {
