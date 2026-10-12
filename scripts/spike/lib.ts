@@ -58,5 +58,10 @@ async function save(path: string, data: unknown) {
 export async function report(platform: string, probes: ProbeResult[], findings: string[]) {
   console.table(probes.map(({ name, status, ms, ok, note }) => ({ name, status, ms, ok, note })));
   console.log(`\nFindings (${platform}):\n- ` + findings.join("\n- "));
-  await saveDump(platform, "report", { platform, ranAt: new Date().toISOString(), probes, findings });
+  await saveDump(platform, "report", {
+    platform,
+    ranAt: new Date().toISOString(),
+    probes,
+    findings,
+  });
 }

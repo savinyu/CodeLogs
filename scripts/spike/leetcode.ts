@@ -89,18 +89,25 @@ async function main() {
     } catch {
       return `${label}: submissionCalendar not parseable`;
     }
-    const keys = Object.keys(m).map(Number).sort((a, b) => a - b);
+    const keys = Object.keys(m)
+      .map(Number)
+      .sort((a, b) => a - b);
     const utc = keys.every((k) => k % 86400 === 0);
     return `${label}: ${keys.length} days, ${keys.length ? iso(keys[0]!).slice(0, 10) + " .. " + iso(keys[keys.length - 1]!).slice(0, 10) : "empty"}, keys all UTC-midnight=${utc}, streak=${uc.streak}, totalActiveDays=${uc.totalActiveDays}, activeYears=${JSON.stringify(uc.activeYears)}`;
   };
   const uc = c.body?.data?.matchedUser?.userCalendar;
   findings.push(describeCal(uc, "calendar(default)"));
   const years: number[] = uc?.activeYears ?? [];
-  const earlier = years.slice().sort((a, b) => a - b).find((y) => y < Math.max(...years));
+  const earlier = years
+    .slice()
+    .sort((a, b) => a - b)
+    .find((y) => y < Math.max(...years));
   if (earlier) {
     const cy = await gql("calendar-year", cal(earlier));
     await saveFixture("leetcode", "calendar-year", cy.body);
-    findings.push(describeCal(cy.body?.data?.matchedUser?.userCalendar, `calendar(year=${earlier})`));
+    findings.push(
+      describeCal(cy.body?.data?.matchedUser?.userCalendar, `calendar(year=${earlier})`),
+    );
   } else {
     findings.push("calendar-year: no earlier activeYear, skipped");
   }
@@ -126,7 +133,9 @@ async function main() {
     details.push(d.body);
   }
   await saveFixture("leetcode", "question-details", details);
-  findings.push(`question-details: ${details.length} requests, all with data=${details.every((d) => d?.data?.question)}`);
+  findings.push(
+    `question-details: ${details.length} requests, all with data=${details.every((d) => d?.data?.question)}`,
+  );
 
   // 7 catalog
   const qList = (limit: number) =>
@@ -146,19 +155,25 @@ async function main() {
       maxLimit = 1000;
       page = c1000.body;
       total = lst.total;
-      findings.push(`catalog: limit 1000 returned ${lst.questions.length} questions in ${c1000.ms} ms`);
+      findings.push(
+        `catalog: limit 1000 returned ${lst.questions.length} questions in ${c1000.ms} ms`,
+      );
     } else {
       findings.push(
         `catalog: limit 1000 failed or capped (status ${c1000.status}, got ${lst?.questions?.length}, errors ${JSON.stringify(c1000.body?.errors)?.slice(0, 200)})`,
       );
     }
   } else {
-    findings.push(`catalog: questionList errored: ${JSON.stringify(c100.body?.errors ?? c100.text.slice(0, 200))}`);
+    findings.push(
+      `catalog: questionList errored: ${JSON.stringify(c100.body?.errors ?? c100.text.slice(0, 200))}`,
+    );
     const v2 = await gql(
       "catalog-v2",
       `query { problemsetQuestionListV2(limit: 100, skip: 0) { totalLength questions { questionFrontendId title titleSlug difficulty paidOnly topicTags { name slug } } } }`,
     );
-    findings.push(`catalog v2: status ${v2.status}, ${JSON.stringify(v2.body?.errors ?? v2.body?.data).slice(0, 300)}`);
+    findings.push(
+      `catalog v2: status ${v2.status}, ${JSON.stringify(v2.body?.errors ?? v2.body?.data).slice(0, 300)}`,
+    );
     page = v2.body;
   }
   if (page) {
