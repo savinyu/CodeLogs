@@ -271,7 +271,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - AtCoder pages overlap at the boundary, and kenkoooo can't validate handles
   - the LC calendar is a rolling year, and the LC catalog page size is capped at 100
 - [x] 👤 LeetCode backfill check: `"status": "ac"` present when logged in (12 Oct 2026)
-- [ ] M1 foundation (branch `m1-foundation`)
+- [ ] M1 foundation (branch `m1-foundation`, PR #1)
   - [x] Next.js 16.4 + Tailwind 4 + shadcn/ui + ESLint/Prettier scaffold
   - [x] `lib/adapters/types.ts`, `lib/db/schema.ts`, migration `0000_init` applied to Neon
   - [x] Better Auth server config (GitHub), `lib/session.ts`
