@@ -29,16 +29,22 @@ describe("difficultyTier", () => {
 describe("normalizeDifficulty", () => {
   it("bands Codeforces ratings", () => {
     expect(normalizeDifficulty("codeforces", 800)).toBe(1);
+    expect(normalizeDifficulty("codeforces", 1100)).toBe(1);
     expect(normalizeDifficulty("codeforces", "1200")).toBe(2);
-    expect(normalizeDifficulty("codeforces", 1999)).toBe(3);
+    expect(normalizeDifficulty("codeforces", 1400)).toBe(3);
+    expect(normalizeDifficulty("codeforces", 1600)).toBe(3);
+    expect(normalizeDifficulty("codeforces", 1700)).toBe(4);
     expect(normalizeDifficulty("codeforces", 2000)).toBe(4);
+    expect(normalizeDifficulty("codeforces", 2100)).toBe(5);
     expect(normalizeDifficulty("codeforces", 3500)).toBe(5);
   });
 
   it("bands AtCoder models, including negative ones", () => {
     expect(normalizeDifficulty("atcoder", -1200)).toBe(1);
     expect(normalizeDifficulty("atcoder", 400)).toBe(2);
-    expect(normalizeDifficulty("atcoder", 1199)).toBe(3);
+    expect(normalizeDifficulty("atcoder", 899)).toBe(3);
+    expect(normalizeDifficulty("atcoder", 900)).toBe(4);
+    expect(normalizeDifficulty("atcoder", 1300)).toBe(5);
     expect(normalizeDifficulty("atcoder", 4383)).toBe(5);
   });
 

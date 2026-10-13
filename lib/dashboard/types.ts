@@ -125,12 +125,13 @@ export interface DashboardData {
   recent: RecentSolve[];
 }
 
+/** Neutral names: the hint says which tier and ranges each band covers (lib/sync/difficulty.ts). */
 export const DIFFICULTY_BANDS: Record<DifficultyBand, { label: string; hint: string }> = {
-  1: { label: "Easy", hint: "CF < 1200 · AtCoder < 400 · LC Easy" },
-  2: { label: "Easy–Medium", hint: "CF 1200–1599 · AtCoder 400–799" },
-  3: { label: "Medium", hint: "CF 1600–1999 · AtCoder 800–1199 · LC Medium" },
-  4: { label: "Hard", hint: "CF 2000–2399 · AtCoder 1200–1599 · LC Hard" },
-  5: { label: "Very hard", hint: "CF 2400+ · AtCoder 1600+" },
+  1: { label: "Band 1", hint: "Easy · CF ≤ 1100 · AtCoder < 400 · LC Easy" },
+  2: { label: "Band 2", hint: "Medium · CF 1200–1300 · AtCoder 400–599" },
+  3: { label: "Band 3", hint: "Medium · CF 1400–1600 · AtCoder 600–899 · LC Medium" },
+  4: { label: "Band 4", hint: "Hard · CF 1700–2000 · AtCoder 900–1299 · LC Hard" },
+  5: { label: "Band 5", hint: "Hard · CF 2100+ · AtCoder 1300+" },
 };
 
 /** Chart color per platform, as CSS variables from app/globals.css (they switch with the theme). */
