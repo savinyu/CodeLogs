@@ -2,11 +2,8 @@
 
 import type { ActivityDay, PlatformFilter } from "./types";
 
-/**
- * "last12" = rolling 12 months ending at asOf; "all" = first activity to asOf;
- * a number = calendar year (UTC).
- */
-export type ActivityPeriod = "last12" | "all" | number;
+/** "last12" = rolling 12 months ending at asOf; a number = calendar year (UTC). */
+export type ActivityPeriod = "last12" | number;
 
 /** Distinct years with activity, newest first. */
 export function activityYears(activity: ActivityDay[]): number[] {
@@ -17,9 +14,8 @@ export function activityYears(activity: ActivityDay[]): number[] {
   return [...years].sort((a, b) => b - a);
 }
 
-/** "all" or a year offered in `years` is used as-is; anything else falls back to the rolling view. */
+/** A year offered in `years` is used as-is; anything else falls back to the rolling view. */
 export function parseActivityPeriod(value: unknown, years: number[]): ActivityPeriod {
-  if (value === "all") return "all";
   if (typeof value !== "string" || !/^\d{4}$/.test(value)) return "last12";
   const year = Number(value);
   return years.includes(year) ? year : "last12";
