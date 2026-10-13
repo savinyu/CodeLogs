@@ -44,7 +44,7 @@ export function RecentSolves({ solves }: { solves: RecentSolve[] }) {
             >
               {s.title}
             </a>
-            {s.difficultyRaw && <DifficultyBadge raw={s.difficultyRaw} />}
+            {s.difficultyRaw && <DifficultyBadge platform={s.platform} raw={s.difficultyRaw} />}
             {s.tags.slice(0, 3).map((tag) => (
               <Badge key={tag} variant="secondary" className="text-muted-foreground">
                 {s.platform === "leetcode" ? humanizeSlug(tag) : tag}

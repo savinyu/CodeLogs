@@ -109,7 +109,9 @@ export async function SolveNext({
                     >
                       {p.title}
                     </a>
-                    {p.difficultyRaw && <DifficultyBadge raw={p.difficultyRaw} />}
+                    {p.difficultyRaw && (
+                      <DifficultyBadge platform={p.platform} raw={p.difficultyRaw} />
+                    )}
                     {p.maybeSolved && <Badge variant="outline">may already be solved</Badge>}
                   </li>
                 ))}

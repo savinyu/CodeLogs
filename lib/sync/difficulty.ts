@@ -31,3 +31,21 @@ export function normalizeDifficulty(
     ? band(value, [1200, 1600, 2000, 2400])
     : band(value, [400, 800, 1200, 1600]);
 }
+
+export type DifficultyTier = "easy" | "medium" | "hard";
+
+/**
+ * Easy / Medium / Hard for the colored difficulty tags. LeetCode uses its own labels; Codeforces
+ * ratings split at ≤ 1100 easy, 1200–1600 medium, ≥ 1700 hard. AtCoder has no tier yet (null).
+ */
+export function difficultyTier(platform: PlatformId, raw: string | null): DifficultyTier | null {
+  if (raw === null || raw === "") return null;
+  if (platform === "leetcode") {
+    const label = raw.toLowerCase();
+    return label === "easy" || label === "medium" || label === "hard" ? label : null;
+  }
+  if (platform !== "codeforces") return null;
+  const rating = Number(raw);
+  if (!Number.isFinite(rating)) return null;
+  return rating < 1200 ? "easy" : rating < 1700 ? "medium" : "hard";
+}
