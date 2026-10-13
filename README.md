@@ -8,6 +8,8 @@ If you practise on more than one site, your progress is split across profiles th
 
 CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subtopics), scores how well each topic is covered against what someone at your level would be expected to have solved, and recommends **unsolved** problems at the right difficulty for your weakest topics. A public profile page (`/u/<github-username>`) works as a shareable portfolio.
 
+![Public profile page showing totals per platform, the activity heatmap and the topic chart](docs/screenshots/public-profile.png)
+
 ## Features
 
 - **Connect handles** for Codeforces, AtCoder and LeetCode. Handles are checked against the platform when you add them.

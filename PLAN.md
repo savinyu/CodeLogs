@@ -94,6 +94,7 @@ Inngest Cloud ── webhook ──> /api/inngest  (Inngest functions, each step
 type PlatformId = "codeforces" | "atcoder" | "leetcode";
 type HistoryCompleteness = "full" | "recent_only" | "counts_only";
 
+<<<<<<< Updated upstream
 interface NormalizedSolve {
   platform: PlatformId;
   externalProblemId: string;   // "1850A", "abc138_a", "two-sum"
@@ -124,6 +125,20 @@ interface CatalogAdapter {
 }
 ```
 The full, current contract is in `lib/adapters/types.ts`. Adapters are **pure**: they make HTTP calls and normalize the results. They never touch the DB, so the fixture tests need no database.
+=======
+**M5 ship (branch `m5-ship`):**
+- [x] Handle verification (code pasted into CF organization / AtCoder affiliation / LC summary); public pages show only verified handles
+- [x] LeetCode backfill import; `history_complete` recomputed after every LeetCode sync
+- [x] `syncStaleAccounts` daily cron
+- [x] Settings: JSON export and account delete
+- [x] README (problem, features, architecture, data limits, setup)
+- [x] 👤 Owner checked: handle verification on all 3 platforms, LeetCode import, export download (13 Oct 2026)
+- [x] Smoother LeetCode import: **Paste** button (clipboard), Cmd/Ctrl+V or drag-and-drop onto the import box, and the file picker also takes the `.html` page Chrome saves with Cmd/Ctrl+S. `parseLeetcodeImportText` in `lib/leetcode-import.ts` tries raw JSON, then each `<pre>` (entities decoded), then a `{…}` slice (drops Chrome's "Pretty-print" label). Checked on the owner's real file as raw JSON, Chrome-rendered HTML and pasted text: 319 slugs each
+- [x] 👤 Owner: try Paste and the saved `.html` in the browser
+- [x] README screenshots (once the public page has verified data)
+- [ ] 🧭 Deploy to Vercel + Neon + Inngest Cloud (needs the owner's accounts, a production GitHub OAuth app, env vars); seed the owner's profile; final review
+- **Done when:** the live `/u/<you>` link works logged out and friends can sign up.
+>>>>>>> Stashed changes
 
 ### Data model (Drizzle)
 ```

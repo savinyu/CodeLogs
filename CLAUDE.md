@@ -81,6 +81,7 @@ scripts/spike/          M0 probes + FINDINGS.md
 - **Captain and subagents:** the main (Opus) session owns the plan, architecture, interfaces and schema, plus review and integration (🧭 tasks in PLAN.md). Self-contained tasks (🤖) go to Sonnet subagents (`model: "sonnet"`) with a precise spec: files they own, files they must not touch, and how to verify. Independent tasks run in parallel. Subagents don't commit; the captain reviews, runs the checks and commits.
 - Make a todo list before starting a milestone, and update PLAN.md §12 when it lands.
 - When a choice isn't settled in PLAN.md, ask the owner.
+- Don't take into account development time. (because it is not being developed by a human)
 
 ## Owner's handles (for testing)
 Codeforces `savinyu` (46 solved) · LeetCode `CptDailyBird` (319 solved) · AtCoder `savinyu` (empty; test with `chokudai`).
