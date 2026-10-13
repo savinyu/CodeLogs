@@ -75,9 +75,10 @@ export async function syncNow(_prevState: SyncState, formData: FormData): Promis
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to sync your platforms." };
 
-  // An empty or missing platform field means every connected account.
+  // An empty or missing platform field means every connected account. A missing field is
+  // `null` from FormData, which zod's `.optional()` rejects, so map both to undefined.
   const rawPlatform = formData.get("platform");
-  const parsed = syncSchema.safeParse({ platform: rawPlatform === "" ? undefined : rawPlatform });
+  const parsed = syncSchema.safeParse({ platform: rawPlatform || undefined });
   if (!parsed.success) return { ok: false, error: "Unknown platform." };
   const { platform } = parsed.data;
 
