@@ -40,16 +40,16 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 - **LeetCode access:** the server fetches public data **only on demand**: when the user clicks Sync, plus at most once a day. Responses are cached. Never passwords or cookies.
 - **First differentiator:** a shared topic list, weak-topic scoring, and "solve next" recommendations.
 - **UI kit:** Tailwind 4 + shadcn/ui (`base-nova` style, on Base UI). This was the default for open question #2 and was adopted in M1.
+- **Charts (was open #1):** shadcn/ui charts (Recharts inside client components) + a custom SVG heatmap. Decided 13 Oct 2026.
+- **Public profiles (was open #5):** opt-in; `users.public_profile` defaults to false. Decided 13 Oct 2026.
 - **LeetCode backfill:** confirmed by the owner on 12 Oct 2026. Logged in, `leetcode.com/api/problems/all/` marks solved problems `"status": "ac"`, so the user-triggered JSON import (M5) is viable.
 - **Later:** Chrome extension for full LeetCode history. HackerRank, CodeChef and GFG come after that, and only through the extension, never by server-side scraping.
 
 **Still open (I'll ask when we reach them)**
 | # | Question | My default |
 |---|---|---|
-| 1 | Chart library | shadcn/ui charts (Recharts inside client components) + a custom SVG heatmap |
 | 3 | Topic list granularity | **Two levels:** 10 macro topics for the UI (radar/bar chart), with about 30 micro topics underneath for scoring and recommendations |
 | 4 | Recommendation rule | Weakest macro topics → unsolved CF problems at rating +100–200 (primary). LC recommendations only for users with full LC history (backfill); otherwise marked "may already be solved" |
-| 5 | Public profiles: opt-in or on by default | Opt-in |
 | 6 | Final product name | CodeLogs for now |
 
 ## 5. Platform data facts (re-verified 12 Oct 2026; full detail and design impact in `scripts/spike/FINDINGS.md`)
