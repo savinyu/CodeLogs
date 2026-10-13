@@ -4,7 +4,7 @@
 import "server-only";
 import { and, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { catalogSyncs, platformAccounts, syncRuns } from "@/lib/db/schema";
+import { catalogSyncs, platformAccounts, platformStats, solves, syncRuns } from "@/lib/db/schema";
 import type { HistoryCompleteness, PlatformId, SyncCursor } from "@/lib/adapters/types";
 import { parseCursor } from "./cursor";
 
@@ -120,6 +120,35 @@ export async function finishAccountSync(args: {
       .set({ status: "ok", finishedAt: sql`now()`, items: args.items })
       .where(eq(syncRuns.id, args.runId)),
   ]);
+  // LeetCode only shows the latest 20 solves: a gap since the import flips the account back to partial.
+  if (args.history === "recent_only") await refreshHistoryComplete(args.accountId);
+}
+
+/**
+ * Recomputes `history_complete` for a recent-only account (LeetCode): complete when at least one
+ * solve came from an import and the known solve count reaches LeetCode's lifetime total
+ * (platform_stats `lc_difficulty_counts`; a missing stat counts as complete). Also sets status to
+ * ok/partial, never overwriting "syncing". One UPDATE. Returns the new value.
+ */
+export async function refreshHistoryComplete(accountId: string): Promise<boolean> {
+  const complete = sql<boolean>`(
+    EXISTS (SELECT 1 FROM ${solves} WHERE ${solves.accountId} = ${platformAccounts.id} AND ${solves.source} = 'import')
+    AND COALESCE(
+      (SELECT count(*) FROM ${solves} WHERE ${solves.accountId} = ${platformAccounts.id})
+        >= (SELECT (${platformStats.payload}->'solved'->>'all')::int FROM ${platformStats}
+            WHERE ${platformStats.accountId} = ${platformAccounts.id} AND ${platformStats.kind} = 'lc_difficulty_counts'),
+      true)
+  )`;
+  const [row] = await db
+    .update(platformAccounts)
+    .set({
+      historyComplete: complete,
+      status: sql`CASE WHEN ${platformAccounts.status} = 'syncing' THEN ${platformAccounts.status}
+        WHEN ${complete} THEN 'ok'::account_status ELSE 'partial'::account_status END`,
+    })
+    .where(eq(platformAccounts.id, accountId))
+    .returning({ historyComplete: platformAccounts.historyComplete });
+  return row?.historyComplete ?? false;
 }
 
 /**

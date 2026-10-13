@@ -1,0 +1,12 @@
+{
+  "user_name": "",
+  "num_solved": 0,
+  "num_total": 3700,
+  "ac_easy": 0,
+  "ac_medium": 0,
+  "ac_hard": 0,
+  "stat_status_pairs": [
+    { "stat": { "question_id": 1, "question__title": "Two Sum", "question__title_slug": "two-sum", "frontend_question_id": 1 }, "status": null, "difficulty": { "level": 1 }, "paid_only": false },
+    { "stat": { "question_id": 2, "question__title": "Add Two Numbers", "question__title_slug": "add-two-numbers", "frontend_question_id": 2 }, "status": null, "difficulty": { "level": 2 }, "paid_only": false }
+  ]
+}

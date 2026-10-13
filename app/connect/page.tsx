@@ -53,6 +53,8 @@ async function PlatformCards() {
                   profileUrl: meta.profileUrl(account.handle),
                   status: account.status,
                   verified: account.verified,
+                  verifyToken: account.verifyToken,
+                  historyComplete: account.historyComplete,
                   lastSyncedAt: account.lastSyncedAt?.toISOString() ?? null,
                   lastError: account.lastError,
                 }

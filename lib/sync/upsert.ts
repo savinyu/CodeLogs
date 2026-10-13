@@ -28,8 +28,10 @@ export interface ApplyResult {
 export async function applySnapshot(
   target: SyncTarget,
   snapshot: PlatformSnapshot,
+  opts: { source?: "api" | "import" } = {},
 ): Promise<ApplyResult> {
   const { accountId, userId, platform } = target;
+  const source = opts.source ?? "api";
   const pageSolves = dedupeSolves(platform, snapshot.solves);
   let stubsInserted = 0;
   let solvesInserted = 0;
@@ -63,7 +65,7 @@ export async function applySnapshot(
     const rows = batch.flatMap((s) => {
       const problemId = idByExternal.get(s.externalProblemId);
       if (problemId === undefined) return [];
-      return [{ userId, accountId, problemId, firstSolvedAt: s.firstSolvedAt ?? null }];
+      return [{ userId, accountId, problemId, firstSolvedAt: s.firstSolvedAt ?? null, source }];
     });
     solvesSkipped += batch.length - rows.length;
     if (rows.length > 0) {

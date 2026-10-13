@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SignInButton } from "@/components/auth/sign-in-button";
 import { SignOutMenuItem } from "@/components/auth/sign-out-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -5,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -44,6 +46,7 @@ export async function UserMenu() {
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/settings" />}>Settings</DropdownMenuItem>
         <SignOutMenuItem />
       </DropdownMenuContent>
     </DropdownMenu>
