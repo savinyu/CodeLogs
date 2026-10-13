@@ -19,6 +19,14 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
+  --color-platform-codeforces: var(--platform-codeforces);
+  --color-platform-atcoder: var(--platform-atcoder);
+  --color-platform-leetcode: var(--platform-leetcode);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
@@ -72,6 +80,15 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  /* CodeLogs: one color per platform, and a 5-step heatmap ramp (0 = no activity). */
+  --platform-codeforces: oklch(0.55 0.17 255);
+  --platform-atcoder: oklch(0.58 0.12 170);
+  --platform-leetcode: oklch(0.72 0.16 65);
+  --heat-0: oklch(0.95 0 0);
+  --heat-1: oklch(0.88 0.08 155);
+  --heat-2: oklch(0.76 0.13 155);
+  --heat-3: oklch(0.63 0.15 155);
+  --heat-4: oklch(0.5 0.13 155);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -107,6 +124,14 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  --platform-codeforces: oklch(0.7 0.14 255);
+  --platform-atcoder: oklch(0.72 0.12 170);
+  --platform-leetcode: oklch(0.8 0.15 70);
+  --heat-0: oklch(0.24 0 0);
+  --heat-1: oklch(0.36 0.07 155);
+  --heat-2: oklch(0.48 0.11 155);
+  --heat-3: oklch(0.62 0.14 155);
+  --heat-4: oklch(0.76 0.15 155);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
