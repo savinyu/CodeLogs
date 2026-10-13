@@ -4,10 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Not inline: Tailwind's base font rule reads var(--font-sans), so it must exist as a variable. */
+@theme {
+  --font-sans: var(--font-geist-sans);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
