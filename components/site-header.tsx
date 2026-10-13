@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { UserMenu } from "@/components/auth/user-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/session";
@@ -33,9 +34,12 @@ export function SiteHeader() {
             <SiteNav />
           </Suspense>
         </div>
-        <Suspense fallback={<Skeleton className="h-8 w-24 rounded-lg" />}>
-          <UserMenu />
-        </Suspense>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Suspense fallback={<Skeleton className="h-8 w-24 rounded-lg" />}>
+            <UserMenu />
+          </Suspense>
+        </div>
       </div>
     </header>
   );

@@ -41,7 +41,8 @@ app/                    routes; api/auth/[...all] is the Better Auth handler
   connect/              add/remove platform handles (server actions)
   dashboard/
 components/ui/          shadcn components (generated: prefer re-adding over hand-editing)
-components/             app components (site-header, auth/…)
+components/             app components (site-header, theme-toggle, auth/…)
+components/dashboard/   dashboard sections; dashboard-view.tsx is shared by /dashboard and /u/[username]
 lib/env.ts              zod-validated env(), lazy so tests and adapters don't need env vars
 lib/auth.ts             Better Auth server config  · lib/auth-client.ts for client hooks
 lib/session.ts          getCurrentUser() / requireUser(): the only way pages read the session
@@ -49,6 +50,8 @@ lib/db/                 schema.ts, client.ts, migrations/
 lib/adapters/           types.ts (contract), http.ts, errors.ts, {codeforces,atcoder,leetcode}.ts, index.ts (registry), validate.ts
 lib/sync/               upsert.ts, runs.ts (DB writes, server-only); cursor.ts, rows.ts, difficulty.ts (pure); request.ts
 lib/inngest/            client.ts, functions/ (syncAccount, syncCatalog, syncCatalogs); served at app/api/inngest
+lib/dashboard/          types.ts (view model, colors), aggregate.ts + heatmap.ts (pure, tested), queries.ts (server-only)
+lib/github-username.ts  sets users.username from GitHub (Better Auth account hook); scripts/dev/backfill-usernames.ts
 lib/platforms.ts        per-platform display metadata and handle patterns
 fixtures/<platform>/    saved real API responses for adapter tests
 tests/                  vitest
@@ -62,6 +65,8 @@ scripts/spike/          M0 probes + FINDINGS.md
 - **Inngest steps:** fetch and write inside one `step.run` and return only small plain data (step outputs are size-limited and JSON round-tripped). Keep DB imports out of `sync-account-core.ts` so it stays unit-testable.
 - **Platform politeness:** respect `minDelayMs` (CF 2000 ms, AtCoder 1100, LC 1000). LeetCode is fetched only on demand or daily. No scraping of HackerRank, CodeChef or GFG, and never ask for platform passwords or cookies.
 - **Schema changes:** edit `lib/db/schema.ts`, run `pnpm db:generate --name …`, review the SQL and commit it with the schema. Don't rename Better Auth's columns (`users`, `sessions`, `accounts`, `verifications`). `accounts` holds OAuth links; platform handles live in `platform_accounts`.
+- **Colors:** use the theme tokens (`bg-platform-codeforces`, `fill-heat-2`, `PLATFORM_COLOR` in `lib/dashboard/types.ts`), never hex, so dark mode keeps working. Recharts bars use `isAnimationActive={false}`.
+- **Turbopack cache:** if `pnpm build` output ignores a CSS change, delete `.next/cache/turbopack` and rebuild. The dev server can also serve stale `globals.css` until the file is saved again.
 - **Secrets:** only in `.env.local` (gitignored). Keep `.env.example` in sync with `lib/env.ts`. Never print secret values.
 
 ## Git and GitHub
