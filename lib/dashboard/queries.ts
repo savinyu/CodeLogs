@@ -1,7 +1,7 @@
 // Dashboard reads. Every query on user data is scoped by userId; aggregate.ts does the shaping.
 
 import "server-only";
-import { and, count, eq, gte, lte, sql } from "drizzle-orm";
+import { and, count, eq, isNotNull, lte, sql } from "drizzle-orm";
 import { cacheLife } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
@@ -13,13 +13,9 @@ import {
   users,
 } from "@/lib/db/schema";
 import type { PlatformId } from "@/lib/adapters/types";
-import {
-  addDays,
-  buildDashboard,
-  HEATMAP_DAYS,
-  RECENT_LIMIT,
-  type DashboardRaw,
-} from "./aggregate";
+import { ratingOf } from "@/lib/topics/recommend";
+import { cfCatalogCap, type TagSetCount } from "@/lib/topics/scoring";
+import { buildDashboard, codeforcesLevel, RECENT_LIMIT, type DashboardRaw } from "./aggregate";
 import type { DashboardData, DifficultyBand } from "./types";
 
 /** Tag frequencies across each platform's whole catalog. Global and slow-moving, so cached. */
@@ -30,6 +26,27 @@ async function getCatalogTags(): Promise<DashboardRaw["catalogTags"]> {
     SELECT p.platform, t.tag, count(*)::int AS count
     FROM ${problems} p CROSS JOIN LATERAL jsonb_array_elements_text(p.raw_tags) AS t(tag)
     GROUP BY 1, 2`);
+  return result.rows;
+}
+
+/**
+ * Catalog problems grouped by identical tag sets, for topic expectations. Codeforces: rated
+ * problems up to `maxRating`. LeetCode: free problems only (paid ones are rarely solvable).
+ */
+async function getCatalogTagSets(
+  platform: "codeforces" | "leetcode",
+  maxRating: number,
+): Promise<TagSetCount[]> {
+  "use cache";
+  cacheLife("days");
+  const filter =
+    platform === "codeforces" ? sql`${ratingOf()} <= ${maxRating}` : sql`NOT ${problems.paidOnly}`;
+  const result = await db.execute<{ tags: string[]; count: number }>(sql`
+    SELECT ${problems.rawTags} AS tags, count(*)::int AS count
+    FROM ${problems}
+    WHERE ${problems.platform} = ${platform} AND ${problems.catalogUpdatedAt} IS NOT NULL
+      AND ${filter}
+    GROUP BY 1`);
   return result.rows;
 }
 
@@ -47,7 +64,6 @@ async function getSolvedTags(userId: string): Promise<DashboardRaw["solvedTags"]
 /** Call after reading the request (session or params): it uses the current time. */
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const asOf = new Date().toISOString().slice(0, 10);
-  const from = addDays(asOf, -(HEATMAP_DAYS - 1));
   // The newest RECENT_LIMIT solves per platform, so a platform filter still has a full list.
   const ranked = db
     .select({
@@ -78,6 +94,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     solvedTags,
     catalogTags,
     recent,
+    cfSolves,
   ] = await Promise.all([
     db
       .select({
@@ -109,9 +126,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       .select({ platform: problems.platform, day: solvedDay, count: count() })
       .from(solves)
       .innerJoin(problems, eq(problems.id, solves.problemId))
-      .where(
-        and(eq(solves.userId, userId), gte(solves.firstSolvedAt, new Date(`${from}T00:00:00Z`))),
-      )
+      .where(and(eq(solves.userId, userId), isNotNull(solves.firstSolvedAt)))
       .groupBy(problems.platform, solvedDay),
     db
       .select({
@@ -121,7 +136,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       })
       .from(activityDays)
       .innerJoin(platformAccounts, eq(platformAccounts.id, activityDays.accountId))
-      .where(and(eq(platformAccounts.userId, userId), gte(activityDays.day, from))),
+      .where(eq(platformAccounts.userId, userId)),
     db
       .select({ platform: problems.platform, band: problems.difficultyNorm, count: count() })
       .from(solves)
@@ -143,6 +158,18 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       })
       .from(ranked)
       .where(lte(ranked.rank, RECENT_LIMIT)),
+    db
+      .select({ tags: problems.rawTags, rating: problems.difficultyRaw })
+      .from(solves)
+      .innerJoin(problems, eq(problems.id, solves.problemId))
+      .where(and(eq(solves.userId, userId), eq(problems.platform, "codeforces"))),
+  ]);
+
+  // The CF catalog slice depends on the user's level, so it's a second (cached) round trip.
+  const level = codeforcesLevel({ accounts, stats, cfSolves });
+  const [cfCatalog, lcCatalog] = await Promise.all([
+    level === null ? [] : getCatalogTagSets("codeforces", cfCatalogCap(level)),
+    accounts.some((a) => a.platform === "leetcode") ? getCatalogTagSets("leetcode", 0) : [],
   ]);
 
   return buildDashboard(
@@ -158,6 +185,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       difficulty,
       solvedTags,
       catalogTags,
+      cfSolves,
+      cfCatalog,
+      lcCatalog,
       recent: recent.map((r) => ({
         ...r,
         solvedAt: r.solvedAt ? new Date(r.solvedAt).toISOString() : null,

@@ -39,7 +39,7 @@ Scripts: `scripts/spike/{cf,atcoder,leetcode}.ts` (run with `pnpm spike:<platfor
 | Fact | Value / evidence |
 |---|---|
 | Stats | All 319 (E81/M195/H43), 611 submissions; catalog 4,081 (E971/M2128/H982) |
-| Tag counts | 40 tag slugs (`fixtures/leetcode/tag-slugs.json`). These are **lifetime** counts, so they drive topic scoring |
+| Tag counts | 40 tag slugs (`fixtures/leetcode/tag-slugs.json`). These are **lifetime** counts, so they drive topic scoring. Only solved tags are listed, and only from a **fixed set of 47** (re-checked 13 Oct 2026 on three heavy profiles): finer catalog tags like `prefix-sum`, `counting`, `number-theory`, `memoization` are never counted, and the counts say `heap` where the catalog says `heap-priority-queue`. See `LEETCODE_COUNTED_TAGS` |
 | Calendar | Default = **rolling last year** (57 days, 2026-04-09 → 2026-10-08). `userCalendar(year:Y)` gives each earlier year (2023: 14 days). Keys are UTC-midnight epoch seconds |
 | Recent AC | 20 items → **17 distinct slugs** (re-solves repeat), so dedupe by slug and keep the earliest timestamp |
 | Question details | `question(titleSlug)` returns difficulty and topicTags for all 17 |

@@ -2,6 +2,7 @@
 // chart components receive it as props, so nothing here may import the DB.
 
 import type { PlatformId } from "@/lib/adapters/types";
+import type { MacroSlug, TopicSlug } from "@/lib/topics/taxonomy";
 
 export type PlatformFilter = PlatformId | "all";
 
@@ -70,6 +71,29 @@ export interface PlatformTags {
   tags: TagStat[];
 }
 
+/** One platform's part of a topic. See lib/topics/scoring.ts for the formula. */
+export interface TopicPlatformStat {
+  platform: PlatformId;
+  /** Problems solved in the topic. LeetCode's is estimated from its lifetime tag counts. */
+  solved: number;
+  /** Solves weighted by difficulty against your level (CF); the estimate itself on LeetCode. */
+  weighted: number;
+  /** What you'd have solved in the topic if your solves mirrored the platform's catalog. */
+  expected: number;
+}
+
+export interface TopicStat {
+  slug: TopicSlug;
+  name: string;
+  /** Platforms with topic data (CF, LC); empty when none is connected. */
+  platforms: TopicPlatformStat[];
+}
+
+export interface MacroTopicStat extends TopicStat {
+  slug: MacroSlug;
+  micros: TopicStat[];
+}
+
 export interface RecentSolve {
   platform: PlatformId;
   externalId: string;
@@ -88,11 +112,15 @@ export interface DashboardData {
   accounts: AccountSummary[];
   /** One per connected account, in PLATFORM_ORDER. */
   totals: PlatformTotal[];
-  /** Days with activity in the 365 days ending at asOf, ascending. */
+  /** Every day with activity up to asOf (all years), ascending. The heatmap picks its period. */
   activity: ActivityDay[];
   difficulty: DifficultyRow[];
   /** Only platforms that have tags and are connected. */
   tags: PlatformTags[];
+  /** Every macro topic, in taxonomy order (lib/topics). */
+  topics: MacroTopicStat[];
+  /** The CF rating that weights and recommendations use (lib/topics/scoring.ts cfLevel). */
+  cfLevel: number | null;
   /** Newest first: up to RECENT_LIMIT per platform until filterDashboard trims it. */
   recent: RecentSolve[];
 }

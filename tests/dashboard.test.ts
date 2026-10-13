@@ -72,6 +72,9 @@ function raw(overrides: Partial<DashboardRaw> = {}): DashboardRaw {
       { platform: "leetcode", tag: "hash-table", count: 843 },
     ],
     recent: [],
+    cfSolves: [],
+    cfCatalog: [],
+    lcCatalog: [],
     ...overrides,
   };
 }
@@ -125,23 +128,24 @@ describe("buildDashboard", () => {
     expect(d.totals.find((t) => t.platform === "codeforces")?.rating).toBeUndefined();
   });
 
-  it("uses a platform's calendar over its solve days, and keeps only the heatmap window", () => {
+  it("uses a platform's calendar over its solve days, and keeps every year up to asOf", () => {
     const d = buildDashboard(
       raw({
         solveDays: [
           { platform: "codeforces", day: "2026-10-01", count: 2 },
           { platform: "leetcode", day: "2026-10-01", count: 1 }, // ignored: LC has a calendar
-          { platform: "codeforces", day: "2025-10-13", count: 5 }, // one day too old
+          { platform: "codeforces", day: "2023-02-13", count: 5 }, // earlier years stay
         ],
         calendarDays: [
           { platform: "leetcode", day: "2026-10-01", count: 4 },
-          { platform: "leetcode", day: "2025-10-14", count: 1 }, // first day of the window
+          { platform: "leetcode", day: "2025-10-14", count: 1 },
           { platform: "leetcode", day: "2026-10-14", count: 9 }, // after asOf
         ],
       }),
       ASOF,
     );
     expect(d.activity).toEqual([
+      { day: "2023-02-13", counts: { codeforces: 5 }, total: 5 },
       { day: "2025-10-14", counts: { leetcode: 1 }, total: 1 },
       { day: "2026-10-01", counts: { codeforces: 2, leetcode: 4 }, total: 6 },
     ]);
@@ -198,6 +202,31 @@ describe("buildDashboard", () => {
 });
 
 describe("filterDashboard", () => {
+  it("scores topics from CF solves and LC tag counts, and narrows them by platform", () => {
+    const all = buildDashboard(
+      raw({
+        cfSolves: [{ tags: ["dp"], rating: "900" }],
+        cfCatalog: [{ tags: ["dp"], count: 4 }],
+        lcCatalog: [{ tags: ["trie"], count: 4 }],
+      }),
+      ASOF,
+    );
+    expect(all.cfLevel).toBe(839);
+    const dp = all.topics.find((t) => t.slug === "dp")!;
+    expect(dp.platforms.map((p) => [p.platform, p.solved])).toEqual([
+      ["codeforces", 1],
+      ["leetcode", 0],
+    ]);
+    const cf = filterDashboard(all, "codeforces").topics.find((t) => t.slug === "dp")!;
+    expect(cf.platforms.map((p) => p.platform)).toEqual(["codeforces"]);
+    expect(cf.micros.every((u) => u.platforms.every((p) => p.platform === "codeforces"))).toBe(
+      true,
+    );
+    expect(filterDashboard(all, "atcoder").topics.every((t) => t.platforms.length === 0)).toBe(
+      true,
+    );
+  });
+
   const data = buildDashboard(
     raw({
       calendarDays: [{ platform: "leetcode", day: "2026-10-01", count: 4 }],

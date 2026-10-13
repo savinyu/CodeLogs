@@ -1,4 +1,10 @@
-import { buildHeatmapGrid, activityStats, type HeatLevel } from "@/lib/dashboard/heatmap";
+import type { ActivityPeriod } from "@/lib/dashboard/filters";
+import {
+  buildHeatmapGrid,
+  activityStats,
+  periodRange,
+  type HeatLevel,
+} from "@/lib/dashboard/heatmap";
 import type { ActivityDay } from "@/lib/dashboard/types";
 import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
 
@@ -67,24 +73,35 @@ function tooltip(day: string, total: number, counts: ActivityDay["counts"]): str
   return `${formatDay(day)}: ${total} — ${parts.join(", ")}`;
 }
 
-export function ActivityHeatmap({ activity, asOf }: { activity: ActivityDay[]; asOf: string }) {
-  const { weeks, months } = buildHeatmapGrid(activity, asOf);
-  const stats = activityStats(activity, asOf);
+export function ActivityHeatmap({
+  activity,
+  asOf,
+  period = "last12",
+}: {
+  activity: ActivityDay[];
+  asOf: string;
+  period?: ActivityPeriod;
+}) {
+  const range = periodRange(period, asOf);
+  const { weeks, months } = buildHeatmapGrid(activity, range);
+  const stats = activityStats(activity, range, asOf);
   const width = LEFT + weeks.length * STEP - GAP;
   const height = TOP + 7 * STEP - GAP;
-  const summary = `${stats.activeDays} active days, ${stats.total.toLocaleString("en-US")} in the last year, current streak ${stats.currentStreak}, longest ${stats.longestStreak}`;
+  const label = period === "last12" ? "in the last year" : `in ${period}`;
+  const totalText = stats.total.toLocaleString("en-US");
+  const streaks =
+    stats.currentStreak === null
+      ? `longest streak ${stats.longestStreak}`
+      : `current streak ${stats.currentStreak} · longest ${stats.longestStreak}`;
+  const activeText = `${stats.activeDays} active ${stats.activeDays === 1 ? "day" : "days"}`;
+  const summary = `${activeText}, ${totalText} ${label}, ${streaks.replace(" · ", ", ")}`;
 
   return (
     <div className="flex flex-col gap-3">
       <p className="text-muted-foreground text-sm">
-        {activity.length === 0 ? (
-          "No activity in the last year."
-        ) : (
-          <>
-            {stats.activeDays} active days · {stats.total.toLocaleString("en-US")} in the last year
-            · current streak {stats.currentStreak} · longest {stats.longestStreak}
-          </>
-        )}
+        {stats.activeDays === 0
+          ? `No activity ${label}.`
+          : `${activeText} · ${totalText} ${label} · ${streaks}`}
       </p>
       {/* rtl starts the scroll at the right edge, so narrow screens show the latest weeks. */}
       <div dir="rtl" className="overflow-x-auto pb-1">

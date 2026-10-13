@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M3 in review, M4 next) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026
+Status: building (M4 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026
 
 ---
 
@@ -40,6 +40,10 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 - **LeetCode access:** the server fetches public data **only on demand**: when the user clicks Sync, plus at most once a day. Responses are cached. Never passwords or cookies.
 - **First differentiator:** a shared topic list, weak-topic scoring, and "solve next" recommendations.
 - **UI kit:** Tailwind 4 + shadcn/ui (`base-nova` style, on Base UI). This was the default for open question #2 and was adopted in M1.
+- **Topic list (was open #3, decided 13 Oct 2026):** two levels. About 10 macro topics for the UI, with micro topics underneath for scoring and recommendations. The taxonomy and tag mappings live in code (`lib/topics/`), not in the `topics`/`tag_mappings` tables.
+- **Recommendations (was open #4, decided 13 Oct 2026):** for the 3 weakest macro topics, unsolved CF problems rated +100–200 above the user's rating (primary). LC picks exclude known solves and are labelled "may already be solved" unless `history_complete`. Paid-only LC problems are never recommended.
+- **Topic visibility (decided 13 Oct 2026):** the topic coverage chart is public on `/u/[username]`. Weak-topic scores and "Solve next" are shown only to the owner.
+- **Activity timeline (decided 13 Oct 2026):** the heatmap has a period filter: "Last 12 months" (default) plus one option per year with activity, newest first (`?year=2025`, combines with `?platform=`). A year shows Jan–Dec up to today, with that year's active days, total and longest streak. The current streak shows only when the period includes today. The filter affects the Activity card only.
 - **LeetCode backfill:** confirmed by the owner on 12 Oct 2026. Logged in, `leetcode.com/api/problems/all/` marks solved problems `"status": "ac"`, so the user-triggered JSON import (M5) is viable.
 - **Later:** Chrome extension for full LeetCode history. HackerRank, CodeChef and GFG come after that, and only through the extension, never by server-side scraping.
 
@@ -47,8 +51,6 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 | # | Question | My default |
 |---|---|---|
 | 1 | Chart library | shadcn/ui charts (Recharts inside client components) + a custom SVG heatmap |
-| 3 | Topic list granularity | **Two levels:** 10 macro topics for the UI (radar/bar chart), with about 30 micro topics underneath for scoring and recommendations |
-| 4 | Recommendation rule | Weakest macro topics → unsolved CF problems at rating +100–200 (primary). LC recommendations only for users with full LC history (backfill); otherwise marked "may already be solved" |
 | 5 | Public profiles: opt-in or on by default | Opt-in |
 | 6 | Final product name | CodeLogs for now |
 
@@ -130,7 +132,7 @@ platform_accounts  (id, user_id, platform, handle, verified bool, verify_token,
                     status ok|partial|error|syncing, sync_cursor jsonb,
                     history_complete bool, last_synced_at)   unique(user_id, platform)
 problems           (id, platform, external_id, title, url, difficulty_raw,
-                    difficulty_norm 1-5, raw_tags jsonb, catalog_updated_at)
+                    difficulty_norm 1-5, raw_tags jsonb, paid_only bool, catalog_updated_at)
                                                                unique(platform, external_id)
 catalog_syncs      (id, platform, started_at, finished_at, status, rows)
 solves             (id, user_id, problem_id, first_solved_at, source api|extension)
@@ -139,8 +141,8 @@ raw_payloads       (id, account_id, kind, fetched_at, payload jsonb)
 activity_days      (user_id, platform, day, count)             unique(user_id, platform, day)
 platform_stats     (account_id, kind, payload jsonb, fetched_at)  -- LC counts, CF rating
 sync_runs          (id, account_id, started_at, finished_at, status, error, items)
-topics             (id, slug, name, parent_id)
-tag_mappings       (platform, raw_tag, topic_id)               unique(platform, raw_tag)
+topics             (id, slug, name, parent_id)                 unused: the taxonomy lives in lib/topics
+tag_mappings       (platform, raw_tag, topic_id)               unused: mappings live in lib/topics/mappings
 ```
 
 ### Repo layout
@@ -153,7 +155,7 @@ CodeLogs/
   lib/inngest/              client.ts, functions/{syncAccount,syncStaleAccounts,syncCatalogs}.ts
   lib/sync/                 upsert.ts, cursor.ts
   lib/db/                   schema.ts, client.ts, migrations/
-  lib/topics/               taxonomy.json, mappings/{codeforces,leetcode}.json, scoring.ts, recommend.ts
+  lib/topics/               taxonomy.ts, mappings/{codeforces,leetcode,index}.ts, scoring.ts, recommend.ts
   scripts/spike/            cf.ts, atcoder.ts, leetcode.ts → fixtures/ + FINDINGS.md
   fixtures/                 saved API responses (tests)
   tests/                    adapter contract tests, upsert idempotency tests
@@ -211,7 +213,8 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - 🧭 `scoring.ts`: LeetCode coverage comes from the **lifetime tag counts**, never from the 20 recent solves, so recent activity can't make a topic look weak. CF coverage comes from per-problem tags, weighted by rating relative to the user's rating.
 - 🤖 `recommend.ts`: unsolved CF problems near rating +100–200 for the 3 weakest topics. LC recommendations exclude known solves and are labelled "may already be solved" unless `history_complete`.
 - 🤖 "Weak topics" and "Solve next" UI
-- **Done when:** a CF `dp` solve and LeetCode's DP count show under one "Dynamic Programming" topic, and recommendations exclude problems you've already solved.
+- 🤖 Activity timeline filter: "Last 12 months" + one option per year with activity (§4)
+- **Done when:** a CF `dp` solve and LeetCode's DP count show under one "Dynamic Programming" topic, recommendations exclude problems you've already solved, and the heatmap can show any year you were active.
 
 ### M5: Ship
 - 🤖 Handle verification flow (CF organization, AtCoder affiliation, LC summary). Then hide unverified handles on `/u/[username]` (M3 shows every connected handle)
@@ -279,7 +282,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Sign-in UI + app shell, Connect platforms page (format-only `validateHandleStub`), CI + Vitest (36 tests)
   - [x] Verified: build passes; signed-out redirects work; GitHub authorize URL uses the registered callback; add/list/remove persist in Neon and cascade on delete
   - [x] 👤 Owner: real GitHub login in the browser, add the 3 handles (13 Oct 2026)
-- [ ] M2 adapters + sync (branch `m2-adapters-sync`, PR #2)
+- [x] M2 adapters + sync (branch `m2-adapters-sync`, PR #2, merged)
   - [x] `lib/adapters/http.ts` (timeout, retry/backoff on 429/5xx/network + CF call limit, per-host pacing); CF, AtCoder, LC adapters + catalog adapters with fixture tests
   - [x] Connect form validates handles against the platform (`lib/adapters/validate.ts`)
   - [x] `lib/sync/`: difficulty bands (1–5), cursors, idempotent upserts, run bookkeeping, atomic claim with a 5-min "Sync now" cooldown; migration `0001` (`sync_requested_at`)
@@ -289,7 +292,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] 👤 Owner: ran `pnpm dev` + `pnpm inngest:dev`, connected the 3 handles; first syncs landed (CF 46, LC 17 recent `partial`, AtCoder 0) (13 Oct 2026)
   - [x] Fix: "Sync all" said "Unknown platform". With no `platform` field, `FormData.get` returns `null`, which `z.enum().optional()` rejects
   - Known limits: Inngest concurrency counts running steps, so two accounts on one platform can interleave requests across serverless instances (in-process pacing covers one instance; CF's call limit is retried). AtCoder AHC `_b` problems aren't in kenkoooo's catalog and stay as stubs. Solves keep the first time seen (`DO NOTHING`); the M5 backfill may need "keep the earliest" instead (§4 decision, ask first).
-- [ ] M3 dashboard + public profile (branch `m3-dashboard`, PR #3)
+- [x] M3 dashboard + public profile (branch `m3-dashboard`, PR #3, merged)
   - [x] Dark theme (`next-themes`, follows the system) + Light/Dark/System toggle left of the avatar
   - [x] `lib/dashboard/`: view-model types, pure aggregation + platform filter (tested), user-scoped queries; catalog tag counts cached with `"use cache"` + `cacheLife("days")`
   - [x] Theme tokens: one color per platform (`--platform-*`) and a heatmap ramp (`--heat-0..4`), light and dark
@@ -299,5 +302,16 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Fix: usernames were never saved (Better Auth drops `input: false` fields from `mapProfileToUser`). Now set from the GitHub API in an account-create hook; `scripts/dev/backfill-usernames.ts` filled the owner's (`savinyu`)
   - [x] Fix: Geist never applied (`--font-sans` inside `@theme inline` isn't emitted as a variable)
   - [x] Verified against the owner's data (headless Chrome, light/dark/narrow): totals CF 46 (rating 839, max 1062) / AtCoder 0 / LC 319; 57 active days (matches LeetCode); CF tags with gaps `dp`, data structures, dfs; CF filter lists the 2023 CF solves; build passes; 182 tests
-  - [ ] 👤 Owner: check `/dashboard` signed in, try the theme toggle and the Public profile switch
+  - [x] 👤 Owner: checked and merged (13 Oct 2026)
   - Known limits: an unknown or private `/u/<name>` streams a "not found" page with HTTP 200 (the status is sent before the lookup finishes). Recharts' bar animation never started in headless Chrome, so it's off. Public profiles show unverified handles until M5. Activity mixes units: CF/AtCoder count new solves per day, LC counts submissions (tooltips say which)
+- [ ] M4 topics + "solve next" + activity timeline (branch `m4-topics`)
+  - [x] Taxonomy (`lib/topics/taxonomy.ts`): 10 macro topics, 40 micro topics underneath
+  - [x] Activity data covers all years; heatmap period filter: "Last 12 months" + one option per active year (`?year=`, keeps `?platform=`), year grid/stats, current streak only when the period includes today (Sonnet)
+  - [x] Tag → topic mappings: CF 38 tags, LC ~190 (every catalog tag listed, generic ones like `array` map to nothing) + coverage tests (Sonnet)
+  - [x] `problems.paid_only` (migration `0002`), written by the LC catalog sync; refreshed once by hand (785 of 4,081 paid)
+  - [x] `scoring.ts`: coverage = (solved + 2) / (expected + 2), expected = your solves × the topic's share of the catalog. CF solves weighted by rating against your level (0.25–1.25), CF catalog limited to rated ≤ level + 300. LC uses lifetime tag counts, scaled by the catalog's tag overlap, on only the 47 tags LeetCode counts per user. Weak = coverage < 0.8 with ≥ 2 expected; focus = the micro topic furthest behind
+  - [x] `recommend.ts`: per weak topic 3 CF (rated +100–200 first, focus tags next, seeded daily shuffle) + 2 LC (free, Medium; Easy under 50 solves; "may already be solved" unless `history_complete`); excludes solves and CF `*special`
+  - [x] UI: Topics chart (public; expected values only for the owner), Solve next (owner only, streamed in `<Suspense>`), raw tags renamed "Platform tags" (Sonnet)
+  - [x] Verified against the owner's data: CF `dp` + LC `dynamic-programming` both under Dynamic Programming; weak topics Math / Greedy & Sorting / Strings (all), DP (CF only, 0 of ~2 expected at 839); picks contain 0 solved problems; queries ~150 ms; public page in headless Chrome (wide, 2023 + CF, 360px)
+  - [ ] 👤 Owner: check Solve next on `/dashboard` (owner-only, so not screenshotted) and the year chips
+  - Known limits: LC topic counts are estimates (tag counts overlap; LC only counts 47 tags per user, so micro topics like prefix sums or number theory get no LC signal). Expectations assume the catalog's mix is the right mix. The `topics`/`tag_mappings` tables stay empty. The dev server served a stale `globals.css` again (theme tokens missing) until the file was edited and restored

@@ -36,7 +36,12 @@ async function PublicProfileContent({ params, searchParams }: PageProps<"/u/[use
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
         </div>
       </div>
-      <DashboardView data={data} filter={parsePlatformFilter(query.platform)} isOwner={false} />
+      <DashboardView
+        data={data}
+        filter={parsePlatformFilter(query.platform)}
+        year={query.year}
+        isOwner={false}
+      />
     </>
   );
 }

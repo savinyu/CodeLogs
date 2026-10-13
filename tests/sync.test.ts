@@ -93,6 +93,7 @@ describe("rows", () => {
         difficultyRaw: "800",
         difficultyNorm: 1,
         rawTags: ["dp"],
+        paidOnly: false,
       },
     ]);
   });
@@ -107,10 +108,16 @@ describe("rows", () => {
         url: "u",
         difficultyRaw: "Easy",
         rawTags: ["array"],
+        paidOnly: true,
       },
     ]);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ title: "Two Sum", difficultyRaw: "Easy", difficultyNorm: 1 });
+    expect(rows[0]).toMatchObject({
+      title: "Two Sum",
+      difficultyRaw: "Easy",
+      difficultyNorm: 1,
+      paidOnly: true,
+    });
   });
 
   it("keeps negative AtCoder difficulty as raw text", () => {

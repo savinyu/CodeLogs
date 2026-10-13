@@ -50,7 +50,8 @@ lib/db/                 schema.ts, client.ts, migrations/
 lib/adapters/           types.ts (contract), http.ts, errors.ts, {codeforces,atcoder,leetcode}.ts, index.ts (registry), validate.ts
 lib/sync/               upsert.ts, runs.ts (DB writes, server-only); cursor.ts, rows.ts, difficulty.ts (pure); request.ts
 lib/inngest/            client.ts, functions/ (syncAccount, syncCatalog, syncCatalogs); served at app/api/inngest
-lib/dashboard/          types.ts (view model, colors), aggregate.ts + heatmap.ts (pure, tested), queries.ts (server-only)
+lib/dashboard/          types.ts (view model, colors), aggregate.ts + heatmap.ts + filters.ts (pure, tested), queries.ts (server-only)
+lib/topics/             taxonomy.ts (10 macro → micro topics), mappings/ (CF + LC tag → topic), scoring.ts (pure, tested), recommend.ts (server-only)
 lib/github-username.ts  sets users.username from GitHub (Better Auth account hook); scripts/dev/backfill-usernames.ts
 lib/platforms.ts        per-platform display metadata and handle patterns
 fixtures/<platform>/    saved real API responses for adapter tests
