@@ -130,6 +130,8 @@ export const platformAccounts = pgTable(
     syncCursor: jsonb("sync_cursor"),
     historyComplete: boolean("history_complete").notNull().default(false),
     lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    /** When the last sync was queued: drives the "Sync now" cooldown and stuck-sync recovery. */
+    syncRequestedAt: timestamp("sync_requested_at", { withTimezone: true }),
     lastError: text("last_error"),
     createdAt: createdAt(),
   },

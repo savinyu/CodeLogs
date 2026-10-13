@@ -54,8 +54,13 @@ Scripts: `scripts/spike/{cf,atcoder,leetcode}.ts` (run with `pnpm spike:<platfor
 - `validateHandle` checks `data.matchedUser === null`, not the HTTP status.
 
 ## Still open
-- 👤 LeetCode logged-in backfill (`/api/problems/all/` with `"status":"ac"`) needs the owner's browser, so it's still unverified.
-- AtCoder unknown-user status from atcoder.jp: confirm in M2 (one request).
+- ~~👤 LeetCode logged-in backfill~~: confirmed by the owner on 12 Oct 2026.
+- ~~AtCoder unknown-user status~~: confirmed in M2. `atcoder.jp/users/<unknown>` returns **404**. Handles are case-insensitive (`/users/CHOKUDAI` is 200); the page's `.username` link has the canonical casing.
+
+## M2 live sync notes (12 Oct 2026)
+- LeetCode accepts the honest `CodeLogs/0.1` User-Agent; no browser UA needed.
+- kenkoooo's catalog lacks some AtCoder Heuristic Contest `_b` problems (6 of chokudai's solves), so those stay as stub rows.
+- Full catalog refresh: CF 37 s, AtCoder 32 s, LC 60 s (41 pages). Repeat refreshes write only changed rows.
 
 ## Adapter interface changes (applied to PLAN.md §6)
 - `validateHandle` now returns `{ result: "valid" | "invalid" | "retry"; canonicalHandle?: string; message?: string }` instead of a boolean.

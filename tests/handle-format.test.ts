@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { validateHandleStub } from "../lib/adapters/validate-stub";
+import { checkHandleFormat } from "../lib/adapters/handle-format";
 import { PLATFORM_META } from "../lib/platforms";
 
-async function valid(platform: Parameters<typeof validateHandleStub>[0], input: string) {
-  const res = await validateHandleStub(platform, input);
+async function valid(platform: Parameters<typeof checkHandleFormat>[0], input: string) {
+  const res = await checkHandleFormat(platform, input);
   expect(res.result).toBe("valid");
   return res.result === "valid" ? res.canonicalHandle : "";
 }
@@ -43,7 +43,7 @@ describe("platform patterns", () => {
   });
 });
 
-describe("validateHandleStub", () => {
+describe("checkHandleFormat", () => {
   it("accepts valid handles", async () => {
     expect(await valid("codeforces", "tourist")).toBe("tourist");
     expect(await valid("codeforces", "Um_nik.x-y")).toBe("Um_nik.x-y");
@@ -60,23 +60,23 @@ describe("validateHandleStub", () => {
       ["atcoder", "a".repeat(17)],
       ["leetcode", "a".repeat(31)],
     ] as const) {
-      const res = await validateHandleStub(p, h);
+      const res = await checkHandleFormat(p, h);
       expect(res.result).toBe("invalid");
     }
   });
 
   it("rejects bad characters with a helpful message", async () => {
-    const res = await validateHandleStub("atcoder", "bad-name");
+    const res = await checkHandleFormat("atcoder", "bad-name");
     expect(res.result).toBe("invalid");
     if (res.result === "invalid") expect(res.message).toContain("AtCoder");
-    expect((await validateHandleStub("codeforces", "has space")).result).toBe("invalid");
-    expect((await validateHandleStub("leetcode", "dots.no")).result).toBe("invalid");
+    expect((await checkHandleFormat("codeforces", "has space")).result).toBe("invalid");
+    expect((await checkHandleFormat("leetcode", "dots.no")).result).toBe("invalid");
   });
 
   it("rejects empty input", async () => {
-    expect((await validateHandleStub("codeforces", "")).result).toBe("invalid");
-    expect((await validateHandleStub("leetcode", "   ")).result).toBe("invalid");
-    expect((await validateHandleStub("leetcode", "@")).result).toBe("invalid");
+    expect((await checkHandleFormat("codeforces", "")).result).toBe("invalid");
+    expect((await checkHandleFormat("leetcode", "   ")).result).toBe("invalid");
+    expect((await checkHandleFormat("leetcode", "@")).result).toBe("invalid");
   });
 
   it("trims whitespace and strips a leading @", async () => {
@@ -97,7 +97,7 @@ describe("validateHandleStub", () => {
 
   it("does not treat a URL for another platform as valid", async () => {
     expect(
-      (await validateHandleStub("atcoder", "https://codeforces.com/profile/tourist")).result,
+      (await checkHandleFormat("atcoder", "https://codeforces.com/profile/tourist")).result,
     ).toBe("invalid");
   });
 });

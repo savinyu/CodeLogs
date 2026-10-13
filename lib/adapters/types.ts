@@ -35,7 +35,7 @@ export interface PlatformExtra {
 }
 
 export interface PlatformSnapshot {
-  /** Deduped within the page (CF by problem, AtCoder by submission id, LC by slug). */
+  /** Deduped within the page by problem, keeping the earliest accepted time. */
   solves: NormalizedSolve[];
   extras: PlatformExtra[];
   /** Per-day submission counts (YYYY-MM-DD, UTC), when the platform provides a calendar. */
