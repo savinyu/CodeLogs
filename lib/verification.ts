@@ -42,6 +42,6 @@ export const VERIFY_FIELD: Record<
   leetcode: {
     label: "Summary",
     settingsUrl: "https://leetcode.com/profile/",
-    hint: "Paste it into the Summary field (Edit profile, then Summary) on your LeetCode profile.",
+    hint: "Paste it into the ReadMe field (Edit profile, then ReadMe) on your LeetCode profile.",
   },
 };
