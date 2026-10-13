@@ -55,7 +55,8 @@ export function LeetcodeImport({
           `Still partial: ${result.known} of ${result.lifetime} solves known. Sync, then import again.`,
         );
       }
-      setOpen(false);
+      // Keep the picker open while the history is still partial, so the user can import again.
+      setOpen(!result.complete);
     });
   }
 

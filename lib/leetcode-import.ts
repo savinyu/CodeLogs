@@ -1,6 +1,8 @@
 // Pure parser for the JSON at https://leetcode.com/api/problems/all/ (saved or copied by the user
 // from their own logged-in browser). Importable from client components; no server or DB imports.
 
+import type { ProblemFallback } from "@/lib/adapters/types";
+
 export type LeetcodeImportParse =
   | { ok: true; userName: string; slugs: string[]; numSolved: number | null }
   | { ok: false; error: string };
@@ -37,6 +39,21 @@ export function parseLeetcodeProblemsAll(json: unknown): LeetcodeImportParse {
       ? json.num_solved
       : null;
   return { ok: true, userName, slugs: [...slugs], numSolved };
+}
+
+// The file only has title slugs, so the import builds a stub title and URL from each slug. The
+// stub is used only when the catalog has no row for the problem (the weekly catalog sync then
+// overwrites it), so an empty or stale catalog never drops a solve.
+export function slugFallback(slug: string): ProblemFallback {
+  return {
+    title: slug
+      .split("-")
+      .filter((word) => word !== "")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" "),
+    url: `https://leetcode.com/problems/${slug}/`,
+    rawTags: [],
+  };
 }
 
 // Accepts whatever the user brings: the raw JSON, the HTML page Chrome saves with Cmd/Ctrl+S
