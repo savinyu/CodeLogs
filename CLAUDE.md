@@ -76,6 +76,7 @@ scripts/spike/          M0 probes + FINDINGS.md
 - Push over HTTPS with the repo-local credential helper, which uses `gh auth token --user savinyu`. Run `gh` commands for this repo as `GH_TOKEN=$(gh auth token --user savinyu) gh …`, which leaves the globally active gh account alone.
 - One branch per milestone (`m1-foundation`, `m2-adapters-sync`, …) → PR into `main`. Commits and PRs are pre-approved by the owner.
 - End commit messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. End PR bodies with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+- Never add a "committed by Cursor" line, or any other Cursor attribution, to commit messages, PR bodies, or files.
 
 ## How we work
 - **Captain and subagents:** the main (Opus) session owns the plan, architecture, interfaces and schema, plus review and integration (🧭 tasks in PLAN.md). Self-contained tasks (🤖) go to Sonnet subagents (`model: "sonnet"`) with a precise spec: files they own, files they must not touch, and how to verify. Independent tasks run in parallel. Subagents don't commit; the captain reviews, runs the checks and commits.
