@@ -1,9 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { buttonVariants } from "@/components/ui/button";
-import { dashboardHref, type ActivityPeriod } from "@/lib/dashboard/filters";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { dashboardHref, parseActivityPeriod, type ActivityPeriod } from "@/lib/dashboard/filters";
 import type { PlatformFilter } from "@/lib/dashboard/types";
 
 export function ActivityPeriodFilter({
@@ -16,29 +21,34 @@ export function ActivityPeriodFilter({
   platform: PlatformFilter;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   if (years.length === 0) return null;
 
-  const options: { id: ActivityPeriod; label: string }[] = [
-    { id: "last12", label: "Last 12 months" },
-    ...years.map((y) => ({ id: y as ActivityPeriod, label: String(y) })),
+  const options: { value: string; label: string }[] = [
+    { value: "last12", label: "Last 12 months" },
+    { value: "all", label: "All time" },
+    ...years.map((y) => ({ value: String(y), label: String(y) })),
   ];
 
   return (
-    <nav aria-label="Activity period" className="flex flex-wrap gap-1 sm:justify-end">
-      {options.map((o) => {
-        const active = o.id === period;
-        return (
-          <Link
-            key={o.id}
-            href={dashboardHref(pathname, { platform, period: o.id })}
-            scroll={false}
-            aria-current={active ? "page" : undefined}
-            className={buttonVariants({ variant: active ? "secondary" : "ghost", size: "sm" })}
-          >
+    <Select
+      items={options}
+      value={String(period)}
+      onValueChange={(value) => {
+        const next = parseActivityPeriod(value, years);
+        router.push(dashboardHref(pathname, { platform, period: next }), { scroll: false });
+      }}
+    >
+      <SelectTrigger size="sm" aria-label="Activity period" className="min-w-36">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="end">
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
             {o.label}
-          </Link>
-        );
-      })}
-    </nav>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

@@ -1,9 +1,11 @@
+import { ChevronRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { filterDashboard } from "@/lib/dashboard/aggregate";
 import { PLATFORM_COLOR, type DashboardData, type PlatformFilter } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
 import { getSolveNext } from "@/lib/topics/recommend";
+import { DifficultyBadge } from "./difficulty-badge";
 
 const MAX_TOPICS = 3;
 
@@ -52,9 +54,21 @@ export async function SolveNext({
       {picks.map((t) => {
         const pct = Math.round(Math.min(Math.max(t.coverage, 0), 1) * 100);
         return (
-          <section key={t.slug} className="space-y-2">
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold">{t.name}</h3>
+          // Native <details>: collapsible without client JS, open by default.
+          <details key={t.slug} open className="group space-y-2">
+            <summary className="-mx-2 cursor-pointer list-none space-y-1 rounded-md px-2 py-1 outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+              <h3 className="flex items-center gap-1 text-sm font-semibold">
+                <ChevronRightIcon
+                  aria-hidden
+                  className="-ml-1 size-4 text-muted-foreground transition-transform group-open:rotate-90"
+                />
+                {t.name}
+                {t.problems.length > 0 && (
+                  <span className="ml-1 text-xs font-normal text-muted-foreground group-open:hidden">
+                    {t.problems.length} {t.problems.length === 1 ? "pick" : "picks"}
+                  </span>
+                )}
+              </h3>
               <div className="flex items-center gap-3">
                 <div
                   role="meter"
@@ -71,7 +85,7 @@ export async function SolveNext({
                 </span>
               </div>
               {t.focus && <p className="text-xs text-muted-foreground">Focus: {t.focus.name}</p>}
-            </div>
+            </summary>
             {t.problems.length === 0 ? (
               <p className="text-sm text-muted-foreground">No unsolved picks found.</p>
             ) : (
@@ -95,13 +109,13 @@ export async function SolveNext({
                     >
                       {p.title}
                     </a>
-                    {p.difficultyRaw && <Badge variant="outline">{p.difficultyRaw}</Badge>}
+                    {p.difficultyRaw && <DifficultyBadge raw={p.difficultyRaw} />}
                     {p.maybeSolved && <Badge variant="outline">may already be solved</Badge>}
                   </li>
                 ))}
               </ul>
             )}
-          </section>
+          </details>
         );
       })}
       <p className="text-xs text-muted-foreground">

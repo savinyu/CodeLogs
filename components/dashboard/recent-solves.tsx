@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { humanizeSlug } from "@/lib/dashboard/aggregate";
 import { PLATFORM_COLOR } from "@/lib/dashboard/types";
 import type { RecentSolve } from "@/lib/dashboard/types";
+import { DifficultyBadge } from "./difficulty-badge";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -43,7 +44,7 @@ export function RecentSolves({ solves }: { solves: RecentSolve[] }) {
             >
               {s.title}
             </a>
-            {s.difficultyRaw && <Badge variant="outline">{s.difficultyRaw}</Badge>}
+            {s.difficultyRaw && <DifficultyBadge raw={s.difficultyRaw} />}
             {s.tags.slice(0, 3).map((tag) => (
               <Badge key={tag} variant="secondary" className="text-muted-foreground">
                 {s.platform === "leetcode" ? humanizeSlug(tag) : tag}

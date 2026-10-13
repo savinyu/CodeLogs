@@ -46,8 +46,13 @@ export interface DayRange {
   end: string;
 }
 
-export function periodRange(period: ActivityPeriod, asOf: string): DayRange {
-  if (period === "last12") return { start: shift(asOf, -(HEATMAP_WINDOW - 1)), end: asOf };
+/** `firstDay` (earliest activity) sets where "all" starts; it never starts later than "last12". */
+export function periodRange(period: ActivityPeriod, asOf: string, firstDay?: string): DayRange {
+  const last12 = shift(asOf, -(HEATMAP_WINDOW - 1));
+  if (period === "last12") return { start: last12, end: asOf };
+  if (period === "all") {
+    return { start: firstDay && firstDay < last12 ? firstDay : last12, end: asOf };
+  }
   const yearEnd = `${period}-12-31`;
   return { start: `${period}-01-01`, end: yearEnd < asOf ? yearEnd : asOf };
 }
@@ -95,6 +100,8 @@ export function heatLevel(total: number, { bounds, max }: HeatThresholds): HeatL
 
 export function buildHeatmapGrid(activity: ActivityDay[], range: DayRange): HeatmapGrid {
   const { start: windowStart, end: windowEnd } = range;
+  // Past one year, January is labeled with its year so multi-year grids stay readable.
+  const multiYear = shift(windowStart, HEATMAP_WINDOW) <= windowEnd;
   const gridStart = shift(windowStart, -weekday(windowStart));
   const inside = inRange(activity, range);
   const thresholds = heatThresholds(inside);
@@ -116,7 +123,9 @@ export function buildHeatmapGrid(activity: ActivityDay[], range: DayRange): Heat
       const total = a?.total ?? 0;
       col.push({ day, total, counts: a?.counts ?? {}, level: heatLevel(total, thresholds) });
       if (day.endsWith("-01") && w - lastLabelWeek >= 3) {
-        months.push({ weekIndex: w, label: MONTHS[Number(day.slice(5, 7)) - 1] ?? "" });
+        const month = Number(day.slice(5, 7));
+        const label = multiYear && month === 1 ? day.slice(0, 4) : (MONTHS[month - 1] ?? "");
+        months.push({ weekIndex: w, label });
         lastLabelWeek = w;
       }
     }
