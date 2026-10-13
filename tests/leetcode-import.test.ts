@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseLeetcodeImportText, parseLeetcodeProblemsAll } from "@/lib/leetcode-import";
+import {
+  parseLeetcodeImportText,
+  parseLeetcodeProblemsAll,
+  slugFallback,
+} from "@/lib/leetcode-import";
 
 const raw = (name: string): string => readFileSync(`fixtures/leetcode/${name}`, "utf8");
 const fixture = (name: string): unknown => JSON.parse(raw(name));
@@ -99,4 +103,19 @@ describe("parseLeetcodeImportText", () => {
       if (!r.ok) expect(r.error).toMatch(/api\/problems\/all/);
     },
   );
+});
+
+describe("slugFallback", () => {
+  it("builds a readable title and the problem URL from a slug", () => {
+    expect(slugFallback("median-of-two-sorted-arrays")).toEqual({
+      title: "Median Of Two Sorted Arrays",
+      url: "https://leetcode.com/problems/median-of-two-sorted-arrays/",
+      rawTags: [],
+    });
+  });
+
+  it("handles digits and doubled hyphens", () => {
+    expect(slugFallback("3sum").title).toBe("3sum");
+    expect(slugFallback("a--b").title).toBe("A B");
+  });
 });

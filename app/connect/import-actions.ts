@@ -5,6 +5,7 @@ import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { platformAccounts, platformStats, solves } from "@/lib/db/schema";
+import { slugFallback } from "@/lib/leetcode-import";
 import { getCurrentUser } from "@/lib/session";
 import { refreshHistoryComplete } from "@/lib/sync/runs";
 import { applySnapshot } from "@/lib/sync/upsert";
@@ -63,7 +64,11 @@ export async function importLeetcodeSolves(input: unknown): Promise<ImportResult
     const result = await applySnapshot(
       { accountId: account.id, userId: user.id, platform: "leetcode" },
       {
-        solves: slugs.map((s) => ({ platform: "leetcode" as const, externalProblemId: s })),
+        solves: slugs.map((s) => ({
+          platform: "leetcode" as const,
+          externalProblemId: s,
+          problemFallback: slugFallback(s),
+        })),
         extras: [],
       },
       { source: "import" },
