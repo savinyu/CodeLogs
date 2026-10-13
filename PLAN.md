@@ -289,7 +289,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] 👤 Owner: ran `pnpm dev` + `pnpm inngest:dev`, connected the 3 handles; first syncs landed (CF 46, LC 17 recent `partial`, AtCoder 0) (13 Oct 2026)
   - [x] Fix: "Sync all" said "Unknown platform". With no `platform` field, `FormData.get` returns `null`, which `z.enum().optional()` rejects
   - Known limits: Inngest concurrency counts running steps, so two accounts on one platform can interleave requests across serverless instances (in-process pacing covers one instance; CF's call limit is retried). AtCoder AHC `_b` problems aren't in kenkoooo's catalog and stay as stubs. Solves keep the first time seen (`DO NOTHING`); the M5 backfill may need "keep the earliest" instead (§4 decision, ask first).
-- [ ] M3 dashboard + public profile (branch `m3-dashboard`, PR pending)
+- [ ] M3 dashboard + public profile (branch `m3-dashboard`, PR #3)
   - [x] Dark theme (`next-themes`, follows the system) + Light/Dark/System toggle left of the avatar
   - [x] `lib/dashboard/`: view-model types, pure aggregation + platform filter (tested), user-scoped queries; catalog tag counts cached with `"use cache"` + `cacheLife("days")`
   - [x] Theme tokens: one color per platform (`--platform-*`) and a heatmap ramp (`--heat-0..4`), light and dark
