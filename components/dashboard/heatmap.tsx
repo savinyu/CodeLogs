@@ -82,14 +82,12 @@ export function ActivityHeatmap({
   asOf: string;
   period?: ActivityPeriod;
 }) {
-  const firstDay = activity.find((a) => a.total > 0)?.day;
-  const range = periodRange(period, asOf, firstDay);
+  const range = periodRange(period, asOf);
   const { weeks, months } = buildHeatmapGrid(activity, range);
   const stats = activityStats(activity, range, asOf);
   const width = LEFT + weeks.length * STEP - GAP;
   const height = TOP + 7 * STEP - GAP;
-  const label =
-    period === "last12" ? "in the last year" : period === "all" ? "in total" : `in ${period}`;
+  const label = period === "last12" ? "in the last year" : `in ${period}`;
   const totalText = stats.total.toLocaleString("en-US");
   const streaks =
     stats.currentStreak === null

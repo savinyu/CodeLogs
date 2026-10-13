@@ -126,16 +126,6 @@ describe("periodRange", () => {
     expect(periodRange(2025, "2026-10-13")).toEqual({ start: "2025-01-01", end: "2025-12-31" });
     expect(periodRange(2026, "2026-10-13")).toEqual({ start: "2026-01-01", end: "2026-10-13" });
   });
-  it("starts all at the first activity, but never later than last12", () => {
-    expect(periodRange("all", "2026-10-13", "2023-05-01")).toEqual({
-      start: "2023-05-01",
-      end: "2026-10-13",
-    });
-    expect(periodRange("all", "2026-10-13", "2026-09-01")).toEqual(
-      periodRange("last12", "2026-10-13"),
-    );
-    expect(periodRange("all", "2026-10-13")).toEqual(periodRange("last12", "2026-10-13"));
-  });
 });
 
 describe("year views", () => {
@@ -193,21 +183,5 @@ describe("year views", () => {
     const a = [day("2026-10-12", 1), day("2026-10-13", 1)];
     const s = activityStats(a, { start: "2026-10-13", end: asOf }, asOf);
     expect(s).toMatchObject({ activeDays: 1, currentStreak: 2, longestStreak: 1 });
-  });
-});
-
-describe("all-time view", () => {
-  it("labels January with its year when the grid spans more than a year", () => {
-    const range = periodRange("all", "2026-10-13", "2024-03-10");
-    const labels = buildHeatmapGrid([], range).months.map((m) => m.label);
-    expect(labels).toContain("2025");
-    expect(labels).toContain("2026");
-    expect(labels).not.toContain("Jan");
-  });
-  it("keeps Jan for a single year", () => {
-    const labels = buildHeatmapGrid([], periodRange("last12", "2026-10-13")).months.map(
-      (m) => m.label,
-    );
-    expect(labels).toContain("Jan");
   });
 });

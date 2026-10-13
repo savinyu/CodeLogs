@@ -20,9 +20,8 @@ describe("parseActivityPeriod", () => {
   it("accepts a year in the list", () => {
     expect(parseActivityPeriod("2025", years)).toBe(2025);
   });
-  it("accepts all", () => {
-    expect(parseActivityPeriod("all", years)).toBe("all");
-    expect(parseActivityPeriod("all", [])).toBe("all");
+  it("treats all as unknown and falls back to last12", () => {
+    expect(parseActivityPeriod("all", years)).toBe("last12");
   });
   it("falls back to last12", () => {
     expect(parseActivityPeriod("2024", years)).toBe("last12");
@@ -44,9 +43,6 @@ describe("dashboardHref", () => {
     expect(dashboardHref("/u/me", { platform: "all", period: 2025 })).toBe("/u/me?year=2025");
     expect(dashboardHref("/dashboard", { platform: "codeforces", period: 2025 })).toBe(
       "/dashboard?platform=codeforces&year=2025",
-    );
-    expect(dashboardHref("/dashboard", { platform: "all", period: "all" })).toBe(
-      "/dashboard?year=all",
     );
   });
 });

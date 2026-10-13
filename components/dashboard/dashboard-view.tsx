@@ -98,13 +98,7 @@ export function DashboardView({
       <TotalsCards totals={data.totals} accounts={data.accounts} />
       <Section
         title="Activity"
-        description={
-          period === "last12"
-            ? "The last 12 months, in UTC."
-            : period === "all"
-              ? "All time, in UTC."
-              : `${period}, in UTC.`
-        }
+        description={period === "last12" ? "The last 12 months, in UTC." : `${period}, in UTC.`}
         action={<ActivityPeriodFilter years={years} period={period} platform={filter} />}
       >
         <ActivityHeatmap activity={data.activity} asOf={data.asOf} period={period} />

@@ -26,7 +26,6 @@ export function ActivityPeriodFilter({
 
   const options: { value: string; label: string }[] = [
     { value: "last12", label: "Last 12 months" },
-    { value: "all", label: "All time" },
     ...years.map((y) => ({ value: String(y), label: String(y) })),
   ];
 

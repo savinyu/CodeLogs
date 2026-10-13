@@ -46,13 +46,9 @@ export interface DayRange {
   end: string;
 }
 
-/** `firstDay` (earliest activity) sets where "all" starts; it never starts later than "last12". */
-export function periodRange(period: ActivityPeriod, asOf: string, firstDay?: string): DayRange {
+export function periodRange(period: ActivityPeriod, asOf: string): DayRange {
   const last12 = shift(asOf, -(HEATMAP_WINDOW - 1));
   if (period === "last12") return { start: last12, end: asOf };
-  if (period === "all") {
-    return { start: firstDay && firstDay < last12 ? firstDay : last12, end: asOf };
-  }
   const yearEnd = `${period}-12-31`;
   return { start: `${period}-01-01`, end: yearEnd < asOf ? yearEnd : asOf };
 }
