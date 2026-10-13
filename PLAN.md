@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M3 next) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026
+Status: building (M3 in review, M4 next) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026
 
 ---
 
@@ -214,7 +214,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - **Done when:** a CF `dp` solve and LeetCode's DP count show under one "Dynamic Programming" topic, and recommendations exclude problems you've already solved.
 
 ### M5: Ship
-- 🤖 Handle verification flow (CF organization, AtCoder affiliation, LC summary)
+- 🤖 Handle verification flow (CF organization, AtCoder affiliation, LC summary). Then hide unverified handles on `/u/[username]` (M3 shows every connected handle)
 - 🤖 LeetCode backfill upload (if M0 confirmed it)
 - 🤖 `syncStaleAccounts` daily Inngest cron
 - 🤖 Account export and delete
@@ -289,4 +289,15 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] 👤 Owner: ran `pnpm dev` + `pnpm inngest:dev`, connected the 3 handles; first syncs landed (CF 46, LC 17 recent `partial`, AtCoder 0) (13 Oct 2026)
   - [x] Fix: "Sync all" said "Unknown platform". With no `platform` field, `FormData.get` returns `null`, which `z.enum().optional()` rejects
   - Known limits: Inngest concurrency counts running steps, so two accounts on one platform can interleave requests across serverless instances (in-process pacing covers one instance; CF's call limit is retried). AtCoder AHC `_b` problems aren't in kenkoooo's catalog and stay as stubs. Solves keep the first time seen (`DO NOTHING`); the M5 backfill may need "keep the earliest" instead (§4 decision, ask first).
-- [ ] M3 dashboard + public profile (next)
+- [ ] M3 dashboard + public profile (branch `m3-dashboard`, PR pending)
+  - [x] Dark theme (`next-themes`, follows the system) + Light/Dark/System toggle left of the avatar
+  - [x] `lib/dashboard/`: view-model types, pure aggregation + platform filter (tested), user-scoped queries; catalog tag counts cached with `"use cache"` + `cacheLife("days")`
+  - [x] Theme tokens: one color per platform (`--platform-*`) and a heatmap ramp (`--heat-0..4`), light and dark
+  - [x] Sections (Sonnet subagents, in parallel): totals + `?platform=` filter + recent solves; heatmap (pure grid/streaks, tested); difficulty bands + raw-tag charts with "gaps" (popular catalog tags you haven't solved)
+  - [x] LeetCode numbers come from its own lifetime counts (total 319, E/M/H split, tag counts), labelled "count"; CF/AtCoder from solve rows. Recent solves keep the newest 15 per platform, so a platform filter still has a list
+  - [x] `/u/[username]`: opt-in (switch on the dashboard), read-only, same view; OG image via `opengraph-image.tsx`
+  - [x] Fix: usernames were never saved (Better Auth drops `input: false` fields from `mapProfileToUser`). Now set from the GitHub API in an account-create hook; `scripts/dev/backfill-usernames.ts` filled the owner's (`savinyu`)
+  - [x] Fix: Geist never applied (`--font-sans` inside `@theme inline` isn't emitted as a variable)
+  - [x] Verified against the owner's data (headless Chrome, light/dark/narrow): totals CF 46 (rating 839, max 1062) / AtCoder 0 / LC 319; 57 active days (matches LeetCode); CF tags with gaps `dp`, data structures, dfs; CF filter lists the 2023 CF solves; build passes; 182 tests
+  - [ ] 👤 Owner: check `/dashboard` signed in, try the theme toggle and the Public profile switch
+  - Known limits: an unknown or private `/u/<name>` streams a "not found" page with HTTP 200 (the status is sent before the lookup finishes). Recharts' bar animation never started in headless Chrome, so it's off. Public profiles show unverified handles until M5. Activity mixes units: CF/AtCoder count new solves per day, LC counts submissions (tooltips say which)
