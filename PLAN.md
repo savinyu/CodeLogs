@@ -304,7 +304,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Verified against the owner's data (headless Chrome, light/dark/narrow): totals CF 46 (rating 839, max 1062) / AtCoder 0 / LC 319; 57 active days (matches LeetCode); CF tags with gaps `dp`, data structures, dfs; CF filter lists the 2023 CF solves; build passes; 182 tests
   - [x] 👤 Owner: checked and merged (13 Oct 2026)
   - Known limits: an unknown or private `/u/<name>` streams a "not found" page with HTTP 200 (the status is sent before the lookup finishes). Recharts' bar animation never started in headless Chrome, so it's off. Public profiles show unverified handles until M5. Activity mixes units: CF/AtCoder count new solves per day, LC counts submissions (tooltips say which)
-- [ ] M4 topics + "solve next" + activity timeline (branch `m4-topics`)
+- [ ] M4 topics + "solve next" + activity timeline (branch `m4-topics`, PR #4)
   - [x] Taxonomy (`lib/topics/taxonomy.ts`): 10 macro topics, 40 micro topics underneath
   - [x] Activity data covers all years; heatmap period filter: "Last 12 months" + one option per active year (`?year=`, keeps `?platform=`), year grid/stats, current streak only when the period includes today (Sonnet)
   - [x] Tag → topic mappings: CF 38 tags, LC ~190 (every catalog tag listed, generic ones like `array` map to nothing) + coverage tests (Sonnet)
