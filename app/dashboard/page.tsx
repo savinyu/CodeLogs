@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { PublicProfileToggle } from "@/components/dashboard/public-profile-toggle";
+import { SolveNext, SolveNextSkeleton } from "@/components/dashboard/solve-next";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parsePlatformFilter } from "@/lib/dashboard/aggregate";
 import { getDashboardData, getPublicProfileSetting } from "@/lib/dashboard/queries";
@@ -13,13 +14,24 @@ async function DashboardContent({ searchParams }: Pick<PageProps<"/dashboard">, 
     getPublicProfileSetting(user.id),
     searchParams,
   ]);
+  const filter = parsePlatformFilter(params.platform);
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Welcome, {user.name}</h1>
         {user.username && <PublicProfileToggle username={user.username} enabled={isPublic} />}
       </div>
-      <DashboardView data={data} filter={parsePlatformFilter(params.platform)} isOwner />
+      <DashboardView
+        data={data}
+        filter={filter}
+        year={params.year}
+        isOwner
+        solveNext={
+          <Suspense fallback={<SolveNextSkeleton />}>
+            <SolveNext userId={user.id} data={data} filter={filter} />
+          </Suspense>
+        }
+      />
     </>
   );
 }

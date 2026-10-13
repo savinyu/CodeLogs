@@ -448,6 +448,7 @@ describe("leetcodeCatalog.fetchCatalog", () => {
         url: "https://leetcode.com/problems/two-sum/",
         difficultyRaw: "Easy",
         rawTags: ["array", "hash-table"],
+        paidOnly: false,
       },
       {
         platform: "leetcode",
@@ -456,6 +457,7 @@ describe("leetcodeCatalog.fetchCatalog", () => {
         url: "https://leetcode.com/problems/a/",
         difficultyRaw: "Medium",
         rawTags: [],
+        paidOnly: false,
       },
       {
         platform: "leetcode",
@@ -464,6 +466,7 @@ describe("leetcodeCatalog.fetchCatalog", () => {
         url: "https://leetcode.com/problems/locked/",
         difficultyRaw: "Hard",
         rawTags: [],
+        paidOnly: true,
       },
     ]);
   });

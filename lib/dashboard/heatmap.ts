@@ -1,5 +1,6 @@
 // Pure heatmap math: grid layout, intensity levels and streaks. All dates are UTC YYYY-MM-DD.
 
+import type { ActivityPeriod } from "./filters";
 import type { ActivityDay } from "./types";
 
 const HEATMAP_WINDOW = 365;
@@ -28,7 +29,8 @@ export interface HeatmapGrid {
 export interface ActivityStats {
   activeDays: number;
   total: number;
-  currentStreak: number;
+  /** null when the period doesn't include asOf (a past year). */
+  currentStreak: number | null;
   longestStreak: number;
 }
 
@@ -36,6 +38,23 @@ function shift(day: string, n: number): string {
   const d = new Date(`${day}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
+}
+
+/** Inclusive UTC day range, YYYY-MM-DD. */
+export interface DayRange {
+  start: string;
+  end: string;
+}
+
+export function periodRange(period: ActivityPeriod, asOf: string): DayRange {
+  const last12 = shift(asOf, -(HEATMAP_WINDOW - 1));
+  if (period === "last12") return { start: last12, end: asOf };
+  const yearEnd = `${period}-12-31`;
+  return { start: `${period}-01-01`, end: yearEnd < asOf ? yearEnd : asOf };
+}
+
+function inRange(activity: ActivityDay[], range: DayRange): ActivityDay[] {
+  return activity.filter((a) => a.day >= range.start && a.day <= range.end);
 }
 
 function weekday(day: string): number {
@@ -75,21 +94,24 @@ export function heatLevel(total: number, { bounds, max }: HeatThresholds): HeatL
   return 4;
 }
 
-export function buildHeatmapGrid(activity: ActivityDay[], asOf: string): HeatmapGrid {
-  const windowStart = shift(asOf, -(HEATMAP_WINDOW - 1));
+export function buildHeatmapGrid(activity: ActivityDay[], range: DayRange): HeatmapGrid {
+  const { start: windowStart, end: windowEnd } = range;
+  // Past one year, January is labeled with its year so multi-year grids stay readable.
+  const multiYear = shift(windowStart, HEATMAP_WINDOW) <= windowEnd;
   const gridStart = shift(windowStart, -weekday(windowStart));
-  const thresholds = heatThresholds(activity);
-  const byDay = new Map(activity.map((a) => [a.day, a]));
+  const inside = inRange(activity, range);
+  const thresholds = heatThresholds(inside);
+  const byDay = new Map(inside.map((a) => [a.day, a]));
 
   const weeks: (HeatCell | null)[][] = [];
   const months: MonthLabel[] = [];
   let lastLabelWeek = -Infinity;
 
-  for (let start = gridStart, w = 0; start <= asOf; start = shift(start, 7), w++) {
+  for (let start = gridStart, w = 0; start <= windowEnd; start = shift(start, 7), w++) {
     const col: (HeatCell | null)[] = [];
     for (let r = 0; r < 7; r++) {
       const day = shift(start, r);
-      if (day < windowStart || day > asOf) {
+      if (day < windowStart || day > windowEnd) {
         col.push(null);
         continue;
       }
@@ -97,7 +119,9 @@ export function buildHeatmapGrid(activity: ActivityDay[], asOf: string): Heatmap
       const total = a?.total ?? 0;
       col.push({ day, total, counts: a?.counts ?? {}, level: heatLevel(total, thresholds) });
       if (day.endsWith("-01") && w - lastLabelWeek >= 3) {
-        months.push({ weekIndex: w, label: MONTHS[Number(day.slice(5, 7)) - 1] ?? "" });
+        const month = Number(day.slice(5, 7));
+        const label = multiYear && month === 1 ? day.slice(0, 4) : (MONTHS[month - 1] ?? "");
+        months.push({ weekIndex: w, label });
         lastLabelWeek = w;
       }
     }
@@ -106,10 +130,21 @@ export function buildHeatmapGrid(activity: ActivityDay[], asOf: string): Heatmap
   return { weeks, months };
 }
 
-export function activityStats(activity: ActivityDay[], asOf: string): ActivityStats {
+/**
+ * Totals and longest streak count only days inside `range`. The current streak is "right now"
+ * (it may reach before range.start) and is null unless the range ends at asOf.
+ */
+export function activityStats(
+  activity: ActivityDay[],
+  range: DayRange,
+  asOf: string,
+): ActivityStats {
+  const allActive = new Set<string>();
+  for (const a of activity) if (a.total > 0) allActive.add(a.day);
+
   const active = new Set<string>();
   let total = 0;
-  for (const a of activity) {
+  for (const a of inRange(activity, range)) {
     if (a.total > 0) {
       active.add(a.day);
       total += a.total;
@@ -125,13 +160,17 @@ export function activityStats(activity: ActivityDay[], asOf: string): ActivitySt
     prev = day;
   }
 
-  // Today may not be over yet: an inactive asOf doesn't break the streak.
-  let cursor = active.has(asOf) ? asOf : shift(asOf, -1);
-  let current = 0;
-  while (active.has(cursor)) {
-    current++;
-    cursor = shift(cursor, -1);
+  let currentStreak: number | null = null;
+  if (range.end === asOf) {
+    // Today may not be over yet: an inactive asOf doesn't break the streak.
+    let cursor = allActive.has(asOf) ? asOf : shift(asOf, -1);
+    let current = 0;
+    while (allActive.has(cursor)) {
+      current++;
+      cursor = shift(cursor, -1);
+    }
+    currentStreak = current;
   }
 
-  return { activeDays: active.size, total, currentStreak: current, longestStreak: longest };
+  return { activeDays: active.size, total, currentStreak, longestStreak: longest };
 }

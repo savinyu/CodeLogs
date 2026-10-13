@@ -155,6 +155,8 @@ export const problems = pgTable(
       .$type<string[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
+    /** LeetCode premium; kept out of recommendations. */
+    paidOnly: boolean("paid_only").notNull().default(false),
     catalogUpdatedAt: timestamp("catalog_updated_at", { withTimezone: true }),
   },
   (t) => [uniqueIndex("problems_platform_external_uq").on(t.platform, t.externalId)],

@@ -15,6 +15,20 @@
       "when": 1791809377152,
       "tag": "0001_sync_requested_at",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791859692466,
+      "tag": "0002_problems_paid_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791863854301,
+      "tag": "0003_difficulty_bands",
+      "breakpoints": true
     }
   ]
 }

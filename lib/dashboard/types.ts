@@ -2,6 +2,7 @@
 // chart components receive it as props, so nothing here may import the DB.
 
 import type { PlatformId } from "@/lib/adapters/types";
+import type { MacroSlug, TopicSlug } from "@/lib/topics/taxonomy";
 
 export type PlatformFilter = PlatformId | "all";
 
@@ -70,6 +71,29 @@ export interface PlatformTags {
   tags: TagStat[];
 }
 
+/** One platform's part of a topic. See lib/topics/scoring.ts for the formula. */
+export interface TopicPlatformStat {
+  platform: PlatformId;
+  /** Problems solved in the topic. LeetCode's is estimated from its lifetime tag counts. */
+  solved: number;
+  /** Solves weighted by difficulty against your level (CF); the estimate itself on LeetCode. */
+  weighted: number;
+  /** What you'd have solved in the topic if your solves mirrored the platform's catalog. */
+  expected: number;
+}
+
+export interface TopicStat {
+  slug: TopicSlug;
+  name: string;
+  /** Platforms with topic data (CF, LC); empty when none is connected. */
+  platforms: TopicPlatformStat[];
+}
+
+export interface MacroTopicStat extends TopicStat {
+  slug: MacroSlug;
+  micros: TopicStat[];
+}
+
 export interface RecentSolve {
   platform: PlatformId;
   externalId: string;
@@ -88,21 +112,26 @@ export interface DashboardData {
   accounts: AccountSummary[];
   /** One per connected account, in PLATFORM_ORDER. */
   totals: PlatformTotal[];
-  /** Days with activity in the 365 days ending at asOf, ascending. */
+  /** Every day with activity up to asOf (all years), ascending. The heatmap picks its period. */
   activity: ActivityDay[];
   difficulty: DifficultyRow[];
   /** Only platforms that have tags and are connected. */
   tags: PlatformTags[];
+  /** Every macro topic, in taxonomy order (lib/topics). */
+  topics: MacroTopicStat[];
+  /** The CF rating that weights and recommendations use (lib/topics/scoring.ts cfLevel). */
+  cfLevel: number | null;
   /** Newest first: up to RECENT_LIMIT per platform until filterDashboard trims it. */
   recent: RecentSolve[];
 }
 
+/** Neutral names: the hint says which tier and ranges each band covers (lib/sync/difficulty.ts). */
 export const DIFFICULTY_BANDS: Record<DifficultyBand, { label: string; hint: string }> = {
-  1: { label: "Easy", hint: "CF < 1200 · AtCoder < 400 · LC Easy" },
-  2: { label: "Easy–Medium", hint: "CF 1200–1599 · AtCoder 400–799" },
-  3: { label: "Medium", hint: "CF 1600–1999 · AtCoder 800–1199 · LC Medium" },
-  4: { label: "Hard", hint: "CF 2000–2399 · AtCoder 1200–1599 · LC Hard" },
-  5: { label: "Very hard", hint: "CF 2400+ · AtCoder 1600+" },
+  1: { label: "Band 1", hint: "Easy · CF ≤ 1100 · AtCoder < 400 · LC Easy" },
+  2: { label: "Band 2", hint: "Medium · CF 1200–1300 · AtCoder 400–599" },
+  3: { label: "Band 3", hint: "Medium · CF 1400–1600 · AtCoder 600–899 · LC Medium" },
+  4: { label: "Band 4", hint: "Hard · CF 1700–2000 · AtCoder 900–1299 · LC Hard" },
+  5: { label: "Band 5", hint: "Hard · CF 2100+ · AtCoder 1300+" },
 };
 
 /** Chart color per platform, as CSS variables from app/globals.css (they switch with the theme). */

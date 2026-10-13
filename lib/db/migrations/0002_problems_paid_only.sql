@@ -1,0 +1,1 @@
+ALTER TABLE "problems" ADD COLUMN "paid_only" boolean DEFAULT false NOT NULL;

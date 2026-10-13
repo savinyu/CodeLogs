@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { PlatformId } from "@/lib/adapters/types";
 import { PLATFORM_ORDER } from "@/lib/platforms";
 import { normalizeDifficulty } from "@/lib/sync/difficulty";
+import { buildTopicStats, cfLevel, type TagSetCount } from "@/lib/topics/scoring";
 import type {
   AccountSummary,
   ActivityDay,
@@ -37,11 +38,15 @@ export interface DashboardRaw {
   catalogTags: (PlatformCount & { tag: string })[];
   /** Up to RECENT_LIMIT per platform, any order. */
   recent: RecentSolve[];
+  /** Every Codeforces solve with its tags and raw rating, for topic scoring. */
+  cfSolves: { tags: string[]; rating: string | null }[];
+  /** CF catalog tag sets up to cfCatalogCap(level); LC catalog tag sets (free problems only). */
+  cfCatalog: TagSetCount[];
+  lcCatalog: TagSetCount[];
 }
 
 /** Unsolved tags shown as gaps: the most common ones in each platform's catalog. */
 export const GAP_TAGS_PER_PLATFORM = 25;
-export const HEATMAP_DAYS = 365;
 /** Recent solves shown, overall or for one platform. */
 export const RECENT_LIMIT = 15;
 
@@ -62,7 +67,12 @@ const lcTagCountsSchema = z.array(
   z.object({ tagSlug: z.string(), tagName: z.string(), problemsSolved: z.number() }),
 );
 
-function stat<T>(raw: DashboardRaw, platform: PlatformId, kind: string, schema: z.ZodType<T>) {
+function stat<T>(
+  raw: Pick<DashboardRaw, "stats">,
+  platform: PlatformId,
+  kind: string,
+  schema: z.ZodType<T>,
+) {
   const row = raw.stats.find((s) => s.platform === platform && s.kind === kind);
   if (!row) return null;
   const parsed = schema.safeParse(row.payload);
@@ -113,13 +123,12 @@ function buildTotals(raw: DashboardRaw, connected: PlatformId[]): PlatformTotal[
 }
 
 function buildActivity(raw: DashboardRaw, asOf: string): ActivityDay[] {
-  const from = addDays(asOf, -(HEATMAP_DAYS - 1));
   const withCalendar = new Set(raw.calendarDays.map((d) => d.platform));
   const rows = [...raw.calendarDays, ...raw.solveDays.filter((d) => !withCalendar.has(d.platform))];
 
   const byDay = new Map<string, ActivityDay>();
   for (const { platform, day, count } of rows) {
-    if (day < from || day > asOf || count <= 0) continue;
+    if (day > asOf || count <= 0) continue;
     let entry = byDay.get(day);
     if (!entry) byDay.set(day, (entry = { day, counts: {}, total: 0 }));
     inc(entry.counts, platform, count);
@@ -198,9 +207,38 @@ function buildTags(raw: DashboardRaw, connected: PlatformId[]): PlatformTags[] {
   });
 }
 
+function cfRatingNumber(raw: string | null): number | null {
+  return raw !== null && /^\d+$/.test(raw) ? Number(raw) : null;
+}
+
+/** The CF level topic scoring uses, or null when Codeforces isn't connected. */
+export function codeforcesLevel(
+  raw: Pick<DashboardRaw, "stats" | "cfSolves"> & { accounts: { platform: PlatformId }[] },
+): number | null {
+  if (!raw.accounts.some((a) => a.platform === "codeforces")) return null;
+  const rating = stat(raw, "codeforces", "cf_rating", cfRatingSchema)?.rating;
+  const solved = raw.cfSolves.map((s) => cfRatingNumber(s.rating)).filter((r) => r !== null);
+  return cfLevel(rating, solved);
+}
+
+function buildTopics(raw: DashboardRaw, level: number | null) {
+  const lcTags = raw.accounts.some((a) => a.platform === "leetcode")
+    ? stat(raw, "leetcode", "lc_tag_counts", lcTagCountsSchema)
+    : null;
+  return buildTopicStats({
+    cfSolves: raw.cfSolves.map((s) => ({ tags: s.tags, rating: cfRatingNumber(s.rating) })),
+    cfLevel: level,
+    cfCatalog: raw.cfCatalog,
+    lcTagCounts: lcTags?.map((t) => ({ tag: t.tagSlug, solved: t.problemsSolved })) ?? null,
+    lcSolved: stat(raw, "leetcode", "lc_difficulty_counts", lcDifficultySchema)?.solved.all ?? 0,
+    lcCatalog: raw.lcCatalog,
+  });
+}
+
 export function buildDashboard(raw: DashboardRaw, asOf: string): DashboardData {
   const accounts = PLATFORM_ORDER.flatMap((p) => raw.accounts.filter((a) => a.platform === p));
   const connected = accounts.map((a) => a.platform);
+  const level = codeforcesLevel(raw);
   return {
     asOf,
     accounts,
@@ -208,6 +246,8 @@ export function buildDashboard(raw: DashboardRaw, asOf: string): DashboardData {
     activity: buildActivity(raw, asOf),
     difficulty: buildDifficulty(raw),
     tags: buildTags(raw, connected),
+    topics: buildTopics(raw, level),
+    cfLevel: level,
     // Newest first; undated solves last.
     recent: [...raw.recent].sort((a, b) => (b.solvedAt ?? "").localeCompare(a.solvedAt ?? "")),
   };
@@ -235,6 +275,11 @@ export function filterDashboard(data: DashboardData, filter: PlatformFilter): Da
     activity: data.activity.map((d) => ({ day: d.day, ...pick(d.counts) })).filter((d) => d.total),
     difficulty: data.difficulty.map((r) => ({ band: r.band, ...pick(r.counts) })),
     tags: only(data.tags),
+    topics: data.topics.map((t) => ({
+      ...t,
+      platforms: only(t.platforms),
+      micros: t.micros.map((u) => ({ ...u, platforms: only(u.platforms) })),
+    })),
     recent: only(data.recent).slice(0, RECENT_LIMIT),
   };
 }

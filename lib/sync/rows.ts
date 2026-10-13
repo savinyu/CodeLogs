@@ -12,12 +12,19 @@ export interface ProblemRow {
   difficultyRaw: string | null;
   difficultyNorm: number | null;
   rawTags: string[];
+  paidOnly: boolean;
 }
 
 export function toProblemRow(
   platform: PlatformId,
   externalId: string,
-  p: { title: string; url: string; difficultyRaw?: string | number; rawTags: string[] },
+  p: {
+    title: string;
+    url: string;
+    difficultyRaw?: string | number;
+    rawTags: string[];
+    paidOnly?: boolean;
+  },
 ): ProblemRow {
   const raw = p.difficultyRaw;
   return {
@@ -28,6 +35,7 @@ export function toProblemRow(
     difficultyRaw: raw === undefined || raw === "" ? null : String(raw),
     difficultyNorm: normalizeDifficulty(platform, raw),
     rawTags: [...new Set(p.rawTags)],
+    paidOnly: p.paidOnly ?? false,
   };
 }
 

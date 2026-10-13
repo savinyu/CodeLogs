@@ -129,12 +129,13 @@ export async function upsertCatalog(
           difficultyRaw: sql`excluded.difficulty_raw`,
           difficultyNorm: sql`excluded.difficulty_norm`,
           rawTags: sql`excluded.raw_tags`,
+          paidOnly: sql`excluded.paid_only`,
           catalogUpdatedAt: sql`now()`,
         },
         setWhere: sql`${problems.catalogUpdatedAt} IS NULL
-          OR (${problems.title}, ${problems.url}, ${problems.difficultyRaw}, ${problems.difficultyNorm}, ${problems.rawTags})
+          OR (${problems.title}, ${problems.url}, ${problems.difficultyRaw}, ${problems.difficultyNorm}, ${problems.rawTags}, ${problems.paidOnly})
              IS DISTINCT FROM
-             (excluded.title, excluded.url, excluded.difficulty_raw, excluded.difficulty_norm, excluded.raw_tags)`,
+             (excluded.title, excluded.url, excluded.difficulty_raw, excluded.difficulty_norm, excluded.raw_tags, excluded.paid_only)`,
       })
       .returning({ id: problems.id });
     written += result.length;

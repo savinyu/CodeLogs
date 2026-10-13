@@ -96,6 +96,8 @@ export interface CatalogProblem {
   url: string;
   difficultyRaw?: string | number;
   rawTags: string[];
+  /** LeetCode premium problems; never recommended. */
+  paidOnly?: boolean;
 }
 
 export interface CatalogAdapter {

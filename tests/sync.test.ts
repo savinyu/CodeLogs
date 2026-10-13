@@ -1,22 +1,50 @@
 import { describe, expect, it } from "vitest";
 import type { NormalizedSolve } from "@/lib/adapters/types";
 import { parseCursor, resolveCursor } from "@/lib/sync/cursor";
-import { normalizeDifficulty } from "@/lib/sync/difficulty";
+import { difficultyTier, normalizeDifficulty } from "@/lib/sync/difficulty";
 import { catalogRows, chunk, dedupeSolves, stubRows, toProblemRow } from "@/lib/sync/rows";
+
+describe("difficultyTier", () => {
+  it("splits Codeforces ratings at 1100 / 1700", () => {
+    expect(difficultyTier("codeforces", "800")).toBe("easy");
+    expect(difficultyTier("codeforces", "1100")).toBe("easy");
+    expect(difficultyTier("codeforces", "1200")).toBe("medium");
+    expect(difficultyTier("codeforces", "1600")).toBe("medium");
+    expect(difficultyTier("codeforces", "1700")).toBe("hard");
+    expect(difficultyTier("codeforces", "3500")).toBe("hard");
+  });
+  it("uses LeetCode's own labels", () => {
+    expect(difficultyTier("leetcode", "Easy")).toBe("easy");
+    expect(difficultyTier("leetcode", "Medium")).toBe("medium");
+    expect(difficultyTier("leetcode", "Hard")).toBe("hard");
+  });
+  it("returns null for AtCoder and unknown values", () => {
+    expect(difficultyTier("atcoder", "800")).toBeNull();
+    expect(difficultyTier("codeforces", "abc")).toBeNull();
+    expect(difficultyTier("codeforces", null)).toBeNull();
+    expect(difficultyTier("leetcode", "Unknown")).toBeNull();
+  });
+});
 
 describe("normalizeDifficulty", () => {
   it("bands Codeforces ratings", () => {
     expect(normalizeDifficulty("codeforces", 800)).toBe(1);
+    expect(normalizeDifficulty("codeforces", 1100)).toBe(1);
     expect(normalizeDifficulty("codeforces", "1200")).toBe(2);
-    expect(normalizeDifficulty("codeforces", 1999)).toBe(3);
+    expect(normalizeDifficulty("codeforces", 1400)).toBe(3);
+    expect(normalizeDifficulty("codeforces", 1600)).toBe(3);
+    expect(normalizeDifficulty("codeforces", 1700)).toBe(4);
     expect(normalizeDifficulty("codeforces", 2000)).toBe(4);
+    expect(normalizeDifficulty("codeforces", 2100)).toBe(5);
     expect(normalizeDifficulty("codeforces", 3500)).toBe(5);
   });
 
   it("bands AtCoder models, including negative ones", () => {
     expect(normalizeDifficulty("atcoder", -1200)).toBe(1);
     expect(normalizeDifficulty("atcoder", 400)).toBe(2);
-    expect(normalizeDifficulty("atcoder", 1199)).toBe(3);
+    expect(normalizeDifficulty("atcoder", 899)).toBe(3);
+    expect(normalizeDifficulty("atcoder", 900)).toBe(4);
+    expect(normalizeDifficulty("atcoder", 1300)).toBe(5);
     expect(normalizeDifficulty("atcoder", 4383)).toBe(5);
   });
 
@@ -93,6 +121,7 @@ describe("rows", () => {
         difficultyRaw: "800",
         difficultyNorm: 1,
         rawTags: ["dp"],
+        paidOnly: false,
       },
     ]);
   });
@@ -107,10 +136,16 @@ describe("rows", () => {
         url: "u",
         difficultyRaw: "Easy",
         rawTags: ["array"],
+        paidOnly: true,
       },
     ]);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ title: "Two Sum", difficultyRaw: "Easy", difficultyNorm: 1 });
+    expect(rows[0]).toMatchObject({
+      title: "Two Sum",
+      difficultyRaw: "Easy",
+      difficultyNorm: 1,
+      paidOnly: true,
+    });
   });
 
   it("keeps negative AtCoder difficulty as raw text", () => {

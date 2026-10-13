@@ -455,6 +455,7 @@ async function fetchCatalog(): Promise<CatalogProblem[]> {
         url: problemUrl(q.titleSlug),
         difficultyRaw: titleCase(q.difficulty),
         rawTags: (q.topicTags ?? []).map((t) => t.slug),
+        paidOnly: q.paidOnly === true,
       });
     }
     skip += list.questions.length;
