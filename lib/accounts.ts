@@ -10,6 +10,9 @@ export type PlatformAccountRow = {
   handle: string;
   status: "pending" | "syncing" | "ok" | "partial" | "error";
   verified: boolean;
+  /** The code the user pastes into their profile to verify the handle; null until requested. */
+  verifyToken: string | null;
+  historyComplete: boolean;
   lastSyncedAt: Date | null;
   lastError: string | null;
   syncRequestedAt: Date | null;
@@ -25,6 +28,8 @@ export async function listPlatformAccounts(userId: string): Promise<PlatformAcco
       handle: platformAccounts.handle,
       status: platformAccounts.status,
       verified: platformAccounts.verified,
+      verifyToken: platformAccounts.verifyToken,
+      historyComplete: platformAccounts.historyComplete,
       lastSyncedAt: platformAccounts.lastSyncedAt,
       lastError: platformAccounts.lastError,
       syncRequestedAt: platformAccounts.syncRequestedAt,

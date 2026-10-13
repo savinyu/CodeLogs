@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { NormalizedSolve } from "@/lib/adapters/types";
 import { parseCursor, resolveCursor } from "@/lib/sync/cursor";
-import { difficultyTier, normalizeDifficulty } from "@/lib/sync/difficulty";
+import {
+  difficultyTier,
+  displayAtcoderDifficulty,
+  normalizeDifficulty,
+} from "@/lib/sync/difficulty";
 import { catalogRows, chunk, dedupeSolves, stubRows, toProblemRow } from "@/lib/sync/rows";
 
 describe("difficultyTier", () => {
@@ -18,11 +22,29 @@ describe("difficultyTier", () => {
     expect(difficultyTier("leetcode", "Medium")).toBe("medium");
     expect(difficultyTier("leetcode", "Hard")).toBe("hard");
   });
-  it("returns null for AtCoder and unknown values", () => {
-    expect(difficultyTier("atcoder", "800")).toBeNull();
+  it("splits AtCoder difficulties at 400 / 900", () => {
+    expect(difficultyTier("atcoder", "-934")).toBe("easy");
+    expect(difficultyTier("atcoder", "399")).toBe("easy");
+    expect(difficultyTier("atcoder", "400")).toBe("medium");
+    expect(difficultyTier("atcoder", "899")).toBe("medium");
+    expect(difficultyTier("atcoder", "900")).toBe("hard");
+    expect(difficultyTier("atcoder", "2802")).toBe("hard");
+  });
+  it("returns null for unknown values", () => {
+    expect(difficultyTier("atcoder", "abc")).toBeNull();
     expect(difficultyTier("codeforces", "abc")).toBeNull();
     expect(difficultyTier("codeforces", null)).toBeNull();
     expect(difficultyTier("leetcode", "Unknown")).toBeNull();
+  });
+});
+
+describe("displayAtcoderDifficulty", () => {
+  it("keeps values from 400 up and squashes lower ones into (0, 400)", () => {
+    expect(displayAtcoderDifficulty(1259)).toBe(1259);
+    expect(displayAtcoderDifficulty(400)).toBe(400);
+    expect(displayAtcoderDifficulty(146)).toBe(212);
+    expect(displayAtcoderDifficulty(-934)).toBe(14);
+    expect(displayAtcoderDifficulty(-193)).toBeGreaterThan(0);
   });
 });
 

@@ -19,7 +19,13 @@ async function DashboardContent({ searchParams }: Pick<PageProps<"/dashboard">, 
     <>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Welcome, {user.name}</h1>
-        {user.username && <PublicProfileToggle username={user.username} enabled={isPublic} />}
+        {user.username && (
+          <PublicProfileToggle
+            username={user.username}
+            enabled={isPublic}
+            unverified={data.accounts.filter((a) => !a.verified).length}
+          />
+        )}
       </div>
       <DashboardView
         data={data}

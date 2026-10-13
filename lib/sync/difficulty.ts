@@ -47,10 +47,18 @@ export const BAND_TIER: Record<1 | 2 | 3 | 4 | 5, DifficultyTier> = {
 
 /**
  * Easy / Medium / Hard for the colored difficulty tags, read off the band: Codeforces ≤ 1100
- * easy, 1200–1600 medium, ≥ 1700 hard; LeetCode its own labels. AtCoder has no tier yet (null).
+ * easy, 1200–1600 medium, ≥ 1700 hard; AtCoder < 400 easy, 400–899 medium, ≥ 900 hard;
+ * LeetCode its own labels.
  */
 export function difficultyTier(platform: PlatformId, raw: string | null): DifficultyTier | null {
-  if (platform === "atcoder") return null;
   const band = normalizeDifficulty(platform, raw);
   return band === null ? null : (BAND_TIER[band as keyof typeof BAND_TIER] ?? null);
+}
+
+/**
+ * The difficulty AtCoder Problems shows: kenkoooo's model values below 400 (often negative) are
+ * squashed into (0, 400) so they stay positive. Order is kept, so tiers and bands don't change.
+ */
+export function displayAtcoderDifficulty(raw: number): number {
+  return Math.round(raw >= 400 ? raw : 400 / Math.exp(1 - raw / 400));
 }

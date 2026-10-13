@@ -22,7 +22,7 @@ async function PublicProfileContent({ params, searchParams }: PageProps<"/u/[use
   // Private and unknown profiles look the same from outside.
   const profile = await getPublicProfile(username);
   if (!profile) notFound();
-  const data = await getDashboardData(profile.userId);
+  const data = await getDashboardData(profile.userId, { verifiedOnly: true });
 
   return (
     <>

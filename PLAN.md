@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M4 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026
+Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026 (M5 started)
 
 ---
 
@@ -319,7 +319,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Verified against the owner's data (headless Chrome, light/dark/narrow): totals CF 46 (rating 839, max 1062) / AtCoder 0 / LC 319; 57 active days (matches LeetCode); CF tags with gaps `dp`, data structures, dfs; CF filter lists the 2023 CF solves; build passes; 182 tests
   - [x] 👤 Owner: checked and merged (13 Oct 2026)
   - Known limits: an unknown or private `/u/<name>` streams a "not found" page with HTTP 200 (the status is sent before the lookup finishes). Recharts' bar animation never started in headless Chrome, so it's off. Public profiles show unverified handles until M5. Activity mixes units: CF/AtCoder count new solves per day, LC counts submissions (tooltips say which)
-- [ ] M4 topics + "solve next" + activity timeline (branch `m4-topics`, PR #4)
+- [x] M4 topics + "solve next" + activity timeline (branch `m4-topics`, PR #4, merged; follow-ups PR #5 and PR #6)
   - [x] Taxonomy (`lib/topics/taxonomy.ts`): 10 macro topics, 40 micro topics underneath
   - [x] Activity data covers all years; heatmap period filter: "Last 12 months" + one option per active year (`?year=`, keeps `?platform=`), year grid/stats, current streak only when the period includes today (Sonnet)
   - [x] Tag → topic mappings: CF 38 tags, LC ~190 (every catalog tag listed, generic ones like `array` map to nothing) + coverage tests (Sonnet)
@@ -330,5 +330,18 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Verified against the owner's data: CF `dp` + LC `dynamic-programming` both under Dynamic Programming; weak topics Math / Greedy & Sorting / Strings (all), DP (CF only, 0 of ~2 expected at 839); picks contain 0 solved problems; queries ~150 ms; public page in headless Chrome (wide, 2023 + CF, 360px)
   - [x] Owner feedback: activity period is a dropdown (Last 12 months / All time `?year=all` / each year; multi-year grids label January with the year); Solve next topics collapse (`<details>`, open by default); difficulty tags colored Easy green / Medium amber / Hard red (LC labels; CF ≤ 1100 / 1200–1600 / ≥ 1700)
   - [x] Difficulty bands re-cut so each sits inside one tag tier (CF 1200/1400/1700/2100, AtCoder 400/600/900/1300; LC unchanged) and renamed "Band 1–5" (tier + ranges in the tooltip); migration `0003` re-banded stored rows (25,295 checked, 0 mismatches)
-  - [ ] 👤 Owner: check Solve next on `/dashboard` (owner-only, so not screenshotted), the period dropdown and the tag colors
+  - [x] 👤 Owner: checked Solve next, the period dropdown and the tag colors (13 Oct 2026)
+  - [x] AtCoder difficulty tags colored too (< 400 / 400–899 / ≥ 900, matching the bands). The badge shows the AtCoder Problems value: model values under 400, often negative, are squashed into (0, 400) (PR #6)
   - Known limits: LC topic counts are estimates (tag counts overlap; LC only counts 47 tags per user, so micro topics like prefix sums or number theory get no LC signal). Expectations assume the catalog's mix is the right mix. The `topics`/`tag_mappings` tables stay empty. The dev server served a stale `globals.css` again (theme tokens missing) until the file was edited and restored
+- [ ] M5 ship (branch `m5-ship`)
+  - [x] Handle verification (Sonnet): Connect card shows a `codelogs-xxxxxx` code to paste into the CF organization / AtCoder affiliation / LC summary, then "Check" reads the field (case-insensitive substring). The code is kept until it matches, then cleared. `lib/verification.ts` (pure, tested), `app/connect/verify-actions.ts`
+  - [x] `/u/[username]` and its OG image only show verified handles: `getDashboardData(userId, { verifiedOnly: true })` filters every query (solves by account, the rest through `platform_accounts.verified`). The owner's toggle says how many handles it hides
+  - [x] LeetCode backfill (Sonnet): the browser parses the saved `api/problems/all/` JSON and sends only `{ userName, slugs }` (the file is ~1.5 MB; server actions cap at 1 MB). The server checks the file's `user_name` matches the connected handle, then inserts `source = 'import'` solves with no date (`DO NOTHING` keeps dated API rows). `history_complete` = has an import AND known solves ≥ LeetCode's lifetime count; recomputed after every LC sync, so a gap of more than 20 solves flips it back to `partial`
+  - [x] `syncStaleAccounts` cron (Sonnet), 04:00 UTC: claims accounts not synced or requested for 20 h whose user had a session in the last 30 days or has a public profile, then fans out `account/sync` events
+  - [x] Settings page (Sonnet): JSON export (`/api/export`: profile, handles, solves, activity, stats; no tokens, sessions, verify codes, cursors or raw payloads) and account delete (type your username; everything cascades from `users.id`). Linked from the user menu
+  - [x] README: problem, features, architecture diagram, data limits, local setup
+  - [x] Verified: typecheck, lint, format, 243 tests, `pnpm build`; logged-out `/u/savinyu` shows "No verified platforms yet"; verification fields read live (CF `savinyu` "IIT Rookee", AtCoder `chokudai` "AtCoder Inc. CEO", LC `CptDailyBird` empty); the completeness SQL run read-only on the owner's accounts (LC 17 known of 319, no import → partial); Inngest sees 4 functions
+  - [ ] 👤 Owner: verify a handle, import the LeetCode JSON (expect 319 known, `ok`), download the export, open Settings (a forged test session was blocked, so the signed-in pages haven't been clicked through)
+  - [ ] README screenshots (after a handle is verified, so the public page has data)
+  - [ ] 🧭 Deploy to Vercel + Neon + Inngest Cloud (needs the owner's accounts, a production GitHub OAuth app and env vars); seed the owner's profile; final review
+  - Known limits: imported LC solves have no dates, so they don't show on the heatmap or in recent solves. LC slugs missing from the catalog are skipped and keep the account `partial` until the weekly catalog refresh and a re-import. The stale cron only covers users active in the last 30 days or with a public profile

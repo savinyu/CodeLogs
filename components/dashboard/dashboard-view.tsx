@@ -82,7 +82,7 @@ export function DashboardView({
         </Card>
       </Link>
     ) : (
-      <p className="text-sm text-muted-foreground">No platforms connected yet.</p>
+      <p className="text-sm text-muted-foreground">No verified platforms yet.</p>
     );
   }
 

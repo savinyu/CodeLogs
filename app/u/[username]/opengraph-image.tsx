@@ -12,7 +12,7 @@ const PLATFORM_HEX = { codeforces: "#3b82f6", atcoder: "#14b8a6", leetcode: "#f5
 export default async function Image({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   const profile = await getPublicProfile(username);
-  const data = profile ? await getDashboardData(profile.userId) : null;
+  const data = profile ? await getDashboardData(profile.userId, { verifiedOnly: true }) : null;
   const total = data?.totals.reduce((sum, t) => sum + t.solved, 0) ?? 0;
 
   return new ImageResponse(
