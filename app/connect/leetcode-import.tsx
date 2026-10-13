@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, type ClipboardEvent, type DragEvent } from "react";
+import { cn } from "cn";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { parseLeetcodeProblemsAll } from "@/lib/leetcode-import";
+import { parseLeetcodeImportText } from "@/lib/leetcode-import";
 import { importLeetcodeSolves } from "./import-actions";
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const MAX_TEXT_LENGTH = 10 * 1024 * 1024;
 const PROBLEMS_URL = "https://leetcode.com/api/problems/all/";
 
 export function LeetcodeImport({
@@ -19,23 +20,17 @@ export function LeetcodeImport({
   const [open, setOpen] = useState(!historyComplete);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
 
-  async function onFile(file: File | undefined) {
-    if (!file) return;
+  function importText(text: string) {
     setError(null);
-    if (file.size > MAX_FILE_BYTES) {
-      setError("That file is over 10 MB. Choose the .json you saved from the link above.");
+    if (text.length > MAX_TEXT_LENGTH) {
+      setError("That's over 10 MB. Copy only the page at the link above.");
       return;
     }
-    let json: unknown;
-    try {
-      json = JSON.parse(await file.text());
-    } catch {
-      setError("That file isn't JSON. Save the page from the link above as a .json file.");
-      return;
-    }
-    const parsed = parseLeetcodeProblemsAll(json);
+    const parsed = parseLeetcodeImportText(text);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -46,7 +41,6 @@ export function LeetcodeImport({
         slugs: parsed.slugs,
         numSolved: parsed.numSolved,
       });
-      if (inputRef.current) inputRef.current.value = "";
       if (!result.ok) {
         setError(result.error);
         return;
@@ -65,6 +59,52 @@ export function LeetcodeImport({
     });
   }
 
+  async function onFile(file: File | undefined) {
+    if (!file) return;
+    if (file.size > MAX_TEXT_LENGTH) {
+      setError("That file is over 10 MB. Choose the page you saved from the link above.");
+      return;
+    }
+    const text = await file.text();
+    if (inputRef.current) inputRef.current.value = "";
+    importText(text);
+  }
+
+  async function onPasteClick() {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      setError("Couldn't read the clipboard. Click the box below and press Cmd/Ctrl+V instead.");
+      dropRef.current?.focus();
+      return;
+    }
+    if (text.trim() === "") {
+      setError("The clipboard is empty. Copy the page at the link above first.");
+      return;
+    }
+    importText(text);
+  }
+
+  function onPaste(e: ClipboardEvent<HTMLDivElement>) {
+    const text = e.clipboardData.getData("text/plain");
+    if (!text) return;
+    e.preventDefault();
+    if (!pending) importText(text);
+  }
+
+  function onDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragging(false);
+    if (pending) return;
+    const file = e.dataTransfer.files[0];
+    if (file) void onFile(file);
+    else {
+      const text = e.dataTransfer.getData("text/plain");
+      if (text) importText(text);
+    }
+  }
+
   const picker = (
     <div className="flex flex-col gap-2">
       <ol className="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
@@ -77,32 +117,57 @@ export function LeetcodeImport({
             className="text-foreground underline underline-offset-2"
           >
             leetcode.com/api/problems/all
-          </a>{" "}
-          and save the page (Ctrl/Cmd+S) as a .json file.
+          </a>
+          .
         </li>
-        <li>Choose that file below.</li>
+        <li>Select everything on that page and copy it (Cmd/Ctrl+A, then Cmd/Ctrl+C).</li>
+        <li>Come back here and click Paste, or click the box and press Cmd/Ctrl+V.</li>
       </ol>
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".json,application/json"
-          className="sr-only"
-          id="lc-import-file"
-          disabled={pending}
-          onChange={(e) => void onFile(e.target.files?.[0])}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={() => inputRef.current?.click()}
-        >
-          {pending ? "Importing..." : "Choose file"}
-        </Button>
+      <div
+        ref={dropRef}
+        tabIndex={0}
+        role="group"
+        aria-label="Paste or drop your LeetCode problems page here"
+        onPaste={onPaste}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        className={cn(
+          "flex flex-col gap-2 rounded-md border border-dashed p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          dragging && "border-primary bg-muted",
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" size="sm" disabled={pending} onClick={() => void onPasteClick()}>
+            {pending ? "Importing..." : "Paste"}
+          </Button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".json,.html,.htm,.txt,application/json,text/html,text/plain"
+            className="sr-only"
+            id="lc-import-file"
+            disabled={pending}
+            onChange={(e) => void onFile(e.target.files?.[0])}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() => inputRef.current?.click()}
+          >
+            Choose file
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            or drop a saved page here (.json, or the .html that Cmd/Ctrl+S saves).
+          </span>
+        </div>
         <span className="text-xs text-muted-foreground">
-          The file is read in your browser. Only the list of solved problem names is sent, never
+          It&apos;s read in your browser. Only the list of solved problem names is sent, never
           cookies.
         </span>
       </div>
