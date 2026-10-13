@@ -1,7 +1,7 @@
 // Dashboard reads. Every query on user data is scoped by userId; aggregate.ts does the shaping.
 
 import "server-only";
-import { and, count, eq, isNotNull, lte, sql } from "drizzle-orm";
+import { and, count, eq, inArray, isNotNull, lte, sql, type SQL } from "drizzle-orm";
 import { cacheLife } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
@@ -50,20 +50,42 @@ async function getCatalogTagSets(
   return result.rows;
 }
 
-async function getSolvedTags(userId: string): Promise<DashboardRaw["solvedTags"]> {
+async function getSolvedTags(
+  userId: string,
+  accountFilter: SQL | undefined,
+): Promise<DashboardRaw["solvedTags"]> {
   const result = await db.execute<{ platform: PlatformId; tag: string; count: number }>(sql`
     SELECT p.platform, t.tag, count(*)::int AS count
-    FROM ${solves} s
-    JOIN ${problems} p ON p.id = s.problem_id
+    FROM ${solves}
+    JOIN ${problems} p ON p.id = ${solves.problemId}
     CROSS JOIN LATERAL jsonb_array_elements_text(p.raw_tags) AS t(tag)
-    WHERE s.user_id = ${userId}
+    WHERE ${solves.userId} = ${userId} ${accountFilter ? sql`AND ${accountFilter}` : sql``}
     GROUP BY 1, 2`);
   return result.rows;
 }
 
+export interface DashboardOptions {
+  /** Public profiles: leave out handles the user hasn't verified, with all their data. */
+  verifiedOnly?: boolean;
+}
+
 /** Call after reading the request (session or params): it uses the current time. */
-export async function getDashboardData(userId: string): Promise<DashboardData> {
+export async function getDashboardData(
+  userId: string,
+  { verifiedOnly = false }: DashboardOptions = {},
+): Promise<DashboardData> {
   const asOf = new Date().toISOString().slice(0, 10);
+  // Applied to every query: solves by their account, the rest through platform_accounts.
+  const solvesFilter = verifiedOnly
+    ? inArray(
+        solves.accountId,
+        db
+          .select({ id: platformAccounts.id })
+          .from(platformAccounts)
+          .where(and(eq(platformAccounts.userId, userId), eq(platformAccounts.verified, true))),
+      )
+    : undefined;
+  const accountsFilter = verifiedOnly ? eq(platformAccounts.verified, true) : undefined;
   // The newest RECENT_LIMIT solves per platform, so a platform filter still has a full list.
   const ranked = db
     .select({
@@ -80,7 +102,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     })
     .from(solves)
     .innerJoin(problems, eq(problems.id, solves.problemId))
-    .where(eq(solves.userId, userId))
+    .where(and(eq(solves.userId, userId), solvesFilter))
     .as("ranked");
   const solvedDay = sql<string>`to_char(${solves.firstSolvedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`;
 
@@ -106,12 +128,12 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         lastSyncedAt: platformAccounts.lastSyncedAt,
       })
       .from(platformAccounts)
-      .where(eq(platformAccounts.userId, userId)),
+      .where(and(eq(platformAccounts.userId, userId), accountsFilter)),
     db
       .select({ platform: problems.platform, count: count() })
       .from(solves)
       .innerJoin(problems, eq(problems.id, solves.problemId))
-      .where(eq(solves.userId, userId))
+      .where(and(eq(solves.userId, userId), solvesFilter))
       .groupBy(problems.platform),
     db
       .select({
@@ -121,12 +143,12 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       })
       .from(platformStats)
       .innerJoin(platformAccounts, eq(platformAccounts.id, platformStats.accountId))
-      .where(eq(platformAccounts.userId, userId)),
+      .where(and(eq(platformAccounts.userId, userId), accountsFilter)),
     db
       .select({ platform: problems.platform, day: solvedDay, count: count() })
       .from(solves)
       .innerJoin(problems, eq(problems.id, solves.problemId))
-      .where(and(eq(solves.userId, userId), isNotNull(solves.firstSolvedAt)))
+      .where(and(eq(solves.userId, userId), solvesFilter, isNotNull(solves.firstSolvedAt)))
       .groupBy(problems.platform, solvedDay),
     db
       .select({
@@ -136,14 +158,14 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       })
       .from(activityDays)
       .innerJoin(platformAccounts, eq(platformAccounts.id, activityDays.accountId))
-      .where(eq(platformAccounts.userId, userId)),
+      .where(and(eq(platformAccounts.userId, userId), accountsFilter)),
     db
       .select({ platform: problems.platform, band: problems.difficultyNorm, count: count() })
       .from(solves)
       .innerJoin(problems, eq(problems.id, solves.problemId))
-      .where(eq(solves.userId, userId))
+      .where(and(eq(solves.userId, userId), solvesFilter))
       .groupBy(problems.platform, problems.difficultyNorm),
-    getSolvedTags(userId),
+    getSolvedTags(userId, solvesFilter),
     getCatalogTags(),
     db
       .select({
@@ -162,7 +184,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       .select({ tags: problems.rawTags, rating: problems.difficultyRaw })
       .from(solves)
       .innerJoin(problems, eq(problems.id, solves.problemId))
-      .where(and(eq(solves.userId, userId), eq(problems.platform, "codeforces"))),
+      .where(and(eq(solves.userId, userId), solvesFilter, eq(problems.platform, "codeforces"))),
   ]);
 
   // The CF catalog slice depends on the user's level, so it's a second (cached) round trip.

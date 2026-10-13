@@ -1,0 +1,18 @@
+{
+  "user_name": "CptDailyBird",
+  "num_solved": 4,
+  "num_total": 3700,
+  "ac_easy": 2,
+  "ac_medium": 1,
+  "ac_hard": 1,
+  "stat_status_pairs": [
+    { "stat": { "question_id": 1, "question__title": "Two Sum", "question__title_slug": "two-sum", "frontend_question_id": 1 }, "status": "ac", "difficulty": { "level": 1 }, "paid_only": false },
+    { "stat": { "question_id": 2, "question__title": "Add Two Numbers", "question__title_slug": "add-two-numbers", "frontend_question_id": 2 }, "status": "ac", "difficulty": { "level": 2 }, "paid_only": false },
+    { "stat": { "question_id": 3, "question__title": "Longest Substring Without Repeating Characters", "question__title_slug": "longest-substring-without-repeating-characters", "frontend_question_id": 3 }, "status": "notac", "difficulty": { "level": 2 }, "paid_only": false },
+    { "stat": { "question_id": 4, "question__title": "Median of Two Sorted Arrays", "question__title_slug": "median-of-two-sorted-arrays", "frontend_question_id": 4 }, "status": "ac", "difficulty": { "level": 3 }, "paid_only": false },
+    { "stat": { "question_id": 5, "question__title": "Longest Palindromic Substring", "question__title_slug": "longest-palindromic-substring", "frontend_question_id": 5 }, "status": null, "difficulty": { "level": 2 }, "paid_only": false },
+    { "stat": { "question_id": 1, "question__title": "Two Sum", "question__title_slug": "two-sum", "frontend_question_id": 1 }, "status": "ac", "difficulty": { "level": 1 }, "paid_only": false },
+    { "stat": { "question_id": 156, "question__title": "Binary Tree Upside Down", "question__title_slug": "binary-tree-upside-down", "frontend_question_id": 156 }, "status": "ac", "difficulty": { "level": 2 }, "paid_only": true },
+    { "stat": { "question_id": 7, "question__title": "Reverse Integer", "question__title_slug": "reverse-integer", "frontend_question_id": 7 }, "status": null, "difficulty": { "level": 2 }, "paid_only": false }
+  ]
+}

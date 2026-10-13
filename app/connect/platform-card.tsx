@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlatformId } from "@/lib/adapters/types";
 import { connectPlatform, disconnectPlatform, type ActionState } from "./actions";
+import { LeetcodeImport } from "./leetcode-import";
 import { SyncButton } from "./sync-button";
+import { VerifyPanel } from "./verify-panel";
 
 type Status = "pending" | "syncing" | "ok" | "partial" | "error";
 
@@ -39,6 +41,9 @@ export interface PlatformCardProps {
     profileUrl: string;
     status: Status;
     verified: boolean;
+    verifyToken: string | null;
+    /** LeetCode: every solve is known (imported, and no gap since). */
+    historyComplete: boolean;
     /** ISO timestamp, so it survives the server-to-client boundary. */
     lastSyncedAt: string | null;
     lastError: string | null;
@@ -151,6 +156,12 @@ function ConnectedView({
         <p role="alert" className="basis-full text-sm text-destructive">
           {account.lastError}
         </p>
+      )}
+      {!account.verified && (
+        <VerifyPanel platform={platform} name={name} verifyToken={account.verifyToken} />
+      )}
+      {platform === "leetcode" && (
+        <LeetcodeImport handle={account.handle} historyComplete={account.historyComplete} />
       )}
       <p className="basis-full text-xs text-muted-foreground" suppressHydrationWarning>
         {account.lastSyncedAt
