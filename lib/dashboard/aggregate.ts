@@ -35,12 +35,15 @@ export interface DashboardRaw {
   solvedTags: (PlatformCount & { tag: string })[];
   /** Tag counts over the whole catalog, per platform. */
   catalogTags: (PlatformCount & { tag: string })[];
+  /** Up to RECENT_LIMIT per platform, any order. */
   recent: RecentSolve[];
 }
 
 /** Unsolved tags shown as gaps: the most common ones in each platform's catalog. */
 export const GAP_TAGS_PER_PLATFORM = 25;
 export const HEATMAP_DAYS = 365;
+/** Recent solves shown, overall or for one platform. */
+export const RECENT_LIMIT = 15;
 
 const cfRatingSchema = z.object({
   rating: z.number().nullable(),
@@ -205,7 +208,8 @@ export function buildDashboard(raw: DashboardRaw, asOf: string): DashboardData {
     activity: buildActivity(raw, asOf),
     difficulty: buildDifficulty(raw),
     tags: buildTags(raw, connected),
-    recent: raw.recent,
+    // Newest first; undated solves last.
+    recent: [...raw.recent].sort((a, b) => (b.solvedAt ?? "").localeCompare(a.solvedAt ?? "")),
   };
 }
 
@@ -215,9 +219,9 @@ export function parsePlatformFilter(value: unknown): PlatformFilter {
     : "all";
 }
 
-/** Narrows every section to one platform; "all" returns the data unchanged. */
+/** Narrows every section to one platform, and trims recent solves to RECENT_LIMIT. */
 export function filterDashboard(data: DashboardData, filter: PlatformFilter): DashboardData {
-  if (filter === "all") return data;
+  if (filter === "all") return { ...data, recent: data.recent.slice(0, RECENT_LIMIT) };
   const only = <T extends { platform: PlatformId }>(rows: T[]) =>
     rows.filter((r) => r.platform === filter);
   const pick = (counts: Partial<Record<PlatformId, number>>) => {
@@ -231,6 +235,6 @@ export function filterDashboard(data: DashboardData, filter: PlatformFilter): Da
     activity: data.activity.map((d) => ({ day: d.day, ...pick(d.counts) })).filter((d) => d.total),
     difficulty: data.difficulty.map((r) => ({ band: r.band, ...pick(r.counts) })),
     tags: only(data.tags),
-    recent: only(data.recent),
+    recent: only(data.recent).slice(0, RECENT_LIMIT),
   };
 }

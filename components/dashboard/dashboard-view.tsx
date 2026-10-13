@@ -73,7 +73,7 @@ export function DashboardView({
       <Section title="Activity" description="The last 365 days, in UTC.">
         <ActivityHeatmap activity={data.activity} asOf={data.asOf} />
       </Section>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <Section title="Difficulty" description="Bands are rough equivalents across platforms.">
           <DifficultyChart rows={data.difficulty} />
         </Section>

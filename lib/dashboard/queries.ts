@@ -1,7 +1,7 @@
 // Dashboard reads. Every query on user data is scoped by userId; aggregate.ts does the shaping.
 
 import "server-only";
-import { and, count, desc, eq, gte, sql } from "drizzle-orm";
+import { and, count, eq, gte, lte, sql } from "drizzle-orm";
 import { cacheLife } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
@@ -13,10 +13,14 @@ import {
   users,
 } from "@/lib/db/schema";
 import type { PlatformId } from "@/lib/adapters/types";
-import { addDays, buildDashboard, HEATMAP_DAYS, type DashboardRaw } from "./aggregate";
+import {
+  addDays,
+  buildDashboard,
+  HEATMAP_DAYS,
+  RECENT_LIMIT,
+  type DashboardRaw,
+} from "./aggregate";
 import type { DashboardData, DifficultyBand } from "./types";
-
-export const RECENT_LIMIT = 15;
 
 /** Tag frequencies across each platform's whole catalog. Global and slow-moving, so cached. */
 async function getCatalogTags(): Promise<DashboardRaw["catalogTags"]> {
@@ -44,6 +48,24 @@ async function getSolvedTags(userId: string): Promise<DashboardRaw["solvedTags"]
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const asOf = new Date().toISOString().slice(0, 10);
   const from = addDays(asOf, -(HEATMAP_DAYS - 1));
+  // The newest RECENT_LIMIT solves per platform, so a platform filter still has a full list.
+  const ranked = db
+    .select({
+      platform: problems.platform,
+      externalId: problems.externalId,
+      title: problems.title,
+      url: problems.url,
+      solvedAt: solves.firstSolvedAt,
+      difficultyRaw: problems.difficultyRaw,
+      difficultyNorm: problems.difficultyNorm,
+      tags: problems.rawTags,
+      rank: sql<number>`row_number() OVER (PARTITION BY ${problems.platform}
+        ORDER BY ${solves.firstSolvedAt} DESC NULLS LAST, ${solves.id} DESC)`.as("rank"),
+    })
+    .from(solves)
+    .innerJoin(problems, eq(problems.id, solves.problemId))
+    .where(eq(solves.userId, userId))
+    .as("ranked");
   const solvedDay = sql<string>`to_char(${solves.firstSolvedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`;
 
   const [
@@ -110,20 +132,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     getCatalogTags(),
     db
       .select({
-        platform: problems.platform,
-        externalId: problems.externalId,
-        title: problems.title,
-        url: problems.url,
-        solvedAt: solves.firstSolvedAt,
-        difficultyRaw: problems.difficultyRaw,
-        difficultyNorm: problems.difficultyNorm,
-        tags: problems.rawTags,
+        platform: ranked.platform,
+        externalId: ranked.externalId,
+        title: ranked.title,
+        url: ranked.url,
+        solvedAt: ranked.solvedAt,
+        difficultyRaw: ranked.difficultyRaw,
+        difficultyNorm: ranked.difficultyNorm,
+        tags: ranked.tags,
       })
-      .from(solves)
-      .innerJoin(problems, eq(problems.id, solves.problemId))
-      .where(eq(solves.userId, userId))
-      .orderBy(sql`${solves.firstSolvedAt} DESC NULLS LAST`, desc(solves.id))
-      .limit(RECENT_LIMIT),
+      .from(ranked)
+      .where(lte(ranked.rank, RECENT_LIMIT)),
   ]);
 
   return buildDashboard(
@@ -141,7 +160,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       catalogTags,
       recent: recent.map((r) => ({
         ...r,
-        solvedAt: r.solvedAt?.toISOString() ?? null,
+        solvedAt: r.solvedAt ? new Date(r.solvedAt).toISOString() : null,
         difficultyNorm: (r.difficultyNorm as DifficultyBand | null) ?? null,
       })),
     },

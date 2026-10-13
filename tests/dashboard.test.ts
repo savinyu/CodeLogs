@@ -6,9 +6,10 @@ import {
   GAP_TAGS_PER_PLATFORM,
   humanizeSlug,
   parsePlatformFilter,
+  RECENT_LIMIT,
   type DashboardRaw,
 } from "@/lib/dashboard/aggregate";
-import type { AccountSummary } from "@/lib/dashboard/types";
+import type { AccountSummary, RecentSolve } from "@/lib/dashboard/types";
 
 const ASOF = "2026-10-13";
 
@@ -208,8 +209,38 @@ describe("filterDashboard", () => {
     ASOF,
   );
 
-  it("returns the data unchanged for all", () => {
-    expect(filterDashboard(data, "all")).toBe(data);
+  it("returns everything for all", () => {
+    expect(filterDashboard(data, "all")).toEqual(data);
+  });
+
+  it("sorts recent solves newest first and trims them after filtering", () => {
+    const solve = (platform: RecentSolve["platform"], i: number): RecentSolve => ({
+      platform,
+      externalId: `${platform}-${i}`,
+      title: "t",
+      url: "u",
+      // LeetCode solves are all newer than Codeforces ones.
+      solvedAt: new Date(Date.UTC(2026, platform === "leetcode" ? 9 : 0, i + 1)).toISOString(),
+      difficultyRaw: null,
+      difficultyNorm: null,
+      tags: [],
+    });
+    const recent = [
+      ...Array.from({ length: RECENT_LIMIT }, (_, i) => solve("codeforces", i)),
+      ...Array.from({ length: RECENT_LIMIT }, (_, i) => solve("leetcode", i)),
+      { ...solve("atcoder", 0), solvedAt: null },
+    ];
+    const d = buildDashboard(raw({ recent }), ASOF);
+
+    const all = filterDashboard(d, "all").recent;
+    expect(all).toHaveLength(RECENT_LIMIT);
+    expect(all.every((s) => s.platform === "leetcode")).toBe(true);
+    expect(all[0]!.externalId).toBe(`leetcode-${RECENT_LIMIT - 1}`);
+
+    const cf = filterDashboard(d, "codeforces").recent;
+    expect(cf).toHaveLength(RECENT_LIMIT);
+    expect(cf.every((s) => s.platform === "codeforces")).toBe(true);
+    expect(d.recent.at(-1)!.platform).toBe("atcoder"); // undated last
   });
 
   it("narrows every section to one platform", () => {

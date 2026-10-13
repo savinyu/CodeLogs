@@ -93,7 +93,7 @@ export interface DashboardData {
   difficulty: DifficultyRow[];
   /** Only platforms that have tags and are connected. */
   tags: PlatformTags[];
-  /** Newest first. */
+  /** Newest first: up to RECENT_LIMIT per platform until filterDashboard trims it. */
   recent: RecentSolve[];
 }
 
