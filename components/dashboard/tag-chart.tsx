@@ -1,6 +1,7 @@
 import type { PlatformId } from "@/lib/adapters/types";
 import type { PlatformTags } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
+import { InfoTip } from "@/components/info-tip";
 import { TagBarChart } from "./tag-bar-chart";
 
 const TOP = 10;
@@ -23,14 +24,14 @@ export function TagCharts({ tags, connected }: { tags: PlatformTags[]; connected
               const gaps = pt.tags.filter((t) => t.solved === 0).slice(0, GAPS);
               return (
                 <section key={pt.platform} className="min-w-0 space-y-3">
-                  <div>
-                    <h3 className="text-sm font-medium">{PLATFORM_META[pt.platform].name}</h3>
-                    <p className="text-xs text-muted-foreground">
+                  <h3 className="flex items-center gap-1.5 text-sm font-medium">
+                    {PLATFORM_META[pt.platform].name}
+                    <InfoTip label={`About ${PLATFORM_META[pt.platform].name} tags`}>
                       {pt.source === "tracked"
                         ? "Tags on the problems you've solved"
                         : "Lifetime counts reported by LeetCode"}
-                    </p>
-                  </div>
+                    </InfoTip>
+                  </h3>
                   {solved.length > 0 ? (
                     <TagBarChart platform={pt.platform} tags={solved} />
                   ) : (
