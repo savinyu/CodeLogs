@@ -17,12 +17,17 @@ export function TotalsCards({
   totals: PlatformTotal[];
   accounts: AccountSummary[];
 }) {
-  const sum = totals.reduce((acc, t) => acc + t.solved, 0);
-  const hasReported = totals.some((t) => t.source === "reported");
+  // Hide empty platforms, unless the card carries a sync status worth seeing.
+  const shown = totals.filter((t) => {
+    const status = accounts.find((a) => a.platform === t.platform)?.status;
+    return t.solved > 0 || (status !== undefined && STATUS_LABEL[status] !== undefined);
+  });
+  const sum = shown.reduce((acc, t) => acc + t.solved, 0);
+  const hasReported = shown.some((t) => t.source === "reported");
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {totals.length > 1 && (
+      {shown.length > 1 && (
         <Card>
           <CardHeader>
             <CardTitle>Total solved</CardTitle>
@@ -37,7 +42,7 @@ export function TotalsCards({
           </CardContent>
         </Card>
       )}
-      {totals.map((t) => {
+      {shown.map((t) => {
         const meta = PLATFORM_META[t.platform];
         const account = accounts.find((a) => a.platform === t.platform);
         const statusLabel = account ? STATUS_LABEL[account.status] : undefined;
