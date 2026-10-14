@@ -1,7 +1,6 @@
 import type { ActivityPeriod } from "@/lib/dashboard/filters";
 import { activeDaysSummary, periodRange } from "@/lib/dashboard/heatmap";
-import { PLATFORM_COLOR, type ActivityDay } from "@/lib/dashboard/types";
-import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
+import type { ActivityDay } from "@/lib/dashboard/types";
 
 const WEEKDAYS = [
   "Sundays",
@@ -42,7 +41,6 @@ export function ActiveDays({
     return <p className="text-muted-foreground text-sm">No activity {label}.</p>;
   }
 
-  const platforms = PLATFORM_ORDER.filter((p) => (s.byPlatform[p] ?? 0) > 0);
   const pct = Math.round((s.activeDays / s.periodDays) * 100);
 
   return (
@@ -62,23 +60,6 @@ export function ActiveDays({
           <Row label="Most active" value={WEEKDAYS[s.busiestWeekday] ?? ""} />
         )}
       </dl>
-      {platforms.length > 1 && (
-        <dl className="flex flex-col gap-1.5 border-t pt-3 text-sm">
-          {platforms.map((p) => (
-            <div key={p} className="flex items-center justify-between gap-2">
-              <dt className="text-muted-foreground flex items-center gap-2">
-                <span
-                  className="size-2.5 rounded-full"
-                  style={{ backgroundColor: PLATFORM_COLOR[p] }}
-                  aria-hidden="true"
-                />
-                {PLATFORM_META[p].name}
-              </dt>
-              <dd className="tabular-nums">{s.byPlatform[p]}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
     </div>
   );
 }
