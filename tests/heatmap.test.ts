@@ -202,7 +202,7 @@ describe("activeDaysSummary", () => {
     expect(activeDaysSummary([], periodRange(2026, asOf), asOf).periodDays).toBe(286);
   });
 
-  it("counts active days per platform inside the range", () => {
+  it("counts only active days inside the range", () => {
     const act = [
       mixed("2026-10-01", { codeforces: 2, leetcode: 1 }),
       mixed("2026-10-02", { leetcode: 3 }),
@@ -210,7 +210,6 @@ describe("activeDaysSummary", () => {
       mixed("2024-01-01", { codeforces: 5 }), // outside last12
     ];
     const s = activeDaysSummary(act, periodRange("last12", asOf), asOf);
-    expect(s.byPlatform).toEqual({ codeforces: 1, leetcode: 2 });
     expect(s.activeDays).toBe(2);
   });
 
@@ -225,7 +224,6 @@ describe("activeDaysSummary", () => {
   it("has a null weekday when empty", () => {
     const s = activeDaysSummary([], periodRange("last12", asOf), asOf);
     expect(s.busiestWeekday).toBeNull();
-    expect(s.byPlatform).toEqual({});
   });
 
   it("passes streaks through from activityStats", () => {
