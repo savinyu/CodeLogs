@@ -8,7 +8,7 @@ import {
 import type { ActivityDay } from "@/lib/dashboard/types";
 import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
 
-const CELL = 11;
+const CELL = 10;
 const GAP = 3;
 const STEP = CELL + GAP;
 const LEFT = 28;
@@ -101,7 +101,7 @@ export function ActivityHeatmap({
       <p className="text-muted-foreground text-sm">
         {stats.activeDays === 0
           ? `No activity ${label}.`
-          : `${activeText} · ${totalText} ${label} · ${streaks}`}
+          : `${totalText} solves and submissions ${label}`}
       </p>
       {/* rtl starts the scroll at the right edge, so narrow screens show the latest weeks. */}
       <div dir="rtl" className="overflow-x-auto pb-1">
@@ -159,7 +159,7 @@ export function ActivityHeatmap({
       <div className="text-muted-foreground flex items-center gap-1 text-xs" aria-hidden="true">
         <span className="mr-1">Less</span>
         {([0, 1, 2, 3, 4] as const).map((l) => (
-          <span key={l} className={`size-[11px] rounded-[2px] ${BG[l]}`} />
+          <span key={l} className={`size-[10px] rounded-[2px] ${BG[l]}`} />
         ))}
         <span className="ml-1">More</span>
       </div>

@@ -108,10 +108,11 @@ describe("buildDashboard", () => {
         platform: "codeforces",
         solved: 46,
         source: "tracked",
+        listed: 46,
         rating: { current: 839, max: 1062, rank: "newbie" },
       },
-      { platform: "atcoder", solved: 0, source: "tracked" },
-      { platform: "leetcode", solved: 319, source: "reported" },
+      { platform: "atcoder", solved: 0, source: "tracked", listed: 0 },
+      { platform: "leetcode", solved: 319, source: "reported", listed: 17 },
     ]);
   });
 
@@ -124,6 +125,7 @@ describe("buildDashboard", () => {
       platform: "leetcode",
       solved: 17,
       source: "tracked",
+      listed: 17,
     });
     expect(d.totals.find((t) => t.platform === "codeforces")?.rating).toBeUndefined();
   });
@@ -197,7 +199,7 @@ describe("buildDashboard", () => {
   it("leaves out tag sections for platforms that aren't connected", () => {
     const d = buildDashboard(raw({ accounts: [account("atcoder")] }), ASOF);
     expect(d.tags).toEqual([]);
-    expect(d.totals).toEqual([{ platform: "atcoder", solved: 0, source: "tracked" }]);
+    expect(d.totals).toEqual([{ platform: "atcoder", solved: 0, source: "tracked", listed: 0 }]);
   });
 });
 

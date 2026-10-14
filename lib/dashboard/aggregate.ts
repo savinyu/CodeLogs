@@ -102,7 +102,7 @@ function inc<K extends string>(rec: Partial<Record<K, number>>, key: K, by: numb
 function buildTotals(raw: DashboardRaw, connected: PlatformId[]): PlatformTotal[] {
   return connected.map((platform) => {
     const tracked = raw.solveCounts.find((c) => c.platform === platform)?.count ?? 0;
-    const total: PlatformTotal = { platform, solved: tracked, source: "tracked" };
+    const total: PlatformTotal = { platform, solved: tracked, source: "tracked", listed: tracked };
 
     if (platform === "leetcode") {
       const all = stat(raw, platform, "lc_difficulty_counts", lcDifficultySchema)?.solved.all;
