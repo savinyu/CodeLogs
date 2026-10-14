@@ -2,9 +2,8 @@ import type { PlatformId } from "@/lib/adapters/types";
 import type { PlatformTags } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
 import { InfoTip } from "@/components/info-tip";
-import { TagBarChart } from "./tag-bar-chart";
+import { TagPieChart } from "./tag-pie-chart";
 
-const TOP = 10;
 const GAPS = 10;
 
 export function TagCharts({ tags, connected }: { tags: PlatformTags[]; connected: PlatformId[] }) {
@@ -20,7 +19,7 @@ export function TagCharts({ tags, connected }: { tags: PlatformTags[]; connected
         <>
           <div className={tags.length === 2 ? "grid gap-8 lg:grid-cols-2" : "grid gap-8"}>
             {tags.map((pt) => {
-              const solved = pt.tags.filter((t) => t.solved > 0).slice(0, TOP);
+              const solved = pt.tags.filter((t) => t.solved > 0);
               const gaps = pt.tags.filter((t) => t.solved === 0).slice(0, GAPS);
               return (
                 <section key={pt.platform} className="min-w-0 space-y-3">
@@ -33,7 +32,12 @@ export function TagCharts({ tags, connected }: { tags: PlatformTags[]; connected
                     </InfoTip>
                   </h3>
                   {solved.length > 0 ? (
-                    <TagBarChart platform={pt.platform} tags={solved} />
+                    <TagPieChart
+                      platform={pt.platform}
+                      tags={solved}
+                      // Trying both shapes side by side: CF as a pie, LeetCode as a ring.
+                      variant={pt.platform === "leetcode" ? "ring" : "pie"}
+                    />
                   ) : (
                     <p className="text-sm text-muted-foreground">No tagged solves yet.</p>
                   )}
