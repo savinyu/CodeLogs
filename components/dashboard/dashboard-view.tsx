@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { InfoTip } from "@/components/info-tip";
 import { filterDashboard } from "@/lib/dashboard/aggregate";
 import { activityYears, parseActivityPeriod } from "@/lib/dashboard/filters";
 import type { DashboardData, PlatformFilter } from "@/lib/dashboard/types";
@@ -26,7 +27,7 @@ function Section({
   action,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
@@ -122,7 +123,19 @@ export function DashboardView({
         </Section>
       )}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Section title="Difficulty" description="Bands are rough equivalents across platforms.">
+        <Section
+          title={
+            <span className="inline-flex items-center gap-1.5">
+              Difficulty
+              <InfoTip label="About difficulty bands">
+                Bands group your solves by difficulty so the platforms line up. Band 1 is the
+                easiest and Band 5 the hardest. Hover a bar to see each band&apos;s rating range per
+                platform. Unrated solves have no difficulty available.
+              </InfoTip>
+            </span>
+          }
+          description="Bands are rough equivalents across platforms."
+        >
           <DifficultyChart rows={data.difficulty} />
         </Section>
         <Section title="Recent solves" description="Newest first.">
