@@ -1,5 +1,6 @@
 // Pure heatmap math: grid layout, intensity levels and streaks. All dates are UTC YYYY-MM-DD.
 
+import type { PlatformId } from "@/lib/adapters/types";
 import type { ActivityPeriod } from "./filters";
 import type { ActivityDay } from "./types";
 
@@ -173,4 +174,44 @@ export function activityStats(
   }
 
   return { activeDays: active.size, total, currentStreak, longestStreak: longest };
+}
+
+export interface ActiveDaysSummary extends ActivityStats {
+  /** Days in the range, inclusive. */
+  periodDays: number;
+  /** Active days per platform inside the range (a day counts when that platform's count > 0). */
+  byPlatform: Partial<Record<PlatformId, number>>;
+  /** 0 = Sunday. null when there is no activity in the range. Ties go to the lower index. */
+  busiestWeekday: number | null;
+}
+
+export function activeDaysSummary(
+  activity: ActivityDay[],
+  range: DayRange,
+  asOf: string,
+): ActiveDaysSummary {
+  const stats = activityStats(activity, range, asOf);
+  const periodDays =
+    Math.round(
+      (Date.parse(`${range.end}T00:00:00Z`) - Date.parse(`${range.start}T00:00:00Z`)) / 86_400_000,
+    ) + 1;
+
+  const byPlatform: Partial<Record<PlatformId, number>> = {};
+  const perWeekday = [0, 0, 0, 0, 0, 0, 0];
+  for (const a of inRange(activity, range)) {
+    if (a.total > 0) perWeekday[weekday(a.day)]!++;
+    for (const [p, n] of Object.entries(a.counts) as [PlatformId, number | undefined][]) {
+      if ((n ?? 0) > 0) byPlatform[p] = (byPlatform[p] ?? 0) + 1;
+    }
+  }
+  let busiestWeekday: number | null = null;
+  let best = 0;
+  perWeekday.forEach((n, i) => {
+    if (n > best) {
+      best = n;
+      busiestWeekday = i;
+    }
+  });
+
+  return { ...stats, periodDays, byPlatform, busiestWeekday };
 }

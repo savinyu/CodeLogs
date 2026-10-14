@@ -217,8 +217,25 @@ function deficit(s: TopicScore): number {
 export interface WeakTopic extends TopicScore {
   slug: MacroSlug;
   name: string;
-  /** The micro topic furthest behind its expectation (in problems), to focus practice on. */
+  /** True when coverage is below WEAK_BELOW; false for lowest-coverage fallback picks. */
+  weak: boolean;
+  /** The micro topic to focus practice on (see weakTopics and practiceTopics). */
   focus: { slug: TopicSlug; name: string } | null;
+}
+
+function toTopic(
+  t: MacroTopicStat,
+  score: TopicScore,
+  weak: boolean,
+  focus: MacroTopicStat["micros"][number] | undefined,
+): WeakTopic {
+  return {
+    slug: t.slug,
+    name: t.name,
+    ...score,
+    weak,
+    focus: focus ? { slug: focus.slug, name: focus.name } : null,
+  };
 }
 
 /** Up to `limit` macro topics with coverage below WEAK_BELOW, weakest first. */
@@ -229,15 +246,34 @@ export function weakTopics(topics: MacroTopicStat[], limit = 3): WeakTopic[] {
     .sort((a, b) => a.score.coverage - b.score.coverage)
     .slice(0, limit)
     .map(({ t, score }) => {
+      // The micro furthest behind its expectation (in problems).
       const focus = t.micros
         .map((u) => ({ u, s: scoreTopic(u) }))
         .filter(({ s }) => s.expected >= 1 && s.coverage < WEAK_BELOW)
         .sort((a, b) => deficit(b.s) - deficit(a.s))[0];
-      return {
-        slug: t.slug,
-        name: t.name,
-        ...score,
-        focus: focus ? { slug: focus.u.slug, name: focus.u.name } : null,
-      };
+      return toTopic(t, score, true, focus?.u);
+    });
+}
+
+/**
+ * Topics to practice: the weak ones when there are any, otherwise the `limit` lowest-coverage
+ * topics (with weak: false), so there is always something to recommend.
+ */
+export function practiceTopics(topics: MacroTopicStat[], limit = 3): WeakTopic[] {
+  const weak = weakTopics(topics, limit);
+  if (weak.length > 0) return weak;
+  const scored = topics.map((t) => ({ t, score: scoreTopic(t) }));
+  const qualified = scored.filter(({ score }) => score.expected >= MIN_EXPECTED);
+  const pool = qualified.length > 0 ? qualified : scored.filter(({ score }) => score.expected > 0);
+  return pool
+    .sort((a, b) => a.score.coverage - b.score.coverage)
+    .slice(0, limit)
+    .map(({ t, score }) => {
+      // No weakness threshold here: simply the micro with the lowest coverage.
+      const focus = t.micros
+        .map((u) => ({ u, s: scoreTopic(u) }))
+        .filter(({ s }) => s.expected >= 1)
+        .sort((a, b) => a.s.coverage - b.s.coverage)[0];
+      return toTopic(t, score, false, focus?.u);
     });
 }

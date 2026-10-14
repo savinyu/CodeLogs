@@ -29,6 +29,8 @@ export interface PlatformTotal {
   platform: PlatformId;
   solved: number;
   source: CountSource;
+  /** Solve rows we hold. LeetCode's can be below `solved` until its history is imported. */
+  listed: number;
   /** Codeforces only, for now. */
   rating?: { current: number; max: number; rank?: string };
 }

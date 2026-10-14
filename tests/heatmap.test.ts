@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  activeDaysSummary,
   activityStats,
   buildHeatmapGrid,
   heatLevel,
@@ -183,5 +184,54 @@ describe("year views", () => {
     const a = [day("2026-10-12", 1), day("2026-10-13", 1)];
     const s = activityStats(a, { start: "2026-10-13", end: asOf }, asOf);
     expect(s).toMatchObject({ activeDays: 1, currentStreak: 2, longestStreak: 1 });
+  });
+});
+
+describe("activeDaysSummary", () => {
+  const asOf = "2026-10-13"; // Tuesday
+  const mixed = (d: string, counts: ActivityDay["counts"]): ActivityDay => ({
+    day: d,
+    counts,
+    total: Object.values(counts).reduce((a, b) => a + (b ?? 0), 0),
+  });
+
+  it("counts period days inclusively", () => {
+    expect(activeDaysSummary([], periodRange("last12", asOf), asOf).periodDays).toBe(365);
+    expect(activeDaysSummary([], periodRange(2025, asOf), asOf).periodDays).toBe(365);
+    expect(activeDaysSummary([], periodRange(2024, asOf), asOf).periodDays).toBe(366);
+    expect(activeDaysSummary([], periodRange(2026, asOf), asOf).periodDays).toBe(286);
+  });
+
+  it("counts active days per platform inside the range", () => {
+    const act = [
+      mixed("2026-10-01", { codeforces: 2, leetcode: 1 }),
+      mixed("2026-10-02", { leetcode: 3 }),
+      mixed("2026-10-03", { atcoder: 0, leetcode: 0 }),
+      mixed("2024-01-01", { codeforces: 5 }), // outside last12
+    ];
+    const s = activeDaysSummary(act, periodRange("last12", asOf), asOf);
+    expect(s.byPlatform).toEqual({ codeforces: 1, leetcode: 2 });
+    expect(s.activeDays).toBe(2);
+  });
+
+  it("finds the busiest weekday and breaks ties by the lower index", () => {
+    // 2026-10-04 Sun, 10-05 Mon, 10-12 Mon, 10-11 Sun, 10-06 Tue
+    const act = [day("2026-10-05", 1), day("2026-10-12", 1), day("2026-10-06", 1)];
+    expect(activeDaysSummary(act, periodRange("last12", asOf), asOf).busiestWeekday).toBe(1);
+    const tie = [day("2026-10-04", 1), day("2026-10-05", 1)];
+    expect(activeDaysSummary(tie, periodRange("last12", asOf), asOf).busiestWeekday).toBe(0);
+  });
+
+  it("has a null weekday when empty", () => {
+    const s = activeDaysSummary([], periodRange("last12", asOf), asOf);
+    expect(s.busiestWeekday).toBeNull();
+    expect(s.byPlatform).toEqual({});
+  });
+
+  it("passes streaks through from activityStats", () => {
+    const act = [day("2026-10-11", 1), day("2026-10-12", 2), day("2026-10-13", 1)];
+    const s = activeDaysSummary(act, periodRange("last12", asOf), asOf);
+    expect(s).toMatchObject({ activeDays: 3, total: 4, currentStreak: 3, longestStreak: 3 });
+    expect(activeDaysSummary(act, periodRange(2025, asOf), asOf).currentStreak).toBeNull();
   });
 });

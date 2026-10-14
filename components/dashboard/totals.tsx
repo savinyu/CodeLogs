@@ -82,7 +82,9 @@ export function TotalsCards({
               )}
               {t.source === "reported" && (
                 <p className="text-xs text-muted-foreground">
-                  Lifetime count reported by LeetCode; only recent solves are listed.
+                  {account?.historyComplete
+                    ? `Full history imported: ${t.listed.toLocaleString("en-US")} ${t.listed === 1 ? "problem" : "problems"}.`
+                    : "Lifetime count reported by LeetCode; only recent solves are listed."}
                 </p>
               )}
             </CardContent>

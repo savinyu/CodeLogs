@@ -42,15 +42,17 @@ export async function SolveNext({
   const picks = (await getSolveNext(userId, filtered)).slice(0, MAX_TOPICS);
 
   if (picks.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No weak topics right now: every topic is at least 80% of what&apos;s expected.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">No topics to recommend yet.</p>;
   }
 
   return (
     <div className="space-y-6">
+      {picks.every((p) => !p.weak) && (
+        <p className="text-sm text-muted-foreground">
+          No weak topics right now: every topic is at least 80% of what&apos;s expected. To keep
+          practicing, here are your lowest-coverage topics.
+        </p>
+      )}
       {picks.map((t) => {
         const pct = Math.round(Math.min(Math.max(t.coverage, 0), 1) * 100);
         return (

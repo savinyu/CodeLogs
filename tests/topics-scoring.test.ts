@@ -5,6 +5,7 @@ import {
   cfCatalogCap,
   cfLevel,
   MIN_EXPECTED,
+  practiceTopics,
   ratingWeight,
   scoreTopic,
   weakTopics,
@@ -189,5 +190,84 @@ describe("weakTopics", () => {
       ),
     );
     expect(weak!.focus).toEqual({ slug: "graph-traversal", name: "BFS & DFS" });
+  });
+
+  it("marks weak topics as weak", () => {
+    expect(weakTopics(topics({ dp: [0, 10] })).every((w) => w.weak)).toBe(true);
+  });
+});
+
+describe("practiceTopics", () => {
+  function topics(
+    rows: Record<string, [weighted: number, expected: number]>,
+    micros: Record<string, [weighted: number, expected: number]> = {},
+    fallback: [number, number] = [10, 10],
+  ) {
+    const stat = (w: number, e: number) => [
+      { platform: "codeforces" as const, solved: Math.round(w), weighted: w, expected: e },
+    ];
+    return buildTopicStats(input()).map((t) => {
+      const [w, e] = rows[t.slug] ?? fallback;
+      return {
+        ...t,
+        platforms: stat(w, e),
+        micros: t.micros.map((u) => {
+          const [mw, me] = micros[u.slug] ?? [0, 0];
+          return { ...u, platforms: stat(mw, me) };
+        }),
+      };
+    });
+  }
+
+  it("returns the weak topics when there are any", () => {
+    const picks = practiceTopics(topics({ dp: [0, 10], graphs: [2, 10] }));
+    expect(picks.map((p) => p.slug)).toEqual(["dp", "graphs"]);
+    expect(picks.every((p) => p.weak)).toBe(true);
+  });
+
+  it("falls back to the lowest-coverage topics, ascending and limited", () => {
+    const picks = practiceTopics(
+      topics({
+        dp: [9, 10],
+        graphs: [9.5, 10],
+        math: [11, 10],
+        strings: [12, 10],
+        trees: [8.5, 10],
+      }),
+    );
+    expect(picks.map((p) => p.slug)).toEqual(["trees", "dp", "graphs"]);
+    expect(picks.every((p) => !p.weak)).toBe(true);
+    expect(practiceTopics(topics({ dp: [9, 10] }), 2)).toHaveLength(2);
+  });
+
+  it("skips topics under MIN_EXPECTED when others qualify", () => {
+    const picks = practiceTopics(
+      topics({ dp: [0.5, MIN_EXPECTED - 0.5], graphs: [20, 20] }, {}, [0, 0]),
+      5,
+    );
+    expect(picks.map((p) => p.slug)).toEqual(["graphs"]);
+  });
+
+  it("uses topics with any expectation when none reach MIN_EXPECTED", () => {
+    const picks = practiceTopics(topics({ dp: [1, 1], graphs: [0.2, 0.5] }, {}, [0, 0]));
+    expect(picks.map((p) => p.slug)).toEqual(["graphs", "dp"]);
+  });
+
+  it("focuses on the micro with the lowest coverage, even when not weak", () => {
+    const [pick] = practiceTopics(
+      topics(
+        { graphs: [9, 10] },
+        { "shortest-paths": [4, 5], "graph-traversal": [12, 12], mst: [5, 5] },
+        [20, 10],
+      ),
+    );
+    expect(pick!.slug).toBe("graphs");
+    expect(pick!.weak).toBe(false);
+    expect(pick!.focus).toEqual({ slug: "shortest-paths", name: expect.any(String) });
+  });
+
+  it("has no focus when no micro has expectations", () => {
+    const [pick] = practiceTopics(topics({ graphs: [9, 10] }, {}, [20, 10]));
+    expect(pick!.focus).toBeNull();
   });
 });

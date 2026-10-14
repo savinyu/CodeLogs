@@ -1,6 +1,7 @@
-// "Solve next": unsolved problems for the weakest topics. Codeforces is the primary source (rated
-// +100–200 above your level); LeetCode picks can't see solves older than the recent 20, so they
-// carry maybeSolved until the account's history is complete (M5 backfill).
+// "Solve next": unsolved problems for the weak topics, or for the lowest-coverage topics when none
+// is weak (see practiceTopics). Codeforces is the primary source (rated +100–200 above your
+// level); LeetCode picks can't see solves older than the recent 20, so they carry maybeSolved
+// until the account's history is complete (M5 backfill).
 
 import "server-only";
 import { and, eq, not, sql, type SQL } from "drizzle-orm";
@@ -8,7 +9,7 @@ import { db } from "@/lib/db/client";
 import { problems, solves } from "@/lib/db/schema";
 import type { DashboardData } from "@/lib/dashboard/types";
 import { tagsForTopic } from "./mappings";
-import { weakTopics, type WeakTopic } from "./scoring";
+import { practiceTopics, type WeakTopic } from "./scoring";
 
 export interface Recommendation {
   platform: "codeforces" | "leetcode";
@@ -129,11 +130,11 @@ async function leetcodePicks(
 }
 
 /**
- * Picks for the weakest topics of an already platform-filtered dashboard. Picks rotate daily
- * (seeded by user and day) and a problem shows under one topic only.
+ * Picks for the weak topics (else the lowest-coverage ones) of an already platform-filtered
+ * dashboard. Picks rotate daily (seeded by user and day) and a problem shows under one topic only.
  */
 export async function getSolveNext(userId: string, data: DashboardData): Promise<TopicPicks[]> {
-  const weak = weakTopics(data.topics);
+  const weak = practiceTopics(data.topics);
   if (weak.length === 0) return [];
 
   const lcAccount = data.accounts.find((a) => a.platform === "leetcode");

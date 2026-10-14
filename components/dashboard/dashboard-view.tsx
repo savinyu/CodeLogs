@@ -10,6 +10,7 @@ import {
 import { filterDashboard } from "@/lib/dashboard/aggregate";
 import { activityYears, parseActivityPeriod } from "@/lib/dashboard/filters";
 import type { DashboardData, PlatformFilter } from "@/lib/dashboard/types";
+import { ActiveDays } from "./active-days";
 import { ActivityPeriodFilter } from "./activity-period-filter";
 import { ActivityHeatmap } from "./heatmap";
 import { DifficultyChart } from "./difficulty-chart";
@@ -96,13 +97,19 @@ export function DashboardView({
     <div className="flex flex-col gap-6">
       <PlatformFilterBar value={filter} platforms={connected} period={period} />
       <TotalsCards totals={data.totals} accounts={data.accounts} />
-      <Section
-        title="Activity"
-        description={period === "last12" ? "The last 12 months, in UTC." : `${period}, in UTC.`}
-        action={<ActivityPeriodFilter years={years} period={period} platform={filter} />}
-      >
-        <ActivityHeatmap activity={data.activity} asOf={data.asOf} period={period} />
-      </Section>
+      {/* 13rem leaves the heatmap room for a full year (~730px) inside max-w-5xl. */}
+      <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <Section title="Active days">
+          <ActiveDays activity={data.activity} asOf={data.asOf} period={period} />
+        </Section>
+        <Section
+          title="Activity"
+          description={period === "last12" ? "The last 12 months, in UTC." : `${period}, in UTC.`}
+          action={<ActivityPeriodFilter years={years} period={period} platform={filter} />}
+        >
+          <ActivityHeatmap activity={data.activity} asOf={data.asOf} period={period} />
+        </Section>
+      </div>
       <Section title="Topics" description="Your solves on one shared topic list, across platforms.">
         <TopicChart topics={data.topics} showExpected={isOwner} />
       </Section>
@@ -114,12 +121,17 @@ export function DashboardView({
           {solveNext}
         </Section>
       )}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Section title="Difficulty" description="Bands are rough equivalents across platforms.">
           <DifficultyChart rows={data.difficulty} />
         </Section>
-        <Section title="Recent solves">
-          <RecentSolves solves={data.recent} />
+        <Section title="Recent solves" description="Newest first.">
+          <RecentSolves
+            solves={data.recent}
+            leetcodeHistoryComplete={
+              data.accounts.find((a) => a.platform === "leetcode")?.historyComplete ?? false
+            }
+          />
         </Section>
       </div>
       <Section
