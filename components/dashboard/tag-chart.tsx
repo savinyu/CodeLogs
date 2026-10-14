@@ -2,7 +2,7 @@ import type { PlatformId } from "@/lib/adapters/types";
 import type { PlatformTags } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
 import { InfoTip } from "@/components/info-tip";
-import { TagPieChart } from "./tag-pie-chart";
+import { TagRingChart } from "./tag-ring-chart";
 
 const GAPS = 10;
 
@@ -32,12 +32,7 @@ export function TagCharts({ tags, connected }: { tags: PlatformTags[]; connected
                     </InfoTip>
                   </h3>
                   {solved.length > 0 ? (
-                    <TagPieChart
-                      platform={pt.platform}
-                      tags={solved}
-                      // Trying both shapes side by side: CF as a pie, LeetCode as a ring.
-                      variant={pt.platform === "leetcode" ? "ring" : "pie"}
-                    />
+                    <TagRingChart platform={pt.platform} tags={solved} />
                   ) : (
                     <p className="text-sm text-muted-foreground">No tagged solves yet.</p>
                   )}

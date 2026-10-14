@@ -33,18 +33,10 @@ function slices(platform: PlatformId, tags: TagStat[]): Slice[] {
 }
 
 /**
- * Tag share as a pie or a ring. Labels stay hidden until a slice is hovered or tapped; a tap pins
- * the slice so it stays shown on touch screens.
+ * Tag share as a ring, with the total (or the hovered or tapped segment) in the middle. Hovering
+ * or tapping a segment shows it; a tap pins it so it stays shown on touch screens.
  */
-export function TagPieChart({
-  platform,
-  tags,
-  variant,
-}: {
-  platform: PlatformId;
-  tags: TagStat[];
-  variant: "pie" | "ring";
-}) {
+export function TagRingChart({ platform, tags }: { platform: PlatformId; tags: TagStat[] }) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
   const data = slices(platform, tags);
@@ -52,7 +44,6 @@ export function TagPieChart({
   const activeIndex = hovered ?? pinned;
   const active = activeIndex === null ? undefined : data[activeIndex];
   const config: ChartConfig = { solved: { label: "Solves" } };
-  const ring = variant === "ring";
 
   return (
     <div className="space-y-2">
@@ -63,11 +54,11 @@ export function TagPieChart({
               data={data}
               dataKey="solved"
               nameKey="label"
-              innerRadius={ring ? "62%" : 0}
+              innerRadius="62%"
               outerRadius="95%"
-              paddingAngle={ring ? 1.5 : 0}
+              paddingAngle={1.5}
               stroke="var(--background)"
-              strokeWidth={ring ? 0 : 1.5}
+              strokeWidth={0}
               startAngle={90}
               endAngle={-270}
               isAnimationActive={false}
@@ -86,43 +77,25 @@ export function TagPieChart({
             </Pie>
           </PieChart>
         </ChartContainer>
-        {ring ? (
-          <div className="pointer-events-none absolute inset-[24%] flex flex-col items-center justify-center text-center">
-            {active ? (
-              <>
-                <span className="text-2xl font-semibold tabular-nums">{active.solved}</span>
-                <span className="line-clamp-2 text-xs text-muted-foreground">{active.label}</span>
-              </>
-            ) : (
-              <>
-                <span className="text-2xl font-semibold tabular-nums">{total}</span>
-                <span className="text-xs text-muted-foreground">tagged solves</span>
-              </>
-            )}
-          </div>
-        ) : null}
-      </div>
-      {!ring ? (
-        <p className="h-5 truncate text-center text-sm" aria-live="polite">
+        <div className="pointer-events-none absolute inset-[24%] flex flex-col items-center justify-center text-center">
           {active ? (
             <>
-              <span className="font-medium">{active.label}</span>
-              <span className="text-muted-foreground">
-                {" "}
-                · {active.solved} ({Math.round((active.solved / total) * 100)}%)
-              </span>
+              <span className="text-2xl font-semibold tabular-nums">{active.solved}</span>
+              <span className="line-clamp-2 text-xs text-muted-foreground">{active.label}</span>
             </>
           ) : (
-            <span className="text-xs text-muted-foreground">Hover or tap a slice</span>
+            <>
+              <span className="text-2xl font-semibold tabular-nums">{total}</span>
+              <span className="text-xs text-muted-foreground">tagged solves</span>
+            </>
           )}
-        </p>
-      ) : (
-        <p className="h-5 text-center text-xs text-muted-foreground">
-          {active
-            ? `${Math.round((active.solved / total) * 100)}% of tagged solves`
-            : "Hover or tap a segment"}
-        </p>
-      )}
+        </div>
+      </div>
+      <p className="h-5 text-center text-xs text-muted-foreground">
+        {active
+          ? `${Math.round((active.solved / total) * 100)}% of tagged solves`
+          : "Hover or tap a segment"}
+      </p>
       <ul className="sr-only">
         {data.map((s) => (
           <li key={s.key}>
