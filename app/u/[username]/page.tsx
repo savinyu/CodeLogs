@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { SocialLinksRow } from "@/components/social-links";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parsePlatformFilter } from "@/lib/dashboard/aggregate";
 import { getDashboardData, getPublicProfile } from "@/lib/dashboard/queries";
+import { getSocialLinks } from "@/lib/social-links";
 
 export async function generateMetadata({ params }: PageProps<"/u/[username]">): Promise<Metadata> {
   const { username } = await params;
@@ -22,19 +24,25 @@ async function PublicProfileContent({ params, searchParams }: PageProps<"/u/[use
   // Private and unknown profiles look the same from outside.
   const profile = await getPublicProfile(username);
   if (!profile) notFound();
-  const data = await getDashboardData(profile.userId, { verifiedOnly: true });
+  const [data, links] = await Promise.all([
+    getDashboardData(profile.userId, { verifiedOnly: true }),
+    getSocialLinks(profile.userId),
+  ]);
 
   return (
     <>
-      <div className="flex items-center gap-3">
-        <Avatar className="size-12">
-          {profile.image ? <AvatarImage src={profile.image} alt="" /> : null}
-          <AvatarFallback>{profile.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{profile.name}</h1>
-          <p className="text-sm text-muted-foreground">@{profile.username}</p>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex items-center gap-3">
+          <Avatar className="size-12">
+            {profile.image ? <AvatarImage src={profile.image} alt="" /> : null}
+            <AvatarFallback>{profile.name.slice(0, 1).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{profile.name}</h1>
+            <p className="text-sm text-muted-foreground">@{profile.username}</p>
+          </div>
         </div>
+        <SocialLinksRow github={profile.username} links={links} />
       </div>
       <DashboardView
         data={data}
