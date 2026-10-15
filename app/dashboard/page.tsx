@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { PublicProfileToggle } from "@/components/dashboard/public-profile-toggle";
+import { SheetsSummary } from "@/components/dashboard/sheets-card";
 import { SolveNext, SolveNextSkeleton } from "@/components/dashboard/solve-next";
 import { SocialLinksRow } from "@/components/social-links";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,6 +52,13 @@ async function DashboardContent({ searchParams }: Pick<PageProps<"/dashboard">, 
           <Suspense fallback={<SolveNextSkeleton />}>
             <SolveNext userId={user.id} data={data} filter={filter} />
           </Suspense>
+        }
+        sheets={
+          filter === "all" || filter === "leetcode" ? (
+            <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+              <SheetsSummary userId={user.id} />
+            </Suspense>
+          ) : undefined
         }
       />
     </>
