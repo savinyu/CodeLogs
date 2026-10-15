@@ -62,6 +62,17 @@ Scripts: `scripts/spike/{cf,atcoder,leetcode}.ts` (run with `pnpm spike:<platfor
 - kenkoooo's catalog lacks some AtCoder Heuristic Contest `_b` problems (6 of chokudai's solves), so those stay as stub rows.
 - Full catalog refresh: CF 37 s, AtCoder 32 s, LC 60 s (41 pages). Repeat refreshes write only changed rows.
 
+## Contests and badges probe (14 Oct 2026, for M6)
+| Platform | Endpoint | Result |
+|---|---|---|
+| Codeforces | `user.rating?handle=savinyu` | `OK`, 20 rated contests; the last one is CodeTON Round 5 (contest 1842), rank 10469, 946 → 839 |
+| LeetCode | `userContestRanking(username)` | `lee215`: 27 attended, rating 2204, global rank 7558, top 0.9 %, badge "Guardian". `CptDailyBird`: `null` (no contests) |
+| LeetCode | `userContestRankingHistory(username)` | `lee215`: 27 rows, all `attended`. `CptDailyBird`: empty. The list can include unattended rows, so filter on `attended` |
+| LeetCode | `matchedUser.badges` | `CptDailyBird`: `{id, displayName, icon, creationDate}`, e.g. "50 Days Badge 2026". Some `icon` values are relative (`/static/images/badges/…`) |
+| AtCoder | `atcoder.jp/users/chokudai/history/json` | 200, 42 rows (`IsRated, Place, OldRating, NewRating, Performance, InnerPerformance, ContestScreenName, ContestName, ContestNameEn, EndTime`). **Disallowed by robots.txt** (`Disallow: /users/*/history/`) |
+
+`robots.txt` check: LeetCode disallows `/graphql` for `*`, which the existing LC adapter already uses (PLAN.md §4 open #8). AtCoder also disallows `/submissions/` and contest standings; the profile page `/users/X` that we use for validation is allowed.
+
 ## Adapter interface changes (applied to PLAN.md §6)
 - `validateHandle` now returns `{ result: "valid" | "invalid" | "retry"; canonicalHandle?: string; message?: string }` instead of a boolean.
 - `NormalizedSolve.problemFallback` holds inline problem metadata for catalog misses.
