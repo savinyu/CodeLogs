@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   buildDashboard,
+  contestUrl,
   filterDashboard,
   GAP_TAGS_PER_PLATFORM,
   humanizeSlug,
@@ -75,6 +76,7 @@ function raw(overrides: Partial<DashboardRaw> = {}): DashboardRaw {
     cfSolves: [],
     cfCatalog: [],
     lcCatalog: [],
+    contests: [],
     ...overrides,
   };
 }
@@ -281,5 +283,155 @@ describe("filterDashboard", () => {
     expect(lc.activity).toEqual([{ day: "2026-10-01", counts: { leetcode: 4 }, total: 4 }]);
     expect(lc.difficulty.map((r) => r.total)).toEqual([81, 0, 195, 43, 0, 0]);
     expect(lc.tags.map((t) => t.platform)).toEqual(["leetcode"]);
+  });
+});
+
+describe("contests and LeetCode badges", () => {
+  const contest = (
+    platform: "codeforces" | "leetcode",
+    contestKey: string,
+    heldAt: string,
+    rank: number | null,
+    oldRating: number | null,
+    newRating: number | null,
+  ) => ({
+    platform,
+    contestKey,
+    name: `Contest ${contestKey}`,
+    heldAt,
+    rank,
+    oldRating,
+    newRating,
+  });
+
+  const withContests = (extraStats: DashboardRaw["stats"] = []) =>
+    raw({
+      contests: [
+        contest("codeforces", "1842", "2023-06-24T17:05:00.000Z", 10469, 946, 839),
+        contest("codeforces", "1782", "2023-01-15T15:05:00.000Z", 8122, 0, 369),
+        contest("codeforces", "1792", "2023-01-24T16:35:00.000Z", 13922, 369, 1062),
+        contest("leetcode", "weekly-contest-416", "2024-09-22T02:30:00.000Z", 2663, null, 1601),
+      ],
+      stats: [...raw().stats, ...extraStats],
+    });
+
+  it("builds one entry per connected CF / LC account, oldest first, with stats", () => {
+    const data = buildDashboard(withContests(), ASOF);
+    expect(data.contests.map((c) => c.platform)).toEqual(["codeforces", "leetcode"]);
+    const cf = data.contests[0]!;
+    expect(cf.contests.map((c) => c.contestKey)).toEqual(["1782", "1792", "1842"]);
+    expect(cf.contests[0]!.url).toBe("https://codeforces.com/contest/1782");
+    expect(cf).toMatchObject({ attended: 3, bestRank: 8122, currentRating: 839, maxRating: 1062 });
+    expect(cf.badge).toBeUndefined();
+  });
+
+  it("uses LeetCode's own summary for rating, count and badge when it has one", () => {
+    const data = buildDashboard(
+      withContests([
+        {
+          platform: "leetcode",
+          kind: "lc_contest",
+          payload: {
+            attended: 27,
+            rating: 2204.316,
+            globalRanking: 7558,
+            totalParticipants: 887132,
+            topPercentage: 0.9,
+            badge: "Guardian",
+          },
+        },
+      ]),
+      ASOF,
+    );
+    expect(data.contests[1]).toMatchObject({
+      platform: "leetcode",
+      attended: 27,
+      currentRating: 2204,
+      maxRating: 1601,
+      bestRank: 2663,
+      globalRanking: 7558,
+      topPercentage: 0.9,
+      badge: "Guardian",
+    });
+    expect(data.contests[1]!.contests[0]!.url).toBe(
+      "https://leetcode.com/contest/weekly-contest-416/",
+    );
+  });
+
+  it("shows an empty entry for a connected platform with no contests, and none for AtCoder", () => {
+    const data = buildDashboard(raw(), ASOF);
+    expect(data.contests).toEqual([
+      {
+        platform: "codeforces",
+        contests: [],
+        attended: 0,
+        bestRank: null,
+        currentRating: null,
+        maxRating: null,
+      },
+      {
+        platform: "leetcode",
+        contests: [],
+        attended: 0,
+        bestRank: null,
+        currentRating: null,
+        maxRating: null,
+        globalRanking: null,
+        topPercentage: null,
+        badge: null,
+      },
+    ]);
+    const atcoderOnly = buildDashboard(raw({ accounts: [account("atcoder")] }), ASOF);
+    expect(atcoderOnly.contests).toEqual([]);
+  });
+
+  it("sorts badges newest first, drops malformed payloads, and narrows by platform", () => {
+    const badge = (id: string, earnedAt: string | null) => ({
+      id,
+      name: `Badge ${id}`,
+      icon: `https://assets.leetcode.com/${id}.png`,
+      earnedAt,
+      category: "ANNUAL",
+    });
+    const data = buildDashboard(
+      withContests([
+        {
+          platform: "leetcode",
+          kind: "lc_badges",
+          payload: [badge("a", "2024-12-01"), badge("b", null), badge("c", "2026-09-09")],
+        },
+      ]),
+      ASOF,
+    );
+    expect(data.leetcodeBadges.map((b) => b.id)).toEqual(["c", "a", "b"]);
+    expect(filterDashboard(data, "leetcode").leetcodeBadges).toHaveLength(3);
+    expect(filterDashboard(data, "codeforces").leetcodeBadges).toEqual([]);
+    expect(filterDashboard(data, "codeforces").contests.map((c) => c.platform)).toEqual([
+      "codeforces",
+    ]);
+
+    const bad = buildDashboard(
+      raw({
+        stats: [
+          ...raw().stats,
+          {
+            platform: "leetcode",
+            kind: "lc_badges",
+            payload: [{ ...badge("x", null), icon: "javascript:alert(1)" }],
+          },
+        ],
+      }),
+      ASOF,
+    );
+    expect(bad.leetcodeBadges).toEqual([]);
+    const noLc = buildDashboard(raw({ accounts: [account("codeforces")] }), ASOF);
+    expect(noLc.leetcodeBadges).toEqual([]);
+  });
+
+  it("builds contest URLs", () => {
+    expect(contestUrl("codeforces", "1842")).toBe("https://codeforces.com/contest/1842");
+    expect(contestUrl("leetcode", "biweekly-contest-1")).toBe(
+      "https://leetcode.com/contest/biweekly-contest-1/",
+    );
   });
 });

@@ -254,6 +254,29 @@ export const platformStats = pgTable(
   (t) => [primaryKey({ columns: [t.accountId, t.kind] })],
 );
 
+/**
+ * Contests an account took part in (CF user.rating, LC contest history). Each sync replaces the
+ * account's set; only changed rows are rewritten.
+ */
+export const contestResults = pgTable(
+  "contest_results",
+  {
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => platformAccounts.id, { onDelete: "cascade" }),
+    /** CF contest id, LC contest slug. */
+    contestKey: text("contest_key").notNull(),
+    name: text("name").notNull(),
+    /** CF: rating update time (the contest's end); LC: the contest's start. */
+    heldAt: timestamp("held_at", { withTimezone: true }).notNull(),
+    rank: integer("rank"),
+    oldRating: integer("old_rating"),
+    newRating: integer("new_rating"),
+    rated: boolean("rated").notNull().default(true),
+  },
+  (t) => [primaryKey({ columns: [t.accountId, t.contestKey] })],
+);
+
 export const syncRuns = pgTable(
   "sync_runs",
   {

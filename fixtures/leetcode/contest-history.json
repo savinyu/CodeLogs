@@ -1,0 +1,384 @@
+{
+  "data": {
+    "userContestRankingHistory": [
+      {
+        "attended": true,
+        "rating": 1556.233,
+        "ranking": 145,
+        "trendDirection": "UP",
+        "problemsSolved": 2,
+        "totalProblems": 3,
+        "finishTimeInSeconds": 10184,
+        "contest": {
+          "title": "Weekly Contest 16A",
+          "titleSlug": "leetcode-weekly-contest-16a",
+          "startTime": 1485012600
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1524.771,
+        "ranking": 375,
+        "trendDirection": "DOWN",
+        "problemsSolved": 2,
+        "totalProblems": 3,
+        "finishTimeInSeconds": 6380,
+        "contest": {
+          "title": "Weekly Contest 18A",
+          "titleSlug": "leetcode-weekly-contest-18a",
+          "startTime": 1486222200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1542.213,
+        "ranking": 312,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 9468,
+        "contest": {
+          "title": "Weekly Contest 18B",
+          "titleSlug": "leetcode-weekly-contest-18b",
+          "startTime": 1486261800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1534.057,
+        "ranking": 646,
+        "trendDirection": "DOWN",
+        "problemsSolved": 3,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 6534,
+        "contest": {
+          "title": "Weekly Contest 19",
+          "titleSlug": "leetcode-weekly-contest-19",
+          "startTime": 1486866600
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1516.761,
+        "ranking": 907,
+        "trendDirection": "DOWN",
+        "problemsSolved": 1,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 1762,
+        "contest": {
+          "title": "Weekly Contest 23",
+          "titleSlug": "leetcode-weekly-contest-23",
+          "startTime": 1489285800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1656.512,
+        "ranking": 17,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 3309,
+        "contest": {
+          "title": "Weekly Contest 44",
+          "titleSlug": "leetcode-weekly-contest-44",
+          "startTime": 1501983000
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1723.299,
+        "ranking": 86,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 5987,
+        "contest": {
+          "title": "Weekly Contest 45",
+          "titleSlug": "leetcode-weekly-contest-45",
+          "startTime": 1502587800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1711.711,
+        "ranking": 690,
+        "trendDirection": "DOWN",
+        "problemsSolved": 2,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 5822,
+        "contest": {
+          "title": "Weekly Contest 46",
+          "titleSlug": "leetcode-weekly-contest-46",
+          "startTime": 1503192600
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1735.978,
+        "ranking": 277,
+        "trendDirection": "UP",
+        "problemsSolved": 3,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 6209,
+        "contest": {
+          "title": "Weekly Contest 47",
+          "titleSlug": "leetcode-weekly-contest-47",
+          "startTime": 1503797400
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1793.128,
+        "ranking": 84,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 3811,
+        "contest": {
+          "title": "Weekly Contest 48",
+          "titleSlug": "leetcode-weekly-contest-48",
+          "startTime": 1504402200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1872.467,
+        "ranking": 29,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 3386,
+        "contest": {
+          "title": "Weekly Contest 50",
+          "titleSlug": "leetcode-weekly-contest-50",
+          "startTime": 1505611800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1920.185,
+        "ranking": 74,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 5334,
+        "contest": {
+          "title": "Weekly Contest 54",
+          "titleSlug": "leetcode-weekly-contest-54",
+          "startTime": 1508031000
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1963.039,
+        "ranking": 53,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 6244,
+        "contest": {
+          "title": "Weekly Contest 63",
+          "titleSlug": "weekly-contest-63",
+          "startTime": 1513477800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1948.081,
+        "ranking": 352,
+        "trendDirection": "DOWN",
+        "problemsSolved": 3,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 4954,
+        "contest": {
+          "title": "Weekly Contest 66",
+          "titleSlug": "weekly-contest-66",
+          "startTime": 1515292200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 1992.434,
+        "ranking": 54,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 5,
+        "finishTimeInSeconds": 2777,
+        "contest": {
+          "title": "Weekly Contest 68",
+          "titleSlug": "weekly-contest-68",
+          "startTime": 1516501800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2022.118,
+        "ranking": 79,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 4528,
+        "contest": {
+          "title": "Weekly Contest 69",
+          "titleSlug": "weekly-contest-69",
+          "startTime": 1517106600
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2076.188,
+        "ranking": 24,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 6087,
+        "contest": {
+          "title": "Weekly Contest 71",
+          "titleSlug": "weekly-contest-71",
+          "startTime": 1518316200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2024.075,
+        "ranking": 689,
+        "trendDirection": "DOWN",
+        "problemsSolved": 1,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 376,
+        "contest": {
+          "title": "Weekly Contest 72",
+          "titleSlug": "weekly-contest-72",
+          "startTime": 1518921000
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2033.692,
+        "ranking": 125,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 4095,
+        "contest": {
+          "title": "Weekly Contest 73",
+          "titleSlug": "weekly-contest-73",
+          "startTime": 1519525800
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2052.492,
+        "ranking": 99,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 6288,
+        "contest": {
+          "title": "Weekly Contest 75",
+          "titleSlug": "weekly-contest-75",
+          "startTime": 1520735400
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2082.721,
+        "ranking": 56,
+        "trendDirection": "UP",
+        "problemsSolved": 3,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 4219,
+        "contest": {
+          "title": "Weekly Contest 76",
+          "titleSlug": "weekly-contest-76",
+          "startTime": 1521336600
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2074.746,
+        "ranking": 208,
+        "trendDirection": "DOWN",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 6394,
+        "contest": {
+          "title": "Weekly Contest 77",
+          "titleSlug": "weekly-contest-77",
+          "startTime": 1521941400
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2095.397,
+        "ranking": 76,
+        "trendDirection": "UP",
+        "problemsSolved": 3,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 5244,
+        "contest": {
+          "title": "Weekly Contest 78",
+          "titleSlug": "weekly-contest-78",
+          "startTime": 1522546200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2081.302,
+        "ranking": 217,
+        "trendDirection": "DOWN",
+        "problemsSolved": 3,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 2037,
+        "contest": {
+          "title": "Weekly Contest 79",
+          "titleSlug": "weekly-contest-79",
+          "startTime": 1523151000
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2163.084,
+        "ranking": 26,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 1961,
+        "contest": {
+          "title": "Weekly Contest 156",
+          "titleSlug": "weekly-contest-156",
+          "startTime": 1569724200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2222.412,
+        "ranking": 59,
+        "trendDirection": "UP",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 3192,
+        "contest": {
+          "title": "Weekly Contest 176",
+          "titleSlug": "weekly-contest-176",
+          "startTime": 1581820200
+        }
+      },
+      {
+        "attended": true,
+        "rating": 2204.316,
+        "ranking": 2663,
+        "trendDirection": "DOWN",
+        "problemsSolved": 4,
+        "totalProblems": 4,
+        "finishTimeInSeconds": 4883,
+        "contest": {
+          "title": "Weekly Contest 416",
+          "titleSlug": "weekly-contest-416",
+          "startTime": 1726972200
+        }
+      }
+    ]
+  }
+}

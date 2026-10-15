@@ -9,8 +9,12 @@ import { buildTopicStats, cfLevel, type TagSetCount } from "@/lib/topics/scoring
 import type {
   AccountSummary,
   ActivityDay,
+  ContestEntry,
+  ContestPlatform,
   DashboardData,
   DifficultyRow,
+  LeetcodeBadge,
+  PlatformContests,
   PlatformFilter,
   PlatformTags,
   PlatformTotal,
@@ -43,6 +47,8 @@ export interface DashboardRaw {
   /** CF catalog tag sets up to cfCatalogCap(level); LC catalog tag sets (free problems only). */
   cfCatalog: TagSetCount[];
   lcCatalog: TagSetCount[];
+  /** contest_results rows of the user's accounts, any order. heldAt is an ISO timestamp. */
+  contests: (Omit<ContestEntry, "url" | "platform"> & { platform: PlatformId })[];
 }
 
 /** Unsolved tags shown as gaps: the most common ones in each platform's catalog. */
@@ -65,6 +71,23 @@ const lcDifficultySchema = z.object({
 });
 const lcTagCountsSchema = z.array(
   z.object({ tagSlug: z.string(), tagName: z.string(), problemsSolved: z.number() }),
+);
+
+const lcContestSchema = z.object({
+  attended: z.number(),
+  rating: z.number().nullable(),
+  globalRanking: z.number().nullable(),
+  topPercentage: z.number().nullable(),
+  badge: z.string().nullable(),
+});
+const lcBadgesSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    icon: z.string().regex(/^https:\/\//),
+    earnedAt: z.string().nullable(),
+    category: z.string().nullable(),
+  }),
 );
 
 function stat<T>(
@@ -235,6 +258,55 @@ function buildTopics(raw: DashboardRaw, level: number | null) {
   });
 }
 
+export function contestUrl(platform: ContestPlatform, contestKey: string): string {
+  const key = encodeURIComponent(contestKey);
+  return platform === "codeforces"
+    ? `https://codeforces.com/contest/${key}`
+    : `https://leetcode.com/contest/${key}/`;
+}
+
+function isContestPlatform(p: PlatformId): p is ContestPlatform {
+  return p === "codeforces" || p === "leetcode";
+}
+
+function buildContests(raw: DashboardRaw, connected: PlatformId[]): PlatformContests[] {
+  return connected.filter(isContestPlatform).map((platform) => {
+    const contests: ContestEntry[] = raw.contests
+      .filter((c) => c.platform === platform)
+      .sort((a, b) => a.heldAt.localeCompare(b.heldAt) || a.contestKey.localeCompare(b.contestKey))
+      .map((c) => ({ ...c, platform, url: contestUrl(platform, c.contestKey) }));
+    const ranks = contests.flatMap((c) => (c.rank !== null && c.rank > 0 ? [c.rank] : []));
+    const ratings = contests.flatMap((c) => (c.newRating !== null ? [c.newRating] : []));
+    const out: PlatformContests = {
+      platform,
+      contests,
+      attended: contests.length,
+      bestRank: ranks.length > 0 ? Math.min(...ranks) : null,
+      currentRating: ratings.at(-1) ?? null,
+      maxRating: ratings.length > 0 ? Math.max(...ratings) : null,
+    };
+    if (platform === "leetcode") {
+      const summary = stat(raw, platform, "lc_contest", lcContestSchema);
+      if (summary?.rating != null) out.currentRating = Math.round(summary.rating);
+      out.attended = Math.max(out.attended, summary?.attended ?? 0);
+      out.globalRanking = summary?.globalRanking ?? null;
+      out.topPercentage = summary?.topPercentage ?? null;
+      out.badge = summary?.badge ?? null;
+    }
+    return out;
+  });
+}
+
+/** Newest earned first; badges without a date keep LeetCode's order, after the dated ones. */
+function buildLeetcodeBadges(raw: DashboardRaw, connected: PlatformId[]): LeetcodeBadge[] {
+  if (!connected.includes("leetcode")) return [];
+  const badges = stat(raw, "leetcode", "lc_badges", lcBadgesSchema) ?? [];
+  return badges
+    .map((b, i) => ({ b, i }))
+    .sort((x, y) => (y.b.earnedAt ?? "").localeCompare(x.b.earnedAt ?? "") || x.i - y.i)
+    .map(({ b }) => b);
+}
+
 export function buildDashboard(raw: DashboardRaw, asOf: string): DashboardData {
   const accounts = PLATFORM_ORDER.flatMap((p) => raw.accounts.filter((a) => a.platform === p));
   const connected = accounts.map((a) => a.platform);
@@ -250,6 +322,8 @@ export function buildDashboard(raw: DashboardRaw, asOf: string): DashboardData {
     cfLevel: level,
     // Newest first; undated solves last.
     recent: [...raw.recent].sort((a, b) => (b.solvedAt ?? "").localeCompare(a.solvedAt ?? "")),
+    contests: buildContests(raw, connected),
+    leetcodeBadges: buildLeetcodeBadges(raw, connected),
   };
 }
 
@@ -281,5 +355,7 @@ export function filterDashboard(data: DashboardData, filter: PlatformFilter): Da
       micros: t.micros.map((u) => ({ ...u, platforms: only(u.platforms) })),
     })),
     recent: only(data.recent).slice(0, RECENT_LIMIT),
+    contests: only(data.contests),
+    leetcodeBadges: filter === "leetcode" ? data.leetcodeBadges : [],
   };
 }

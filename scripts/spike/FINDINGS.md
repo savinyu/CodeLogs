@@ -71,6 +71,12 @@ Scripts: `scripts/spike/{cf,atcoder,leetcode}.ts` (run with `pnpm spike:<platfor
 | LeetCode | `matchedUser.badges` | `CptDailyBird`: `{id, displayName, icon, creationDate}`, e.g. "50 Days Badge 2026". Some `icon` values are relative (`/static/images/badges/…`) |
 | AtCoder | `atcoder.jp/users/chokudai/history/json` | 200, 42 rows (`IsRated, Place, OldRating, NewRating, Performance, InnerPerformance, ContestScreenName, ContestName, ContestNameEn, EndTime`). **Disallowed by robots.txt** (`Disallow: /users/*/history/`) |
 
+Re-probed 15 Oct 2026 for the fixtures (`fixtures/codeforces/user-rating.json`, `fixtures/leetcode/contest-*.json`, `badges*.json`):
+- CF `user.rating` rows: `{contestId, contestName, handle, rank, ratingUpdateTimeSeconds, oldRating, newRating}`. No start time; a user's first contest has `oldRating: 0`. Unknown handle: HTTP 400 `FAILED`, "handle: User X not found".
+- LC `userContestRankingHistory.contest` has `titleSlug` (used as the contest key) and `startTime`. History ratings are floats and there's no old rating, so the adapter chains the previous attended row's rating.
+- LC `userContestRanking` is `null` with **no error** for an unknown user (unlike `matchedUser`).
+- LC badge categories seen: ANNUAL, DCC (monthly challenge), SUBMISSION, COMPETITION. DCC and competition icons are relative.
+
 `robots.txt` check: LeetCode disallows `/graphql` for `*`, which the existing LC adapter already uses (PLAN.md §4 open #8). AtCoder also disallows `/submissions/` and contest standings; the profile page `/users/X` that we use for validation is allowed.
 
 ## Adapter interface changes (applied to PLAN.md §6)

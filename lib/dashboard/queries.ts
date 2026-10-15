@@ -6,6 +6,7 @@ import { cacheLife } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
   activityDays,
+  contestResults,
   platformAccounts,
   platformStats,
   problems,
@@ -117,6 +118,7 @@ export async function getDashboardData(
     catalogTags,
     recent,
     cfSolves,
+    contests,
   ] = await Promise.all([
     db
       .select({
@@ -185,6 +187,19 @@ export async function getDashboardData(
       .from(solves)
       .innerJoin(problems, eq(problems.id, solves.problemId))
       .where(and(eq(solves.userId, userId), solvesFilter, eq(problems.platform, "codeforces"))),
+    db
+      .select({
+        platform: platformAccounts.platform,
+        contestKey: contestResults.contestKey,
+        name: contestResults.name,
+        heldAt: contestResults.heldAt,
+        rank: contestResults.rank,
+        oldRating: contestResults.oldRating,
+        newRating: contestResults.newRating,
+      })
+      .from(contestResults)
+      .innerJoin(platformAccounts, eq(platformAccounts.id, contestResults.accountId))
+      .where(and(eq(platformAccounts.userId, userId), accountsFilter)),
   ]);
 
   // The CF catalog slice depends on the user's level, so it's a second (cached) round trip.
@@ -215,6 +230,7 @@ export async function getDashboardData(
         solvedAt: r.solvedAt ? new Date(r.solvedAt).toISOString() : null,
         difficultyNorm: (r.difficultyNorm as DifficultyBand | null) ?? null,
       })),
+      contests: contests.map((c) => ({ ...c, heldAt: c.heldAt.toISOString() })),
     },
     asOf,
   );

@@ -3,6 +3,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   activityDays,
+  contestResults,
   platformAccounts,
   platformStats,
   problems,
@@ -26,7 +27,7 @@ export async function buildAccountExport(userId: string) {
     .where(eq(users.id, userId));
   if (!user) return null;
 
-  const [linkRows, accountRows, solveRows, dayRows, statRows] = await Promise.all([
+  const [linkRows, accountRows, solveRows, dayRows, statRows, contestRows] = await Promise.all([
     db
       .select({ kind: socialLinks.kind, value: socialLinks.value })
       .from(socialLinks)
@@ -80,6 +81,21 @@ export async function buildAccountExport(userId: string) {
       .innerJoin(platformAccounts, eq(platformAccounts.id, platformStats.accountId))
       .where(eq(platformAccounts.userId, userId))
       .orderBy(asc(platformAccounts.platform), asc(platformStats.kind)),
+    db
+      .select({
+        platform: platformAccounts.platform,
+        contestKey: contestResults.contestKey,
+        name: contestResults.name,
+        heldAt: contestResults.heldAt,
+        rank: contestResults.rank,
+        oldRating: contestResults.oldRating,
+        newRating: contestResults.newRating,
+        rated: contestResults.rated,
+      })
+      .from(contestResults)
+      .innerJoin(platformAccounts, eq(platformAccounts.id, contestResults.accountId))
+      .where(eq(platformAccounts.userId, userId))
+      .orderBy(asc(platformAccounts.platform), asc(contestResults.heldAt)),
   ]);
 
   return {
@@ -92,5 +108,6 @@ export async function buildAccountExport(userId: string) {
     solves: solveRows,
     activityDays: dayRows,
     platformStats: statRows,
+    contestResults: contestRows,
   };
 }

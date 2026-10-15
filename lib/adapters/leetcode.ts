@@ -10,7 +10,10 @@
 // PageToken semantics for fetchPage (one HTTP request per call):
 //   null | 0  stats: solved/total counts per difficulty             -> extra lc_difficulty_counts, next 1
 //   1         lifetime per-tag solve counts                         -> extra lc_tag_counts,         next 2
-//   2         recentAcSubmissionList(limit: 20)                     -> solves + resumeCursor,       next 3
+//   2         recentAcSubmissionList(limit: 20)                     -> solves + resumeCursor,       next 4
+//   4         userContestRanking                                    -> extra lc_contest,            next 5
+//   5         userContestRankingHistory                             -> snapshot.contests,           next 6
+//   6         matchedUser.badges                                    -> extra lc_badges,             next 3
 //   3         userCalendar, rolling last year                       -> activity + extra lc_calendar,
 //                                                                     next = newest earlier active year
 //                                                                     on the FIRST sync (cursor null),
@@ -24,6 +27,9 @@ import type {
   CatalogAdapter,
   CatalogProblem,
   NormalizedSolve,
+  LcBadge,
+  LcContestSummary,
+  NormalizedContest,
   PageToken,
   PlatformAdapter,
   PlatformExtra,
@@ -44,6 +50,10 @@ const PAGE_STATS = 0;
 const PAGE_TAGS = 1;
 const PAGE_RECENT = 2;
 const PAGE_CALENDAR = 3;
+const PAGE_CONTEST = 4;
+const PAGE_CONTEST_HISTORY = 5;
+const PAGE_BADGES = 6;
+const SITE_ORIGIN = "https://leetcode.com";
 
 // The default CodeLogs User-Agent from http.ts is accepted by leetcode.com (verified live in M2),
 // so no override is needed here.
@@ -111,6 +121,40 @@ interface CalendarData {
   matchedUser?: { userCalendar?: RawUserCalendar | null } | null;
 }
 
+interface ContestRankingData {
+  userContestRanking?: {
+    attendedContestsCount?: number | null;
+    rating?: number | null;
+    globalRanking?: number | null;
+    totalParticipants?: number | null;
+    topPercentage?: number | null;
+    badge?: { name?: string | null } | null;
+  } | null;
+}
+
+interface RawContestHistoryRow {
+  attended?: boolean | null;
+  rating?: number | null;
+  ranking?: number | null;
+  contest?: { title?: string | null; titleSlug?: string | null; startTime?: number | null } | null;
+}
+
+interface ContestHistoryData {
+  userContestRankingHistory?: RawContestHistoryRow[] | null;
+}
+
+interface RawBadge {
+  id?: string | number | null;
+  displayName?: string | null;
+  icon?: string | null;
+  creationDate?: string | null;
+  category?: string | null;
+}
+
+interface BadgesData {
+  matchedUser?: { badges?: RawBadge[] | null } | null;
+}
+
 interface ProfileData {
   matchedUser?: { username?: string; profile?: { aboutMe?: string | null } | null } | null;
 }
@@ -155,6 +199,10 @@ const Q_CALENDAR = `query ($username: String!) {
 const Q_CALENDAR_YEAR = `query ($username: String!, $year: Int) {
   matchedUser(username: $username) { userCalendar(year: $year) ${CAL_FIELDS} }
 }`;
+
+const Q_CONTEST = `query ($username: String!) { userContestRanking(username: $username) { attendedContestsCount rating globalRanking totalParticipants topPercentage badge { name } } }`;
+const Q_CONTEST_HISTORY = `query ($username: String!) { userContestRankingHistory(username: $username) { attended rating ranking contest { title titleSlug startTime } } }`;
+const Q_BADGES = `query ($username: String!) { matchedUser(username: $username) { badges { id displayName icon creationDate category } } }`;
 
 const Q_VALIDATE = `query ($username: String!) { matchedUser(username: $username) { username } }`;
 const Q_PROFILE = `query ($username: String!) {
@@ -298,8 +346,105 @@ async function fetchRecent(handle: string, cursor: SyncCursor | null): Promise<S
 
   return {
     snapshot: { solves, extras: [] },
-    nextPage: PAGE_CALENDAR,
+    nextPage: PAGE_CONTEST,
     resumeCursor: solves.length > 0 ? { platform: "leetcode", lastAcceptedAt: maxTs } : null,
+  };
+}
+
+function numOrNull(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+async function fetchContestSummary(handle: string): Promise<SyncPage> {
+  const data = requireData(
+    await gql<ContestRankingData>(Q_CONTEST, { username: handle }),
+    "contest ranking",
+  );
+  // Null for users who never entered a contest (and, quietly, for unknown users).
+  const r = data.userContestRanking;
+  const payload: LcContestSummary = {
+    attended: r ? (numOrNull(r.attendedContestsCount) ?? 0) : 0,
+    rating: numOrNull(r?.rating),
+    globalRanking: numOrNull(r?.globalRanking),
+    totalParticipants: numOrNull(r?.totalParticipants),
+    topPercentage: numOrNull(r?.topPercentage),
+    badge: r?.badge?.name ? r.badge.name : null,
+  };
+  return {
+    snapshot: { solves: [], extras: [{ kind: "lc_contest", payload }] },
+    nextPage: PAGE_CONTEST_HISTORY,
+    resumeCursor: null,
+  };
+}
+
+async function fetchContestHistory(handle: string): Promise<SyncPage> {
+  const data = requireData(
+    await gql<ContestHistoryData>(Q_CONTEST_HISTORY, { username: handle }),
+    "contest history",
+  );
+  const rows = data.userContestRankingHistory;
+  // Null means "unknown", never "no contests": throwing keeps stored rows intact.
+  if (!rows) throw new Error("LeetCode contest history failed: response is missing the list");
+
+  const seen = new Set<string>();
+  const contests: NormalizedContest[] = [];
+  let prevRating: number | null = null;
+  for (const row of rows) {
+    if (row.attended !== true) continue;
+    const slug = row.contest?.titleSlug;
+    const title = row.contest?.title;
+    const start = numOrNull(row.contest?.startTime);
+    const rating = numOrNull(row.rating);
+    if (!slug || !title || start === null) continue;
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    const newRating = rating === null ? null : Math.round(rating);
+    const rank = numOrNull(row.ranking);
+    contests.push({
+      contestKey: slug,
+      name: title,
+      heldAt: new Date(start * 1000),
+      rank: rank !== null && rank > 0 ? rank : null,
+      oldRating: prevRating,
+      newRating,
+      rated: true,
+    });
+    if (newRating !== null) prevRating = newRating;
+  }
+  return {
+    snapshot: { solves: [], extras: [], contests },
+    nextPage: PAGE_BADGES,
+    resumeCursor: null,
+  };
+}
+
+function absoluteIcon(icon: string | null | undefined): string | null {
+  if (!icon) return null;
+  const url = icon.startsWith("/") && !icon.startsWith("//") ? `${SITE_ORIGIN}${icon}` : icon;
+  // https only: the page renders these as <img> sources.
+  return /^https:\/\//i.test(url) ? url : null;
+}
+
+async function fetchBadges(handle: string): Promise<SyncPage> {
+  const data = requireData(await gql<BadgesData>(Q_BADGES, { username: handle }), "badges");
+  if (!data.matchedUser) throw unknownUser(handle);
+  const payload: LcBadge[] = [];
+  for (const b of data.matchedUser.badges ?? []) {
+    const icon = absoluteIcon(b.icon);
+    if (!icon || b.id === null || b.id === undefined || !b.displayName) continue;
+    payload.push({
+      id: String(b.id),
+      name: b.displayName,
+      icon,
+      earnedAt:
+        b.creationDate && /^\d{4}-\d{2}-\d{2}$/.test(b.creationDate) ? b.creationDate : null,
+      category: b.category ? b.category : null,
+    });
+  }
+  return {
+    snapshot: { solves: [], extras: [{ kind: "lc_badges", payload }] },
+    nextPage: PAGE_CALENDAR,
+    resumeCursor: null,
   };
 }
 
@@ -408,6 +553,12 @@ async function fetchPage(
       return fetchTags(handle);
     case PAGE_RECENT:
       return fetchRecent(handle, cursor);
+    case PAGE_CONTEST:
+      return fetchContestSummary(handle);
+    case PAGE_CONTEST_HISTORY:
+      return fetchContestHistory(handle);
+    case PAGE_BADGES:
+      return fetchBadges(handle);
     case PAGE_CALENDAR:
       return fetchCalendar(handle, cursor, null);
     default:
