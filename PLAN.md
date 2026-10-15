@@ -11,6 +11,8 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 
 **Why this one is different:** existing trackers (Codolio, CoderSTAT, CoderHub, Dsabuddy) mostly show totals and ratings. CodeLogs maps every platform's tags onto **one topic list**, scores your weak areas, and recommends **unsolved** problems at your level.
 
+**Codolio, the closest competitor (owner's notes, 14 Oct 2026):** a handle plus a verification step, like ours, gets you solved counts from LeetCode, Code Studio (Code360), GFG, InterviewBit, CodeChef, Codeforces, HackerRank and AtCoder. It also shows contest history, LeetCode badges and difficulty tags. CodeLogs already has difficulty tags. Contests and LC badges for our 3 platforms are planned as M6 (§7). Social links on the profile are planned as M7. Adding Codolio's other platforms would change a §4 decision, so it's open question #7.
+
 ## 2. Product name ideas (decide later)
 | Name | Vibe |
 |---|---|
@@ -53,6 +55,8 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 | 1 | Chart library | shadcn/ui charts (Recharts inside client components) + a custom SVG heatmap |
 | 5 | Public profiles: opt-in or on by default | Opt-in |
 | 6 | Final product name | CodeLogs for now |
+| 7 | More platforms, as Codolio has (CodeChef, GFG, HackerRank, InterviewBit, Code360). Codolio most likely reads their internal JSON endpoints or scrapes HTML from its server. That conflicts with §4 "never by server-side scraping" and with §5 (CodeChef and GFG terms forbid bots; HackerRank's `/rest` is disallowed by robots.txt) | Keep the §4 decision (extension only, M10). If the owner wants counts sooner: a per-platform check of terms and robots.txt, then **solved counts only**, fetched on demand like LeetCode, for the platforms that pass |
+| 8 | `robots.txt` consistency (found 14 Oct 2026): LeetCode's robots.txt disallows `/graphql`, which our LC adapter already uses (§4 accepted on-demand, user-triggered fetches), and AtCoder's disallows `/users/*/history/`, the only source of AtCoder contest history. §5 cites robots.txt as the reason HackerRank was excluded | LeetCode stays as decided. AtCoder contest history is left out of M6 |
 
 ## 5. Platform data facts (re-verified 12 Oct 2026; full detail and design impact in `scripts/spike/FINDINGS.md`)
 - **Codeforces (official API):**
@@ -70,6 +74,10 @@ A web app where you link your coding-platform handles. It pulls in the problems 
   - The full submission list is null without logging in.
   - Send each query separately: one failing field nulls the whole user object.
   - Tags and difficulty for those 20 come from the public problem catalog.
+- **Contests and badges (checked 14 Oct 2026; detail in FINDINGS.md):**
+  - CF: official `user.rating?handle=X` returns every rated contest in one call (rank, old/new rating, time). `savinyu`: 20 contests.
+  - LC: the GraphQL query `userContestRanking` gives the rating, global rank, top %, attended count and contest badge (Knight/Guardian). `userContestRankingHistory` lists every contest, so filter on `attended`. Both are `null` or empty for users who never entered a contest (`CptDailyBird`). `matchedUser.badges` gives badge name, icon and date. Some icon URLs are relative (`/static/…`) and need the `https://leetcode.com` prefix.
+  - AtCoder: `atcoder.jp/users/X/history/json` has the data (rated flag, place, old/new rating, performance) but robots.txt disallows it (§4 open #8). kenkoooo has no rating history.
 - **Not in v1:**
   - HackerRank: its `/rest` endpoints are disallowed by robots.txt.
   - CodeChef: HTML only, and its terms forbid scraping.
@@ -225,10 +233,24 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - 🧭 Deploy to Vercel + Neon; seed your profile; final review
 - **Done when:** your live `/u/<you>` link works logged out and friends can sign up.
 
+### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison)
+- 🧭 Schema: `contest_results` (account_id, contest_key, name, started_at, rank, old_rating, new_rating, rated bool), unique(account_id, contest_key). LC badges and the LC contest summary go in `platform_stats` (kinds `lc_badges` and `lc_contest`), so they need no new table. Extend `PlatformSnapshot.extras` or add `fetchContests(handle)` to the adapter contract
+- 🤖∥ CF: `user.rating`, one call per sync, replacing the stored rows (the list is small and append-only) + fixture test
+- 🤖∥ LC: `userContestRanking` + `userContestRankingHistory` (attended only) + `matchedUser.badges`, each sent as its own query (§5) + fixture tests, with no-contest users covered
+- 🤖 UI: a Contests card with a rating-over-time line per platform, contests entered, best rank, current and max rating, plus the LC contest badge. A LeetCode badges strip with the icons (plain `<img>`, or `next/image` with `remotePatterns` for `assets.leetcode.com` and `leetcode.com`). Public on `/u/[username]` for verified handles
+- AtCoder: skipped while robots.txt disallows `/users/*/history/` (§4 open #8). The card says "AtCoder contests not available"
+- **Done when:** CF shows `savinyu`'s 20 contests with rating 839 as the last point; `lee215` on LC shows 27 contests and the Guardian badge; `CptDailyBird` shows its LC badges and an empty contest state; a second sync changes nothing.
+
+### M7: Social links on the profile (added 14 Oct 2026)
+- 🧭 Schema: `profile_links` (user_id, kind, value, position), unique(user_id, kind). Kinds: `github` (filled from the login and locked, the only verified link), `linkedin`, `x`, `website`, and maybe `youtube` and `discord`. Known networks store a **handle**, and we build the URL from it, so a profile can't carry an arbitrary link under a LinkedIn icon. `website` must be an `https://` URL
+- 🤖 Settings section to add, edit, reorder and remove links, with per-kind validation (pure, tested) in `lib/profile-links.ts`. The server action re-checks `getCurrentUser()` and scopes writes to the user
+- 🤖 Icons row on `/u/[username]` and the dashboard header, with `rel="me nofollow noopener"` and `target="_blank"`. Include the links in the JSON export, and let account delete cascade to them
+- **Done when:** the owner adds LinkedIn + website and they show logged out on `/u/savinyu`; a `javascript:` or `http://` website and a malformed handle are rejected.
+
 ### Later
-- M6: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token)
-- M7: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
-- M8: CodeChef and GFG via the extension, plus revision reminders
+- M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token)
+- M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
+- M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
 
 ## 8. How the captain/subagent split works
 - **Before each milestone:** the Captain (Opus) writes a todo list. Each 🤖 task gets a spec: files to create, interfaces to import, the fixture to test against, and the "done when" check.
@@ -252,6 +274,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 | Inngest free-tier limit (~50k step runs/month) | Incremental cursors keep steps per sync small; catalog sync runs once a day |
 | Neon free-tier limits | Incremental writes, trimmed raw payloads, catalog written once a day rather than per user |
 | Scope creep | Ship M5 before starting M6+ |
+| Chasing Codolio's platform count | Compete on topics and "solve next" (§1). Add platforms only through the §4 open #7 decision |
 
 ## 11. External review log
 ### Gemini critique (12 Oct 2026): cross-checked
