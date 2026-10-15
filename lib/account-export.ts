@@ -6,6 +6,7 @@ import {
   platformAccounts,
   platformStats,
   problems,
+  socialLinks,
   solves,
   users,
 } from "@/lib/db/schema";
@@ -25,7 +26,12 @@ export async function buildAccountExport(userId: string) {
     .where(eq(users.id, userId));
   if (!user) return null;
 
-  const [accountRows, solveRows, dayRows, statRows] = await Promise.all([
+  const [linkRows, accountRows, solveRows, dayRows, statRows] = await Promise.all([
+    db
+      .select({ kind: socialLinks.kind, value: socialLinks.value })
+      .from(socialLinks)
+      .where(eq(socialLinks.userId, userId))
+      .orderBy(asc(socialLinks.kind)),
     db
       .select({
         platform: platformAccounts.platform,
@@ -81,6 +87,7 @@ export async function buildAccountExport(userId: string) {
     version: 1 as const,
     exportedAt: new Date(),
     user,
+    socialLinks: linkRows,
     platformAccounts: accountRows,
     solves: solveRows,
     activityDays: dayRows,

@@ -16,6 +16,7 @@ import {
   uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import type { SocialKind } from "../social-links-shared";
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () =>
@@ -98,6 +99,21 @@ export const verifications = pgTable(
 // ---------------------------------------------------------------------------
 // CodeLogs tables
 // ---------------------------------------------------------------------------
+
+/** Links shown on the profile, one per kind. GitHub isn't stored: it's users.username. */
+export const socialLinks = pgTable(
+  "social_links",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<SocialKind>().notNull(),
+    /** A handle for x/instagram, an https URL for website, an address for email. */
+    value: text("value").notNull(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind] })],
+);
 
 export const PLATFORMS = ["codeforces", "atcoder", "leetcode"] as const;
 export const platformEnum = pgEnum("platform", PLATFORMS);

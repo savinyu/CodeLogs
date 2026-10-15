@@ -3,7 +3,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireUser } from "@/lib/session";
+import { getSocialLinks } from "@/lib/social-links";
 import { DeleteAccountForm } from "./delete-account-form";
+import { SocialLinksForm } from "./social-links-form";
 
 export const metadata = { title: "Settings" };
 
@@ -12,6 +14,9 @@ export default function SettingsPage() {
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
       <div className="mt-8 grid gap-4">
+        <Suspense fallback={<CardSkeleton />}>
+          <SocialLinksCard />
+        </Suspense>
         <Card>
           <CardHeader>
             <CardTitle>Export your data</CardTitle>
@@ -26,11 +31,31 @@ export default function SettingsPage() {
             </a>
           </CardContent>
         </Card>
-        <Suspense fallback={<DeleteSkeleton />}>
+        <Suspense fallback={<CardSkeleton />}>
           <DeleteCard />
         </Suspense>
       </div>
     </main>
+  );
+}
+
+async function SocialLinksCard() {
+  const user = await requireUser();
+  const links = await getSocialLinks(user.id);
+  return (
+    <Card id="social-links">
+      <CardHeader>
+        <CardTitle>Social links</CardTitle>
+        <CardDescription>
+          Shown as icons on your dashboard and public profile. Leave a field empty to remove it.
+          {user.username &&
+            ` GitHub (@${user.username}) comes from your sign-in and is always shown.`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <SocialLinksForm links={links} />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -53,7 +78,7 @@ async function DeleteCard() {
   );
 }
 
-function DeleteSkeleton() {
+function CardSkeleton() {
   return (
     <Card aria-hidden>
       <CardHeader>

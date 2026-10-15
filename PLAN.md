@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M5: streak flame)
+Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links built; M6 contests + badges moved to Later)
 
 ---
 
@@ -11,7 +11,7 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 
 **Why this one is different:** existing trackers (Codolio, CoderSTAT, CoderHub, Dsabuddy) mostly show totals and ratings. CodeLogs maps every platform's tags onto **one topic list**, scores your weak areas, and recommends **unsolved** problems at your level.
 
-**Codolio, the closest competitor (owner's notes, 14 Oct 2026):** a handle plus a verification step, like ours, gets you solved counts from LeetCode, Code Studio (Code360), GFG, InterviewBit, CodeChef, Codeforces, HackerRank and AtCoder. It also shows contest history, LeetCode badges and difficulty tags. CodeLogs already has difficulty tags. Contests and LC badges for our 3 platforms are planned as M6 (§7). Social links on the profile are planned as M7. Adding Codolio's other platforms would change a §4 decision, so it's open question #7.
+**Codolio, the closest competitor (owner's notes, 14 Oct 2026):** a handle plus a verification step, like ours, gets you solved counts from LeetCode, Code Studio (Code360), GFG, InterviewBit, CodeChef, Codeforces, HackerRank and AtCoder. It also shows contest history, LeetCode badges and difficulty tags. CodeLogs already has difficulty tags. Contests and LC badges for our 3 platforms are planned as M6, now under Later (§7). Social links on the profile are M7, built first. Adding Codolio's other platforms would change a §4 decision, so it's open question #7.
 
 ## 2. Product name ideas (decide later)
 | Name | Vibe |
@@ -233,7 +233,14 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - 🧭 Deploy to Vercel + Neon; seed your profile; final review
 - **Done when:** your live `/u/<you>` link works logged out and friends can sign up.
 
-### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison)
+### M7: Social links on the profile (added 14 Oct 2026; built 15 Oct 2026, ahead of M6)
+- 🧭 Schema: `social_links` (user_id, kind, value), primary key (user_id, kind). Kinds: `x`, `instagram`, `website`, `email`. GitHub isn't stored: it's the login (`users.username`), always shown, and the only verified link. X and Instagram store a **handle** (a pasted profile URL is reduced to it) and we build the URL, so a profile can't carry an arbitrary link under a brand icon. `website` must be `https://`; `email` becomes a `mailto:` link
+- 🧭 `lib/social-links-shared.ts` (pure, tested): per-kind parsing, URLs and labels. Settings has a "Social links" card with one field per kind; saving replaces the set atomically (`db.batch`), an empty field removes that link, and the server action re-checks `getCurrentUser()`
+- 🧭 Icon row (`components/social-links.tsx`) beside the name on `/u/[username]` and under the dashboard greeting, with `rel="me nofollow noopener noreferrer"` and `target="_blank"`. Included in the JSON export; account delete cascades to it
+- **Done when:** the owner adds X, Instagram, a website and an email, and they show logged out on `/u/savinyu`; a `javascript:` or `http://` website and a malformed handle are rejected.
+
+### Later
+#### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison; moved to Later on 15 Oct 2026)
 - 🧭 Schema: `contest_results` (account_id, contest_key, name, started_at, rank, old_rating, new_rating, rated bool), unique(account_id, contest_key). LC badges and the LC contest summary go in `platform_stats` (kinds `lc_badges` and `lc_contest`), so they need no new table. Extend `PlatformSnapshot.extras` or add `fetchContests(handle)` to the adapter contract
 - 🤖∥ CF: `user.rating`, one call per sync, replacing the stored rows (the list is small and append-only) + fixture test
 - 🤖∥ LC: `userContestRanking` + `userContestRankingHistory` (attended only) + `matchedUser.badges`, each sent as its own query (§5) + fixture tests, with no-contest users covered
@@ -241,13 +248,6 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - AtCoder: skipped while robots.txt disallows `/users/*/history/` (§4 open #8). The card says "AtCoder contests not available"
 - **Done when:** CF shows `savinyu`'s 20 contests with rating 839 as the last point; `lee215` on LC shows 27 contests and the Guardian badge; `CptDailyBird` shows its LC badges and an empty contest state; a second sync changes nothing.
 
-### M7: Social links on the profile (added 14 Oct 2026)
-- 🧭 Schema: `profile_links` (user_id, kind, value, position), unique(user_id, kind). Kinds: `github` (filled from the login and locked, the only verified link), `linkedin`, `x`, `website`, and maybe `youtube` and `discord`. Known networks store a **handle**, and we build the URL from it, so a profile can't carry an arbitrary link under a LinkedIn icon. `website` must be an `https://` URL
-- 🤖 Settings section to add, edit, reorder and remove links, with per-kind validation (pure, tested) in `lib/profile-links.ts`. The server action re-checks `getCurrentUser()` and scopes writes to the user
-- 🤖 Icons row on `/u/[username]` and the dashboard header, with `rel="me nofollow noopener"` and `target="_blank"`. Include the links in the JSON export, and let account delete cascade to them
-- **Done when:** the owner adds LinkedIn + website and they show logged out on `/u/savinyu`; a `javascript:` or `http://` website and a malformed handle are rejected.
-
-### Later
 - M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token)
 - M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
 - M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
@@ -358,3 +358,9 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [ ] 👤 Owner: check the dashboard layout at wide and narrow widths
   - [x] Streak flame (15 Oct 2026): the Active days card shows the current streak LeetCode-style, as a flame icon with the number beside it in the card header, instead of a "Current streak" row. The flame is orange (`--streak` token) once today (UTC) has activity and grey while the streak still waits on today; hover says which. Hidden when the period doesn't include today (past years), like before. `StreakFlame` in `components/dashboard/active-days.tsx`
   - Known limits: imported LC solves have no dates, so they don't show on the heatmap or in recent solves. LC slugs missing from the catalog get a stub problem row built from the slug (title and URL only, no difficulty or tags), so no solve is dropped; the weekly catalog sync then fills them in. The picker stays open while the account is still `partial`. The stale cron only covers users active in the last 30 days or with a public profile
+- [ ] M7 social links (branch `m7-socials`; M6 contests + badges moved to Later on 15 Oct 2026)
+  - [x] `social_links` table (migration `0004`, applied to Neon); GitHub comes from the login and isn't stored
+  - [x] `lib/social-links-shared.ts`: X and Instagram handles (bare, `@handle` or a pasted profile URL), `https://` websites (a bare domain gets `https://`), plain emails; 9 tests
+  - [x] Settings "Social links" card (one field per kind, atomic replace); icon row on `/u/[username]` and the dashboard (with an "Add social links" / "Edit links" link); links in the JSON export
+  - [x] Verified: typecheck, lint, format, 279 tests; live with a temp public user (then deleted): a second save replaced the first set, `/u/<name>` rendered every href with `rel="me nofollow noopener noreferrer"`, delete cascaded; headless Chrome screenshot of the icons
+  - [ ] 👤 Owner: add links in Settings, check them on the dashboard and logged out on `/u/savinyu`
