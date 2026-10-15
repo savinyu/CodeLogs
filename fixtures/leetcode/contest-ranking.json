@@ -1,0 +1,14 @@
+{
+  "data": {
+    "userContestRanking": {
+      "attendedContestsCount": 27,
+      "rating": 2204.316,
+      "globalRanking": 7558,
+      "totalParticipants": 887132,
+      "topPercentage": 0.9,
+      "badge": {
+        "name": "Guardian"
+      }
+    }
+  }
+}

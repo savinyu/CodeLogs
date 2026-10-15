@@ -29,9 +29,49 @@ export interface NormalizedSolve {
 }
 
 export interface PlatformExtra {
-  /** e.g. "lc_difficulty_counts", "lc_tag_counts", "lc_calendar", "cf_rating" */
+  /** e.g. "lc_difficulty_counts", "lc_tag_counts", "lc_calendar", "lc_contest", "lc_badges", "cf_rating" */
   kind: string;
   payload: unknown;
+}
+
+/** One contest the user took part in. Ratings are whole numbers (LeetCode's are rounded). */
+export interface NormalizedContest {
+  /** Unique per platform: CF contest id "1842", LC contest slug "weekly-contest-416". */
+  contestKey: string;
+  name: string;
+  /** CF: when the ratings were updated (the contest's end). LC: the contest's start. */
+  heldAt: Date;
+  rank: number | null;
+  /** Null when the platform doesn't say (a user's first LeetCode contest). */
+  oldRating: number | null;
+  newRating: number | null;
+  rated: boolean;
+}
+
+/** Payload of the "lc_contest" extra. attended = 0 and the rest null if the user never entered one. */
+export interface LcContestSummary {
+  attended: number;
+  /** LeetCode's contest rating, unrounded (e.g. 2204.316). */
+  rating: number | null;
+  globalRanking: number | null;
+  totalParticipants: number | null;
+  /** e.g. 0.9 = top 0.9 %. */
+  topPercentage: number | null;
+  /** "Knight" or "Guardian". */
+  badge: string | null;
+}
+
+/** One element of the "lc_badges" extra's payload (an array, newest first as LeetCode lists them). */
+export interface LcBadge {
+  id: string;
+  /** displayName: "50 Days Badge 2026". */
+  name: string;
+  /** Always absolute: relative "/static/…" icons get the https://leetcode.com prefix. */
+  icon: string;
+  /** YYYY-MM-DD, or null if missing. */
+  earnedAt: string | null;
+  /** "ANNUAL", "DCC", "COMPETITION", "SUBMISSION", … */
+  category: string | null;
 }
 
 export interface PlatformSnapshot {
@@ -40,6 +80,11 @@ export interface PlatformSnapshot {
   extras: PlatformExtra[];
   /** Per-day submission counts (YYYY-MM-DD, UTC), when the platform provides a calendar. */
   activity?: { day: string; count: number }[];
+  /**
+   * The account's complete contest list. When present (even empty) it replaces the stored
+   * rows; when undefined, stored contests are left alone. Only one page per sync sets it.
+   */
+  contests?: NormalizedContest[];
 }
 
 /** Where the next incremental sync resumes. Stored in platform_accounts.sync_cursor. */

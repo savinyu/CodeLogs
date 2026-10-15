@@ -3,10 +3,15 @@
 // (catalog syncs); stats and activity only rewrite rows whose value changed.
 
 import "server-only";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { activityDays, platformStats, problems, solves } from "@/lib/db/schema";
-import type { CatalogProblem, PlatformId, PlatformSnapshot } from "@/lib/adapters/types";
+import { activityDays, contestResults, platformStats, problems, solves } from "@/lib/db/schema";
+import type {
+  CatalogProblem,
+  NormalizedContest,
+  PlatformId,
+  PlatformSnapshot,
+} from "@/lib/adapters/types";
 import { catalogRows, chunk, dedupeSolves, stubRows } from "./rows";
 
 export interface SyncTarget {
@@ -24,7 +29,7 @@ export interface ApplyResult {
   solvesSkipped: number;
 }
 
-/** Writes one adapter page: stub problems, solves, platform stats and activity days. */
+/** Writes one adapter page: stub problems, solves, platform stats, activity days and contests. */
 export async function applySnapshot(
   target: SyncTarget,
   snapshot: PlatformSnapshot,
@@ -106,7 +111,56 @@ export async function applySnapshot(
     }
   }
 
+  if (snapshot.contests !== undefined) await replaceContests(accountId, snapshot.contests);
+
   return { solvesInserted, stubsInserted, solvesSkipped };
+}
+
+/**
+ * Makes the account's stored contests match `contests` in one atomic batch: rows no longer
+ * listed are deleted, changed rows are updated, unchanged rows aren't written.
+ */
+async function replaceContests(accountId: string, contests: readonly NormalizedContest[]) {
+  const byKey = new Map(contests.map((c) => [c.contestKey, c]));
+  const rows = [...byKey.values()].map((c) => ({
+    accountId,
+    contestKey: c.contestKey,
+    name: c.name,
+    heldAt: c.heldAt,
+    rank: c.rank,
+    oldRating: c.oldRating,
+    newRating: c.newRating,
+    rated: c.rated,
+  }));
+  const keys = rows.map((r) => r.contestKey);
+  const removeStale = db
+    .delete(contestResults)
+    .where(
+      and(
+        eq(contestResults.accountId, accountId),
+        keys.length > 0 ? notInArray(contestResults.contestKey, keys) : undefined,
+      ),
+    );
+  const upserts = chunk(rows).map((batch) =>
+    db
+      .insert(contestResults)
+      .values(batch)
+      .onConflictDoUpdate({
+        target: [contestResults.accountId, contestResults.contestKey],
+        set: {
+          name: sql`excluded.name`,
+          heldAt: sql`excluded.held_at`,
+          rank: sql`excluded.rank`,
+          oldRating: sql`excluded.old_rating`,
+          newRating: sql`excluded.new_rating`,
+          rated: sql`excluded.rated`,
+        },
+        setWhere: sql`(${contestResults.name}, ${contestResults.heldAt}, ${contestResults.rank}, ${contestResults.oldRating}, ${contestResults.newRating}, ${contestResults.rated})
+          IS DISTINCT FROM
+          (excluded.name, excluded.held_at, excluded.rank, excluded.old_rating, excluded.new_rating, excluded.rated)`,
+      }),
+  );
+  await db.batch([removeStale, ...upserts]);
 }
 
 /**

@@ -25,6 +25,7 @@ interface ErrorFixture {
 const status = loadFixture<StatusFixture>("codeforces/user-status.json");
 const userInfo = loadFixture("codeforces/user-info.json");
 const unknownHandle = loadFixture<ErrorFixture>("codeforces/error-unknown-handle.json");
+const ratingFixture = loadFixture("codeforces/user-rating.json");
 const catalogFixture = loadFixture("codeforces/problemset-sample.json");
 
 const NEWEST_ID = Math.max(...status.result.map((s) => s.id));
@@ -64,7 +65,7 @@ describe("codeforcesAdapter metadata", () => {
 });
 
 describe("fetchPage", () => {
-  it("page null: user.info -> cf_rating extra, nextPage 1", async () => {
+  it("page null: user.info -> cf_rating extra, nextPage 0", async () => {
     const http = mockHttp([{ match: "user.info", json: userInfo }]);
     const page = await codeforcesAdapter.fetchPage("savinyu", null, null);
     expect(page.snapshot.solves).toEqual([]);
@@ -74,7 +75,7 @@ describe("fetchPage", () => {
         payload: { rating: 839, maxRating: 1062, rank: "newbie", maxRank: "newbie" },
       },
     ]);
-    expect(page.nextPage).toBe(1);
+    expect(page.nextPage).toBe(0);
     expect(page.resumeCursor).toBeNull();
     expect(http.calls).toHaveLength(1);
     expect(http.calls[0]?.url).toBe("https://codeforces.com/api/user.info?handles=savinyu");
@@ -98,6 +99,101 @@ describe("fetchPage", () => {
     const err = codeforcesAdapter.fetchPage("nobody", null, null);
     await expect(err).rejects.toThrow(/"nobody" not found/);
     await expect(err).rejects.toBeInstanceOf(PlatformUserNotFoundError);
+  });
+
+  it("page 0: user.rating -> 20 contests, nextPage 1, no solves", async () => {
+    const http = mockHttp([{ match: "user.rating", json: ratingFixture }]);
+    const page = await codeforcesAdapter.fetchPage("savinyu", null, 0);
+    expect(http.calls).toHaveLength(1);
+    expect(http.calls[0]?.url).toBe("https://codeforces.com/api/user.rating?handle=savinyu");
+    expect(page.snapshot.solves).toEqual([]);
+    expect(page.snapshot.extras).toEqual([]);
+    const contests = page.snapshot.contests ?? [];
+    expect(contests).toHaveLength(20);
+    expect(contests[0]).toEqual({
+      contestKey: "1782",
+      name: "Codeforces Round 844 (Div. 1 + Div. 2, based on VK Cup 2022 - Elimination Round)",
+      heldAt: new Date(1673795100 * 1000),
+      rank: 8122,
+      oldRating: 0,
+      newRating: 369,
+      rated: true,
+    });
+    expect(contests[0]?.heldAt).toBeInstanceOf(Date);
+    const last = contests[19];
+    expect(last?.contestKey).toBe("1842");
+    expect(last?.name).toBe("CodeTON Round 5 (Div. 1 + Div. 2, Rated, Prizes!)");
+    expect(last?.rank).toBe(10469);
+    expect(last?.oldRating).toBe(946);
+    expect(last?.newRating).toBe(839);
+    expect(last?.rated).toBe(true);
+    expect(last?.heldAt).toBeInstanceOf(Date);
+    expect(page.nextPage).toBe(1);
+    expect(page.resumeCursor).toBeNull();
+  });
+
+  it("page 0: also runs on incremental syncs", async () => {
+    const http = mockHttp([{ match: "user.rating", json: ratingFixture }]);
+    const page = await codeforcesAdapter.fetchPage("savinyu", cursor(500), 0);
+    expect(http.calls).toHaveLength(1);
+    expect(page.snapshot.contests).toHaveLength(20);
+    expect(page.nextPage).toBe(1);
+  });
+
+  it("page 0: no rated contests gives contests: [] (not undefined)", async () => {
+    mockHttp([{ match: "user.rating", json: { status: "OK", result: [] } }]);
+    const page = await codeforcesAdapter.fetchPage("fresh", null, 0);
+    expect(page.snapshot.contests).toEqual([]);
+    expect(page.nextPage).toBe(1);
+  });
+
+  it("page 0: dedupes by contestKey, keeping the first", async () => {
+    const row = (name: string, newRating: number) => ({
+      contestId: 7,
+      contestName: name,
+      handle: "h",
+      rank: 1,
+      ratingUpdateTimeSeconds: 100,
+      oldRating: 0,
+      newRating,
+    });
+    mockHttp([
+      { match: "user.rating", json: { status: "OK", result: [row("first", 10), row("dup", 20)] } },
+    ]);
+    const page = await codeforcesAdapter.fetchPage("h", null, 0);
+    expect(page.snapshot.contests?.map((c) => c.name)).toEqual(["first"]);
+  });
+
+  it("page 0: unknown handle throws PlatformUserNotFoundError", async () => {
+    mockHttp([
+      {
+        match: "user.rating",
+        status: 400,
+        json: { status: "FAILED", comment: "handle: User zzzz not found" },
+      },
+    ]);
+    const err = codeforcesAdapter.fetchPage("zzzz", null, 0);
+    await expect(err).rejects.toBeInstanceOf(PlatformUserNotFoundError);
+  });
+
+  it("page 0: 503 is a retryable HttpError", async () => {
+    mockHttp([{ match: "user.rating", status: 503, text: "Service Unavailable" }]);
+    const err = await codeforcesAdapter.fetchPage("h", null, 0).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect(isRetryableError(err)).toBe(true);
+  });
+
+  it("page 0: a call limit that never clears is retryable", async () => {
+    mockHttp([
+      {
+        match: "user.rating",
+        status: 400,
+        json: { status: "FAILED", comment: "Call limit exceeded" },
+      },
+    ]);
+    const err = await codeforcesAdapter.fetchPage("h", null, 0).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect(isRetryableError(err)).toBe(true);
   });
 
   it("first sync: whole history in one call, 46 unique solves, one request without from/count", async () => {

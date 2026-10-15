@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links built; M6 contests + badges moved to Later)
+Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links merged; M6 contests + badges built, PR open)
 
 ---
 
@@ -240,7 +240,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - **Done when:** the owner adds X, Instagram, a website and an email, and they show logged out on `/u/savinyu`; a `javascript:` or `http://` website and a malformed handle are rejected.
 
 ### Later
-#### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison; moved to Later on 15 Oct 2026)
+#### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison; moved to Later on 15 Oct 2026; built 15 Oct 2026, see §12)
 - 🧭 Schema: `contest_results` (account_id, contest_key, name, started_at, rank, old_rating, new_rating, rated bool), unique(account_id, contest_key). LC badges and the LC contest summary go in `platform_stats` (kinds `lc_badges` and `lc_contest`), so they need no new table. Extend `PlatformSnapshot.extras` or add `fetchContests(handle)` to the adapter contract
 - 🤖∥ CF: `user.rating`, one call per sync, replacing the stored rows (the list is small and append-only) + fixture test
 - 🤖∥ LC: `userContestRanking` + `userContestRankingHistory` (attended only) + `matchedUser.badges`, each sent as its own query (§5) + fixture tests, with no-contest users covered
@@ -364,3 +364,10 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Settings "Social links" card (one field per kind, atomic replace); icon row on `/u/[username]` and the dashboard (with an "Add social links" / "Edit links" link); links in the JSON export
   - [x] Verified: typecheck, lint, format, 279 tests; live with a temp public user (then deleted): a second save replaced the first set, `/u/<name>` rendered every href with `rel="me nofollow noopener noreferrer"`, delete cascaded; headless Chrome screenshot of the icons
   - [ ] 👤 Owner: add links in Settings, check them on the dashboard and logged out on `/u/savinyu`
+- [ ] M6 contests + LeetCode badges (branch `m6-contests`)
+  - [x] `contest_results` (account_id, contest_key, name, held_at, rank, old/new rating, rated), PK (account_id, contest_key); migration `0005`, applied to Neon. `held_at` replaces the planned `started_at`: CF's `user.rating` only gives the rating update time (the contest's end), LC gives the start
+  - [x] Contract: `PlatformSnapshot.contests?` is the account's complete list. When present (even empty) `applySnapshot` replaces the stored set in one `db.batch` (delete keys no longer listed + change-only upsert); undefined leaves it alone. `LcContestSummary` (`lc_contest`) and `LcBadge[]` (`lc_badges`) live in `platform_stats`
+  - [x] CF adapter (Sonnet): page 0 = `user.rating` on every sync (user.info → rating → status). LC adapter (Sonnet): pages 4 `userContestRanking` → 5 `userContestRankingHistory` (attended only; ratings rounded; old rating = the previous attended contest's, null for the first; a null list throws so a glitch never wipes rows) → 6 `matchedUser.badges` (relative icons get `https://leetcode.com`; non-https icons dropped) → 3 calendar. Fixtures from live calls (savinyu, lee215, CptDailyBird)
+  - [x] Dashboard: `contests` + `leetcodeBadges` in the view model (pure, tested), narrowed by `?platform=`; public pages only show verified handles' contests and badges (same `accountsFilter`). UI (Sonnet): Contests card (one rating line per platform, stat block per platform, newest 5 contests, AtCoder robots.txt footnote) and a LeetCode badges strip (plain `<img>`, no optimizer). Contests in the JSON export
+  - [x] Verified: typecheck, lint, format, 309 tests; live with temp users (then deleted): CF `savinyu` 20 contests, last CodeTON Round 5 at 839; LC `lee215` 27 contests, Guardian, top 0.9 %; a second sync left every contest row's `xmin` unchanged; `CptDailyBird` shows "No rated contests yet" and 4 badges; headless Chrome at 1280 px and inside a 360 px frame
+  - [ ] 👤 Owner: check the Contests card and badges on the dashboard (Sync now first so CF and LC fetch contests)

@@ -108,6 +108,50 @@ export interface RecentSolve {
   tags: string[];
 }
 
+/** One contest, for the rating chart and list. */
+export interface ContestEntry {
+  platform: ContestPlatform;
+  contestKey: string;
+  name: string;
+  url: string;
+  /** ISO timestamp. */
+  heldAt: string;
+  rank: number | null;
+  oldRating: number | null;
+  newRating: number | null;
+}
+
+/** Platforms with contest history. AtCoder's is disallowed by its robots.txt (PLAN.md §4 #8). */
+export type ContestPlatform = "codeforces" | "leetcode";
+
+export interface PlatformContests {
+  platform: ContestPlatform;
+  /** Oldest first. Empty when the user never entered one. */
+  contests: ContestEntry[];
+  /** Contests entered (LeetCode's own count when it has one). */
+  attended: number;
+  /** Best (lowest) rank across contests, or null. */
+  bestRank: number | null;
+  /** Rounded. CF: the last contest's new rating; LC: its current contest rating. */
+  currentRating: number | null;
+  maxRating: number | null;
+  /** LeetCode only. */
+  globalRanking?: number | null;
+  topPercentage?: number | null;
+  /** LeetCode contest badge: "Knight" or "Guardian". */
+  badge?: string | null;
+}
+
+export interface LeetcodeBadge {
+  id: string;
+  name: string;
+  /** Absolute https URL on leetcode.com or assets.leetcode.com. */
+  icon: string;
+  /** YYYY-MM-DD. */
+  earnedAt: string | null;
+  category: string | null;
+}
+
 export interface DashboardData {
   /** YYYY-MM-DD (UTC): the last day the heatmap covers. */
   asOf: string;
@@ -125,6 +169,10 @@ export interface DashboardData {
   cfLevel: number | null;
   /** Newest first: up to RECENT_LIMIT per platform until filterDashboard trims it. */
   recent: RecentSolve[];
+  /** One per connected CF / LC account, in PLATFORM_ORDER (AtCoder never appears). */
+  contests: PlatformContests[];
+  /** LeetCode badges, newest earned first; empty without a LeetCode account. */
+  leetcodeBadges: LeetcodeBadge[];
 }
 
 /** Neutral names: the hint says which tier and ranges each band covers (lib/sync/difficulty.ts). */

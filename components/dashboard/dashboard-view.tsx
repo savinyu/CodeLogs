@@ -15,7 +15,9 @@ import type { DashboardData, PlatformFilter } from "@/lib/dashboard/types";
 import { ActiveDays, StreakFlame } from "./active-days";
 import { ActivityPeriodFilter } from "./activity-period-filter";
 import { ActivityHeatmap } from "./heatmap";
+import { Contests } from "./contests";
 import { DifficultyChart } from "./difficulty-chart";
+import { LeetcodeBadges } from "./leetcode-badges";
 import { PlatformFilterBar } from "./platform-filter";
 import { RecentSolves } from "./recent-solves";
 import { TagCharts } from "./tag-chart";
@@ -96,6 +98,7 @@ export function DashboardView({
   // The streak is "right now", so it only shows when the period runs up to today.
   const showStreak = periodRange(period, data.asOf).end === data.asOf;
   const visible = data.accounts.map((a) => a.platform);
+  const atcoderVisible = visible.includes("atcoder");
 
   return (
     <div className="flex flex-col gap-6">
@@ -155,6 +158,16 @@ export function DashboardView({
           />
         </Section>
       </div>
+      {(data.contests.length > 0 || atcoderVisible) && (
+        <Section title="Contests" description="Rated contests and your rating over time.">
+          <Contests contests={data.contests} atcoderVisible={atcoderVisible} />
+        </Section>
+      )}
+      {data.leetcodeBadges.length > 0 && (
+        <Section title="LeetCode badges">
+          <LeetcodeBadges badges={data.leetcodeBadges} />
+        </Section>
+      )}
       <Section
         title="Platform tags"
         description="Each platform's own tags. Popular tags you haven't solved are your gaps."

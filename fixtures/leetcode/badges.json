@@ -1,0 +1,67 @@
+{
+  "data": {
+    "matchedUser": {
+      "badges": [
+        {
+          "id": "10772155",
+          "name": "Annual Badge",
+          "shortName": "50 Days Badge 2026",
+          "displayName": "50 Days Badge 2026",
+          "icon": "https://assets.leetcode.com/static_assets/others/50_1080_1080.png",
+          "hoverText": "50 Days Badge 2026",
+          "creationDate": "2026-09-09",
+          "category": "ANNUAL"
+        },
+        {
+          "id": "5600263",
+          "name": "Annual Badge",
+          "shortName": "100 Days Badge 2024",
+          "displayName": "100 Days Badge 2024",
+          "icon": "https://assets.leetcode.com/static_assets/marketing/2024-100-lg.png",
+          "hoverText": "100 Days Badge 2024",
+          "creationDate": "2024-12-01",
+          "category": "ANNUAL"
+        },
+        {
+          "id": "4977375",
+          "name": "Annual Badge",
+          "shortName": "50 Days Badge 2024",
+          "displayName": "50 Days Badge 2024",
+          "icon": "https://assets.leetcode.com/static_assets/marketing/2024-50-lg.png",
+          "hoverText": "50 Days Badge 2024",
+          "creationDate": "2024-09-23",
+          "category": "ANNUAL"
+        },
+        {
+          "id": "5592895",
+          "name": "Daily Coding Challenge",
+          "shortName": "Nov Badge",
+          "displayName": "Nov LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2024-11.png",
+          "hoverText": "Nov LeetCoding Challenge",
+          "creationDate": "2024-11-30",
+          "category": "DCC"
+        }
+      ],
+      "upcomingBadges": [
+        {
+          "name": "Oct LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2026-10.png"
+        },
+        {
+          "name": "Nov LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2026-11.png"
+        },
+        {
+          "name": "Dec LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2026-12.png"
+        }
+      ],
+      "activeBadge": {
+        "id": "4977375",
+        "displayName": "50 Days Badge 2024",
+        "icon": "https://assets.leetcode.com/static_assets/marketing/2024-50-lg.png"
+      }
+    }
+  }
+}

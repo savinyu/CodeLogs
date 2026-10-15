@@ -1,0 +1,57 @@
+{
+  "data": {
+    "matchedUser": {
+      "badges": [
+        {
+          "id": "10260542",
+          "name": "Guardian",
+          "shortName": "Guardian",
+          "displayName": "Guardian",
+          "icon": "/static/images/badges/guardian.png",
+          "hoverText": "Guardian Top 5% site-wide\n(9095 total)",
+          "creationDate": "2026-05-06",
+          "category": "COMPETITION"
+        },
+        {
+          "id": "5712613",
+          "name": "Submission Badge",
+          "shortName": "500 Days Badge",
+          "displayName": "500 Days Badge",
+          "icon": "https://assets.leetcode.com/static_assets/marketing/lg500.png",
+          "hoverText": "500 Days Badge",
+          "creationDate": "2024-12-08",
+          "category": "SUBMISSION"
+        },
+        {
+          "id": "5712612",
+          "name": "Submission Badge",
+          "shortName": "365 Days Badge",
+          "displayName": "365 Days Badge",
+          "icon": "https://assets.leetcode.com/static_assets/marketing/lg365.png",
+          "hoverText": "365 Days Badge",
+          "creationDate": "2024-12-08",
+          "category": "SUBMISSION"
+        }
+      ],
+      "upcomingBadges": [
+        {
+          "name": "Oct LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2026-10.png"
+        },
+        {
+          "name": "Nov LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2026-11.png"
+        },
+        {
+          "name": "Dec LeetCoding Challenge",
+          "icon": "/static/images/badges/dcc-2026-12.png"
+        }
+      ],
+      "activeBadge": {
+        "id": "5712612",
+        "displayName": "365 Days Badge",
+        "icon": "https://assets.leetcode.com/static_assets/marketing/lg365.png"
+      }
+    }
+  }
+}
