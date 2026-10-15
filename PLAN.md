@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 13 Oct 2026 (M5 started)
+Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M5: streak flame)
 
 ---
 
@@ -94,7 +94,6 @@ Inngest Cloud ── webhook ──> /api/inngest  (Inngest functions, each step
 type PlatformId = "codeforces" | "atcoder" | "leetcode";
 type HistoryCompleteness = "full" | "recent_only" | "counts_only";
 
-<<<<<<< Updated upstream
 interface NormalizedSolve {
   platform: PlatformId;
   externalProblemId: string;   // "1850A", "abc138_a", "two-sum"
@@ -125,20 +124,6 @@ interface CatalogAdapter {
 }
 ```
 The full, current contract is in `lib/adapters/types.ts`. Adapters are **pure**: they make HTTP calls and normalize the results. They never touch the DB, so the fixture tests need no database.
-=======
-**M5 ship (branch `m5-ship`):**
-- [x] Handle verification (code pasted into CF organization / AtCoder affiliation / LC summary); public pages show only verified handles
-- [x] LeetCode backfill import; `history_complete` recomputed after every LeetCode sync
-- [x] `syncStaleAccounts` daily cron
-- [x] Settings: JSON export and account delete
-- [x] README (problem, features, architecture, data limits, setup)
-- [x] 👤 Owner checked: handle verification on all 3 platforms, LeetCode import, export download (13 Oct 2026)
-- [x] Smoother LeetCode import: **Paste** button (clipboard), Cmd/Ctrl+V or drag-and-drop onto the import box, and the file picker also takes the `.html` page Chrome saves with Cmd/Ctrl+S. `parseLeetcodeImportText` in `lib/leetcode-import.ts` tries raw JSON, then each `<pre>` (entities decoded), then a `{…}` slice (drops Chrome's "Pretty-print" label). Checked on the owner's real file as raw JSON, Chrome-rendered HTML and pasted text: 319 slugs each
-- [x] 👤 Owner: try Paste and the saved `.html` in the browser
-- [x] README screenshots (once the public page has verified data)
-- [ ] 🧭 Deploy to Vercel + Neon + Inngest Cloud (needs the owner's accounts, a production GitHub OAuth app, env vars); seed the owner's profile; final review
-- **Done when:** the live `/u/<you>` link works logged out and friends can sign up.
->>>>>>> Stashed changes
 
 ### Data model (Drizzle)
 ```
@@ -341,9 +326,12 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Settings page (Sonnet): JSON export (`/api/export`: profile, handles, solves, activity, stats; no tokens, sessions, verify codes, cursors or raw payloads) and account delete (type your username; everything cascades from `users.id`). Linked from the user menu
   - [x] README: problem, features, architecture diagram, data limits, local setup
   - [x] Verified: typecheck, lint, format, 243 tests, `pnpm build`; logged-out `/u/savinyu` shows "No verified platforms yet"; verification fields read live (CF `savinyu` "IIT Rookee", AtCoder `chokudai` "AtCoder Inc. CEO", LC `CptDailyBird` empty); the completeness SQL run read-only on the owner's accounts (LC 17 known of 319, no import → partial); Inngest sees 4 functions
-  - [ ] 👤 Owner: verify a handle, import the LeetCode JSON (expect 319 known, `ok`), download the export, open Settings (a forged test session was blocked, so the signed-in pages haven't been clicked through)
-  - [ ] README screenshots (after a handle is verified, so the public page has data)
+  - [x] 👤 Owner checked: handle verification on all 3 platforms, LeetCode import, export download (13 Oct 2026)
+  - [x] Smoother LeetCode import: **Paste** button (clipboard), Cmd/Ctrl+V or drag-and-drop onto the import box, and the file picker also takes the `.html` page Chrome saves with Cmd/Ctrl+S. `parseLeetcodeImportText` in `lib/leetcode-import.ts` tries raw JSON, then each `<pre>` (entities decoded), then a `{…}` slice (drops Chrome's "Pretty-print" label). Checked on the owner's real file as raw JSON, Chrome-rendered HTML and pasted text: 319 slugs each
+  - [x] 👤 Owner: tried Paste and the saved `.html` in the browser
+  - [x] README screenshots (once the public page has verified data)
   - [ ] 🧭 Deploy to Vercel + Neon + Inngest Cloud (needs the owner's accounts, a production GitHub OAuth app and env vars); seed the owner's profile; final review
   - [x] Dashboard polish (branch `dashboard-polish`, Sonnet ×3 in parallel): Recent solves scrolls inside a capped height so it matches Difficulty; LeetCode copy says "Full history imported: N problems" once `history_complete` (new `PlatformTotal.listed`) and drops the "20 most recent" note; Solve next falls back to the 3 lowest-coverage topics when none is weak (`practiceTopics`, `WeakTopic.weak`); new Active days card (`activeDaysSummary`: active days / period %, streaks, busiest weekday) left of Activity at `lg`, heatmap cells 11 → 10 px so a year fits beside it
   - [ ] 👤 Owner: check the dashboard layout at wide and narrow widths
+  - [x] Streak flame (15 Oct 2026): the Active days card shows the current streak LeetCode-style, as a flame icon with the number beside it in the card header, instead of a "Current streak" row. The flame is orange (`--streak` token) once today (UTC) has activity and grey while the streak still waits on today; hover says which. Hidden when the period doesn't include today (past years), like before. `StreakFlame` in `components/dashboard/active-days.tsx`
   - Known limits: imported LC solves have no dates, so they don't show on the heatmap or in recent solves. LC slugs missing from the catalog get a stub problem row built from the slug (title and URL only, no difficulty or tags), so no solve is dropped; the weekly catalog sync then fills them in. The picker stays open while the account is still `partial`. The stale cron only covers users active in the last 30 days or with a public profile

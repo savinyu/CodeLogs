@@ -10,8 +10,9 @@ import {
 import { InfoTip } from "@/components/info-tip";
 import { filterDashboard } from "@/lib/dashboard/aggregate";
 import { activityYears, parseActivityPeriod } from "@/lib/dashboard/filters";
+import { periodRange } from "@/lib/dashboard/heatmap";
 import type { DashboardData, PlatformFilter } from "@/lib/dashboard/types";
-import { ActiveDays } from "./active-days";
+import { ActiveDays, StreakFlame } from "./active-days";
 import { ActivityPeriodFilter } from "./activity-period-filter";
 import { ActivityHeatmap } from "./heatmap";
 import { DifficultyChart } from "./difficulty-chart";
@@ -92,6 +93,8 @@ export function DashboardView({
   const connected = all.accounts.map((a) => a.platform);
   const years = activityYears(data.activity);
   const period = parseActivityPeriod(year, years);
+  // The streak is "right now", so it only shows when the period runs up to today.
+  const showStreak = periodRange(period, data.asOf).end === data.asOf;
   const visible = data.accounts.map((a) => a.platform);
 
   return (
@@ -100,7 +103,12 @@ export function DashboardView({
       <TotalsCards totals={data.totals} accounts={data.accounts} />
       {/* 13rem leaves the heatmap room for a full year (~730px) inside max-w-5xl. */}
       <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <Section title="Active days">
+        <Section
+          title="Active days"
+          action={
+            showStreak && <StreakFlame activity={data.activity} asOf={data.asOf} period={period} />
+          }
+        >
           <ActiveDays activity={data.activity} asOf={data.asOf} period={period} />
         </Section>
         <Section
