@@ -248,7 +248,9 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - AtCoder: skipped while robots.txt disallows `/users/*/history/` (§4 open #8). The card says "AtCoder contests not available"
 - **Done when:** CF shows `savinyu`'s 20 contests with rating 839 as the last point; `lee215` on LC shows 27 contests and the Guardian badge; `CptDailyBird` shows its LC badges and an empty contest state; a second sync changes nothing.
 
-- M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token)
+- M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token). Built 15 Oct 2026 (branch `m8-extension`, see §12):
+  - 🧭 `api_tokens` (hash only, prefix for display, last used; max 5 per user), Bearer auth, `GET /api/extension/me` + `POST /api/extension/leetcode` (`{ userName, solves: [{ slug, solvedAt | null }] }`), shared `lib/leetcode-ingest.ts` with the JSON import (same handle check, same `history_complete` rule; extension solves count like imports)
+  - 🤖 Settings "Browser extension" card (create once-visible tokens, list, revoke); 🤖 `extension/`: reads `leetcode.com/api/problems/all/` (+ optionally `api/submissions/` for dates) in the user's browser and posts slugs + dates. Never sends cookies or code
 - M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
 - M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
 
@@ -358,6 +360,15 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [ ] 👤 Owner: check the dashboard layout at wide and narrow widths
   - [x] Streak flame (15 Oct 2026): the Active days card shows the current streak LeetCode-style, as a flame icon with the number beside it in the card header, instead of a "Current streak" row. The flame is orange (`--streak` token) once today (UTC) has activity and grey while the streak still waits on today; hover says which. Hidden when the period doesn't include today (past years), like before. `StreakFlame` in `components/dashboard/active-days.tsx`
   - Known limits: imported LC solves have no dates, so they don't show on the heatmap or in recent solves. LC slugs missing from the catalog get a stub problem row built from the slug (title and URL only, no difficulty or tags), so no solve is dropped; the weekly catalog sync then fills them in. The picker stays open while the account is still `partial`. The stale cron only covers users active in the last 30 days or with a public profile
+- [ ] M8 browser extension for full LeetCode history (branch `m8-extension`, stacked on `m6-contests`)
+  - [x] `api_tokens` (migration `0006`, applied to Neon): SHA-256 hash only, `cl_…` tokens shown once, max 5 per user, revoke = delete, `last_used_at` written at most once a minute. Pure helpers in `lib/api-tokens-shared.ts` (tested)
+  - [x] `GET /api/extension/me`, `POST /api/extension/leetcode` (Bearer only, never cookies; 1 MB cap; zod-checked). `lib/leetcode-ingest.ts` is shared with the Connect page import
+  - [x] Solves: an undated solve (from an import) now takes the first date seen, from the extension or a later LC sync (`ON CONFLICT … DO UPDATE … WHERE first_solved_at IS NULL`); dated rows never change, so a repeat sync still writes nothing. Owner: this refines the §4 "DO NOTHING" rule; revert if unwanted
+  - [x] Settings "Browser extension" card (Sonnet); `extension/` MV3, plain JS, no build (Sonnet)
+  - [x] Verified live against the dev server with a temp user (then deleted): 401 without / with a bad or revoked token, 409 for another LeetCode login, 400 for bad JSON; undated upload → 4 solves, history complete; repeat → 0 written; dated upload → 4 dates filled; repeat → 0
+  - [x] Settings checked with a temp signed-in user in headless Chrome (CDP): create → token shown once, list, revoke; no overflow at 360 px from the new card
+  - [ ] 👤 Owner: load `extension/` unpacked, create a token in Settings, sync while logged in to leetcode.com. The dates endpoint (`/api/submissions/`) is unofficial and untested by us (synthetic fixture)
+  - Known limits: the extension is load-unpacked only (no Web Store listing) and its host permission covers `http://localhost:3000` plus any https origin you approve. Found while testing: the signed-in site header is 8 px wider than a 360 px screen (the avatar), on every page; not fixed here
 - [ ] M7 social links (branch `m7-socials`; M6 contests + badges moved to Later on 15 Oct 2026)
   - [x] `social_links` table (migration `0004`, applied to Neon); GitHub comes from the login and isn't stored
   - [x] `lib/social-links-shared.ts`: X and Instagram handles (bare, `@handle` or a pasted profile URL), `https://` websites (a bare domain gets `https://`), plain emails; 9 tests

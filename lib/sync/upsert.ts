@@ -1,6 +1,7 @@
 // DB writes for syncs. Every write is idempotent, so an Inngest step can be retried safely:
-// problems and solves use ON CONFLICT DO NOTHING (user syncs) or a change-only upsert
-// (catalog syncs); stats and activity only rewrite rows whose value changed.
+// problems use ON CONFLICT DO NOTHING (user syncs) or a change-only upsert (catalog syncs);
+// solves are insert-only except that an undated solve takes the first date seen; stats,
+// activity and contests only rewrite rows whose value changed.
 
 import "server-only";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
@@ -27,13 +28,15 @@ export interface ApplyResult {
   stubsInserted: number;
   /** Solves dropped because their problem has no catalog row and no fallback metadata. */
   solvesSkipped: number;
+  /** Existing undated solves (from an import) that got a date from this page. */
+  datesFilled: number;
 }
 
 /** Writes one adapter page: stub problems, solves, platform stats, activity days and contests. */
 export async function applySnapshot(
   target: SyncTarget,
   snapshot: PlatformSnapshot,
-  opts: { source?: "api" | "import" } = {},
+  opts: { source?: "api" | "import" | "extension" } = {},
 ): Promise<ApplyResult> {
   const { accountId, userId, platform } = target;
   const source = opts.source ?? "api";
@@ -41,6 +44,7 @@ export async function applySnapshot(
   let stubsInserted = 0;
   let solvesInserted = 0;
   let solvesSkipped = 0;
+  let datesFilled = 0;
 
   for (const batch of chunk(pageSolves)) {
     const stubs = stubRows(platform, batch);
@@ -74,12 +78,19 @@ export async function applySnapshot(
     });
     solvesSkipped += batch.length - rows.length;
     if (rows.length > 0) {
-      const inserted = await db
+      // Existing rows keep their date; an undated one (from an import) takes the first date seen.
+      const written = await db
         .insert(solves)
         .values(rows)
-        .onConflictDoNothing({ target: [solves.userId, solves.problemId] })
-        .returning({ id: solves.id });
-      solvesInserted += inserted.length;
+        .onConflictDoUpdate({
+          target: [solves.userId, solves.problemId],
+          set: { firstSolvedAt: sql`excluded.first_solved_at` },
+          setWhere: sql`${solves.firstSolvedAt} IS NULL AND excluded.first_solved_at IS NOT NULL`,
+        })
+        .returning({ inserted: sql<boolean>`xmax = 0` });
+      const inserted = written.filter((w) => w.inserted).length;
+      solvesInserted += inserted;
+      datesFilled += written.length - inserted;
     }
   }
 
@@ -113,7 +124,7 @@ export async function applySnapshot(
 
   if (snapshot.contests !== undefined) await replaceContests(accountId, snapshot.contests);
 
-  return { solvesInserted, stubsInserted, solvesSkipped };
+  return { solvesInserted, stubsInserted, solvesSkipped, datesFilled };
 }
 
 /**

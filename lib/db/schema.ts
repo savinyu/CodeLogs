@@ -115,6 +115,27 @@ export const socialLinks = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.kind] })],
 );
 
+/**
+ * Personal tokens for the browser extension (M8). Only a SHA-256 hash is stored; the token is
+ * shown once when created. Deleting a row revokes it.
+ */
+export const apiTokens = pgTable(
+  "api_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    /** The first characters of the token ("cl_AbCd12"), so the user can tell tokens apart. */
+    tokenPrefix: text("token_prefix").notNull(),
+    createdAt: createdAt(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  },
+  (t) => [index("api_tokens_user_id_idx").on(t.userId)],
+);
+
 export const PLATFORMS = ["codeforces", "atcoder", "leetcode"] as const;
 export const platformEnum = pgEnum("platform", PLATFORMS);
 

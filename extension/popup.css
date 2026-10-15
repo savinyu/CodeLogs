@@ -1,0 +1,101 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #666666;
+  --border: #c9c9c9;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --err: #b91c1c;
+  --ok: #15803d;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1b1f;
+    --fg: #ececec;
+    --muted: #a0a0a8;
+    --border: #3d3d45;
+    --accent: #60a5fa;
+    --accent-fg: #0b1220;
+    --err: #f87171;
+    --ok: #4ade80;
+  }
+}
+body {
+  width: 340px;
+  margin: 0;
+  padding: 14px;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    13px/1.45 system-ui,
+    sans-serif;
+}
+h1 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+section {
+  margin-bottom: 14px;
+}
+label {
+  display: block;
+  margin: 8px 0 3px;
+  font-weight: 600;
+}
+label.inline {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 400;
+  margin: 0 0 8px;
+}
+input[type="url"],
+input[type="password"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+button.primary {
+  width: 100%;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.note {
+  min-height: 1.4em;
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.note.error,
+.result.error {
+  color: var(--err);
+}
+.result {
+  margin: 4px 0 0;
+}
+.result.ok {
+  color: var(--ok);
+}

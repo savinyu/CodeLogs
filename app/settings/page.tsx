@@ -2,9 +2,12 @@ import { Suspense } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { listApiTokens } from "@/lib/api-tokens";
+import { MAX_TOKENS_PER_USER } from "@/lib/api-tokens-shared";
 import { requireUser } from "@/lib/session";
 import { getSocialLinks } from "@/lib/social-links";
 import { DeleteAccountForm } from "./delete-account-form";
+import { ExtensionTokens } from "./extension-tokens";
 import { SocialLinksForm } from "./social-links-form";
 
 export const metadata = { title: "Settings" };
@@ -16,6 +19,9 @@ export default function SettingsPage() {
       <div className="mt-8 grid gap-4">
         <Suspense fallback={<CardSkeleton />}>
           <SocialLinksCard />
+        </Suspense>
+        <Suspense fallback={<CardSkeleton />}>
+          <ExtensionCard />
         </Suspense>
         <Card>
           <CardHeader>
@@ -54,6 +60,30 @@ async function SocialLinksCard() {
       </CardHeader>
       <CardContent>
         <SocialLinksForm links={links} />
+      </CardContent>
+    </Card>
+  );
+}
+
+async function ExtensionCard() {
+  const user = await requireUser();
+  const tokens = await listApiTokens(user.id);
+  return (
+    <Card id="extension">
+      <CardHeader>
+        <CardTitle>Browser extension</CardTitle>
+        <CardDescription>
+          The CodeLogs extension reads your full LeetCode solved list (with dates) from your own
+          logged-in browser and sends it here, so your LeetCode history stays complete. Your
+          LeetCode cookies never leave your browser. Create a token, then paste it into the
+          extension.
+          <br />
+          Load the <code>extension/</code> folder of the CodeLogs repo as an unpacked extension
+          (chrome://extensions → Developer mode → Load unpacked).
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ExtensionTokens tokens={tokens} maxTokens={MAX_TOKENS_PER_USER} />
       </CardContent>
     </Card>
   );
