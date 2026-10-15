@@ -34,6 +34,7 @@
   --color-difficulty-easy: var(--difficulty-easy);
   --color-difficulty-medium: var(--difficulty-medium);
   --color-difficulty-hard: var(--difficulty-hard);
+  --color-streak: var(--streak);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
@@ -100,6 +101,8 @@
   --difficulty-easy: oklch(0.58 0.15 160);
   --difficulty-medium: oklch(0.68 0.16 70);
   --difficulty-hard: oklch(0.58 0.21 20);
+  /* LeetCode-style streak flame. */
+  --streak: oklch(0.7 0.19 50);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -146,6 +149,7 @@
   --difficulty-easy: oklch(0.76 0.15 165);
   --difficulty-medium: oklch(0.82 0.16 80);
   --difficulty-hard: oklch(0.7 0.19 20);
+  --streak: oklch(0.75 0.18 55);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
