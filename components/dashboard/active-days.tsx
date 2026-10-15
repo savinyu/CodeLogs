@@ -1,5 +1,8 @@
+import { Flame } from "lucide-react";
+import { cn } from "cn";
+
 import type { ActivityPeriod } from "@/lib/dashboard/filters";
-import { activeDaysSummary, periodRange } from "@/lib/dashboard/heatmap";
+import { activeDaysSummary, activityStats, periodRange } from "@/lib/dashboard/heatmap";
 import type { ActivityDay } from "@/lib/dashboard/types";
 
 const WEEKDAYS = [
@@ -21,6 +24,46 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-2">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * LeetCode-style streak: a flame and the current streak. The flame is orange once today (UTC) has
+ * activity, and grey while the streak still waits on today. Renders nothing when the period
+ * doesn't include today.
+ */
+export function StreakFlame({
+  activity,
+  asOf,
+  period = "last12",
+}: {
+  activity: ActivityDay[];
+  asOf: string;
+  period?: ActivityPeriod;
+}) {
+  const range = periodRange(period, asOf);
+  const { currentStreak } = activityStats(activity, range, asOf);
+  if (currentStreak === null) return null;
+
+  const lit = activity.some((a) => a.day === asOf && a.total > 0);
+  const label =
+    currentStreak === 0
+      ? "No current streak"
+      : `Current streak: ${days(currentStreak)}${lit ? "" : " (no activity yet today)"}`;
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1 text-sm font-semibold tabular-nums",
+        lit ? "text-streak" : "text-muted-foreground",
+      )}
+      title={label}
+      aria-label={label}
+      role="img"
+    >
+      <Flame className={cn("size-5", lit && "fill-streak")} aria-hidden />
+      <span>{currentStreak.toLocaleString("en-US")}</span>
     </div>
   );
 }
@@ -54,7 +97,6 @@ export function ActiveDays({
         </p>
       </div>
       <dl className="flex flex-col gap-1.5 text-sm">
-        {s.currentStreak !== null && <Row label="Current streak" value={days(s.currentStreak)} />}
         <Row label="Longest streak" value={days(s.longestStreak)} />
         {s.busiestWeekday !== null && (
           <Row label="Most active" value={WEEKDAYS[s.busiestWeekday] ?? ""} />
