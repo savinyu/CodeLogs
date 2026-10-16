@@ -57,6 +57,7 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 | 6 | Final product name | CodeLogs for now |
 | 7 | More platforms, as Codolio has (CodeChef, GFG, HackerRank, InterviewBit, Code360). Codolio most likely reads their internal JSON endpoints or scrapes HTML from its server. That conflicts with §4 "never by server-side scraping" and with §5 (CodeChef and GFG terms forbid bots; HackerRank's `/rest` is disallowed by robots.txt) | Keep the §4 decision (extension only, M10). If the owner wants counts sooner: a per-platform check of terms and robots.txt, then **solved counts only**, fetched on demand like LeetCode, for the platforms that pass |
 | 8 | `robots.txt` consistency (found 14 Oct 2026): LeetCode's robots.txt disallows `/graphql`, which our LC adapter already uses (§4 accepted on-demand, user-triggered fetches), and AtCoder's disallows `/users/*/history/`, the only source of AtCoder contest history. §5 cites robots.txt as the reason HackerRank was excluded | LeetCode stays as decided. AtCoder contest history is left out of M6 |
+| 9 | Profile bands (idea, 15 Oct 2026, M11): bands by solved count, each with its own public profile background, like CF's rank colors. Thresholds, the background style and whether bands are shown on logged-out profiles are open | Bands count verified solves only, so unverified handles can't move a profile up a band. Thresholds to be proposed once the owner picks the style |
 
 ## 5. Platform data facts (re-verified 12 Oct 2026; full detail and design impact in `scripts/spike/FINDINGS.md`)
 - **Codeforces (official API):**
@@ -251,6 +252,11 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token)
 - M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
 - M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
+- M11: Profile bands (idea, added 15 Oct 2026; not started, see §4 open #9). A band comes from the number of verified solves across platforms, and each band sets the background of `/u/[username]` and its OG image:
+  - 🧭 Band rule in pure code (`lib/profile-band.ts`, tested): thresholds as one table, computed from the same verified totals the public page already shows. No new table unless the owner wants a band history
+  - 🧭 Backgrounds use theme tokens (`--band-*`, light and dark), never hex (CLAUDE.md). Each band needs a legible name and text colour
+  - 🤖 Apply the band on `/u/[username]` (background + band name) and in the OG image; the owner's dashboard shows their band and what the next one needs
+  - **Done when:** the owner's public page shows the band for the verified solve count, the band changes when a threshold is crossed, and an unverified handle doesn't change it
 
 ## 8. How the captain/subagent split works
 - **Before each milestone:** the Captain (Opus) writes a todo list. Each 🤖 task gets a spec: files to create, interfaces to import, the fixture to test against, and the "done when" check.
@@ -364,3 +370,18 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Settings "Social links" card (one field per kind, atomic replace); icon row on `/u/[username]` and the dashboard (with an "Add social links" / "Edit links" link); links in the JSON export
   - [x] Verified: typecheck, lint, format, 279 tests; live with a temp public user (then deleted): a second save replaced the first set, `/u/<name>` rendered every href with `rel="me nofollow noopener noreferrer"`, delete cascaded; headless Chrome screenshot of the icons
   - [ ] 👤 Owner: add links in Settings, check them on the dashboard and logged out on `/u/savinyu`
+<<<<<<< Updated upstream
+=======
+- [ ] M6 contests + LeetCode badges (branch `m6-contests`)
+  - [x] `contest_results` (account_id, contest_key, name, held_at, rank, old/new rating, rated), PK (account_id, contest_key); migration `0005`, applied to Neon. `held_at` replaces the planned `started_at`: CF's `user.rating` only gives the rating update time (the contest's end), LC gives the start
+  - [x] Contract: `PlatformSnapshot.contests?` is the account's complete list. When present (even empty) `applySnapshot` replaces the stored set in one `db.batch` (delete keys no longer listed + change-only upsert); undefined leaves it alone. `LcContestSummary` (`lc_contest`) and `LcBadge[]` (`lc_badges`) live in `platform_stats`
+  - [x] CF adapter (Sonnet): page 0 = `user.rating` on every sync (user.info → rating → status). LC adapter (Sonnet): pages 4 `userContestRanking` → 5 `userContestRankingHistory` (attended only; ratings rounded; old rating = the previous attended contest's, null for the first; a null list throws so a glitch never wipes rows) → 6 `matchedUser.badges` (relative icons get `https://leetcode.com`; non-https icons dropped) → 3 calendar. Fixtures from live calls (savinyu, lee215, CptDailyBird)
+  - [x] Dashboard: `contests` + `leetcodeBadges` in the view model (pure, tested), narrowed by `?platform=`; public pages only show verified handles' contests and badges (same `accountsFilter`). UI (Sonnet): Contests card (one rating line per platform, stat block per platform, newest 5 contests, AtCoder robots.txt footnote) and a LeetCode badges strip (plain `<img>`, no optimizer). Contests in the JSON export
+  - [x] Verified: typecheck, lint, format, 309 tests; live with temp users (then deleted): CF `savinyu` 20 contests, last CodeTON Round 5 at 839; LC `lee215` 27 contests, Guardian, top 0.9 %; a second sync left every contest row's `xmin` unchanged; `CptDailyBird` shows "No rated contests yet" and 4 badges; headless Chrome at 1280 px and inside a 360 px frame
+  - [ ] 👤 Owner: check the Contests card and badges on the dashboard (Sync now first so CF and LC fetch contests)
+- [ ] M11 profile bands (idea, 15 Oct 2026; not started)
+  - [ ] 👤 Owner: pick the background style and thresholds (§4 open #9)
+  - [ ] 🧭 `lib/profile-band.ts`: band rule from verified solve totals (pure, tested)
+  - [ ] Band tokens (`--band-*`, light and dark) and the background on `/u/[username]` + OG image
+  - [ ] Owner's dashboard shows the band and what the next one needs
+>>>>>>> Stashed changes
