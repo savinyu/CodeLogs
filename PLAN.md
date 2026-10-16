@@ -384,4 +384,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [ ] 🧭 `lib/profile-band.ts`: band rule from verified solve totals (pure, tested)
   - [ ] Band tokens (`--band-*`, light and dark) and the background on `/u/[username]` + OG image
   - [ ] Owner's dashboard shows the band and what the next one needs
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
