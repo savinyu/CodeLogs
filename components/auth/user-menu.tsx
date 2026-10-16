@@ -46,6 +46,7 @@ export async function UserMenu() {
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/sheets" />}>Sheets</DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/settings" />}>Settings</DropdownMenuItem>
         <SignOutMenuItem />
       </DropdownMenuContent>

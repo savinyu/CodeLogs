@@ -1,12 +1,18 @@
 // DB writes for syncs. Every write is idempotent, so an Inngest step can be retried safely:
-// problems and solves use ON CONFLICT DO NOTHING (user syncs) or a change-only upsert
-// (catalog syncs); stats and activity only rewrite rows whose value changed.
+// problems use ON CONFLICT DO NOTHING (user syncs) or a change-only upsert (catalog syncs);
+// solves are insert-only except that an undated solve takes the first date seen; stats,
+// activity and contests only rewrite rows whose value changed.
 
 import "server-only";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { activityDays, platformStats, problems, solves } from "@/lib/db/schema";
-import type { CatalogProblem, PlatformId, PlatformSnapshot } from "@/lib/adapters/types";
+import { activityDays, contestResults, platformStats, problems, solves } from "@/lib/db/schema";
+import type {
+  CatalogProblem,
+  NormalizedContest,
+  PlatformId,
+  PlatformSnapshot,
+} from "@/lib/adapters/types";
 import { catalogRows, chunk, dedupeSolves, stubRows } from "./rows";
 
 export interface SyncTarget {
@@ -22,13 +28,15 @@ export interface ApplyResult {
   stubsInserted: number;
   /** Solves dropped because their problem has no catalog row and no fallback metadata. */
   solvesSkipped: number;
+  /** Existing undated solves (from an import) that got a date from this page. */
+  datesFilled: number;
 }
 
-/** Writes one adapter page: stub problems, solves, platform stats and activity days. */
+/** Writes one adapter page: stub problems, solves, platform stats, activity days and contests. */
 export async function applySnapshot(
   target: SyncTarget,
   snapshot: PlatformSnapshot,
-  opts: { source?: "api" | "import" } = {},
+  opts: { source?: "api" | "import" | "extension" } = {},
 ): Promise<ApplyResult> {
   const { accountId, userId, platform } = target;
   const source = opts.source ?? "api";
@@ -36,6 +44,7 @@ export async function applySnapshot(
   let stubsInserted = 0;
   let solvesInserted = 0;
   let solvesSkipped = 0;
+  let datesFilled = 0;
 
   for (const batch of chunk(pageSolves)) {
     const stubs = stubRows(platform, batch);
@@ -69,12 +78,19 @@ export async function applySnapshot(
     });
     solvesSkipped += batch.length - rows.length;
     if (rows.length > 0) {
-      const inserted = await db
+      // Existing rows keep their date; an undated one (from an import) takes the first date seen.
+      const written = await db
         .insert(solves)
         .values(rows)
-        .onConflictDoNothing({ target: [solves.userId, solves.problemId] })
-        .returning({ id: solves.id });
-      solvesInserted += inserted.length;
+        .onConflictDoUpdate({
+          target: [solves.userId, solves.problemId],
+          set: { firstSolvedAt: sql`excluded.first_solved_at` },
+          setWhere: sql`${solves.firstSolvedAt} IS NULL AND excluded.first_solved_at IS NOT NULL`,
+        })
+        .returning({ inserted: sql<boolean>`xmax = 0` });
+      const inserted = written.filter((w) => w.inserted).length;
+      solvesInserted += inserted;
+      datesFilled += written.length - inserted;
     }
   }
 
@@ -106,7 +122,56 @@ export async function applySnapshot(
     }
   }
 
-  return { solvesInserted, stubsInserted, solvesSkipped };
+  if (snapshot.contests !== undefined) await replaceContests(accountId, snapshot.contests);
+
+  return { solvesInserted, stubsInserted, solvesSkipped, datesFilled };
+}
+
+/**
+ * Makes the account's stored contests match `contests` in one atomic batch: rows no longer
+ * listed are deleted, changed rows are updated, unchanged rows aren't written.
+ */
+async function replaceContests(accountId: string, contests: readonly NormalizedContest[]) {
+  const byKey = new Map(contests.map((c) => [c.contestKey, c]));
+  const rows = [...byKey.values()].map((c) => ({
+    accountId,
+    contestKey: c.contestKey,
+    name: c.name,
+    heldAt: c.heldAt,
+    rank: c.rank,
+    oldRating: c.oldRating,
+    newRating: c.newRating,
+    rated: c.rated,
+  }));
+  const keys = rows.map((r) => r.contestKey);
+  const removeStale = db
+    .delete(contestResults)
+    .where(
+      and(
+        eq(contestResults.accountId, accountId),
+        keys.length > 0 ? notInArray(contestResults.contestKey, keys) : undefined,
+      ),
+    );
+  const upserts = chunk(rows).map((batch) =>
+    db
+      .insert(contestResults)
+      .values(batch)
+      .onConflictDoUpdate({
+        target: [contestResults.accountId, contestResults.contestKey],
+        set: {
+          name: sql`excluded.name`,
+          heldAt: sql`excluded.held_at`,
+          rank: sql`excluded.rank`,
+          oldRating: sql`excluded.old_rating`,
+          newRating: sql`excluded.new_rating`,
+          rated: sql`excluded.rated`,
+        },
+        setWhere: sql`(${contestResults.name}, ${contestResults.heldAt}, ${contestResults.rank}, ${contestResults.oldRating}, ${contestResults.newRating}, ${contestResults.rated})
+          IS DISTINCT FROM
+          (excluded.name, excluded.held_at, excluded.rank, excluded.old_rating, excluded.new_rating, excluded.rated)`,
+      }),
+  );
+  await db.batch([removeStale, ...upserts]);
 }
 
 /**

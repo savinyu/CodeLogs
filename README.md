@@ -18,6 +18,9 @@ CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subto
 - **Topics:** coverage per shared topic, weak-topic scoring, and "Solve next" picks (Codeforces problems rated +100–200 above your level, plus free LeetCode problems).
 - **Public profile:** opt-in, read-only, with an Open Graph preview image. Only handles you've **verified** (by pasting a short code into your platform profile) appear on it.
 - **Full LeetCode history:** upload the JSON that `leetcode.com/api/problems/all/` gives you while logged in. Only the list of solved problem slugs is sent; your cookies never leave the browser.
+- **Browser extension** (`extension/`, Chrome MV3): does the same from your logged-in browser in one click, and can add solve dates from your submission list. It authenticates with a personal token from Settings and sends only problem slugs and dates; never cookies or code.
+- **Contests and badges:** Codeforces and LeetCode contest history on one rating-over-time chart, with contests entered, current and max rating, best rank, and LeetCode's global rank and Knight / Guardian badge. Your LeetCode badges show as a strip of icons.
+- **Sheets:** progress through Blind 75 and NeetCode 150, by section and difficulty (problem list from [NeetCode](https://github.com/neetcode-gh/leetcode), MIT).
 - **Social links:** add X, Instagram, a website and an email in Settings. They show as icons, next to your GitHub, on your dashboard and public profile.
 - **Your data:** export everything as JSON, or delete your account, from Settings.
 
@@ -59,6 +62,7 @@ Other things to know:
 - **LeetCode topic numbers are estimates.** They come from LeetCode's lifetime per-tag counts, which overlap, and LeetCode only counts 47 broad tags per user.
 - **Activity mixes units:** Codeforces and AtCoder days count new problems solved; LeetCode days count submissions (that's what its calendar reports).
 - **Difficulty bands are our own** cross-platform approximation (e.g. Band 3 ≈ CF 1400–1600 ≈ AtCoder 600–899 ≈ LeetCode Medium), not an official conversion.
+- **No AtCoder contest history:** the only source, `atcoder.jp/users/<you>/history`, is disallowed by AtCoder's robots.txt.
 - **Imported LeetCode solves have no dates**, so they count toward totals and topics but not the heatmap.
 - HackerRank, CodeChef and GeeksforGeeks aren't supported: their terms or robots.txt rule out server-side access. CodeLogs never asks for platform passwords or cookies.
 

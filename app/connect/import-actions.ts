@@ -1,14 +1,9 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/lib/db/client";
-import { platformAccounts, platformStats, solves } from "@/lib/db/schema";
-import { slugFallback } from "@/lib/leetcode-import";
+import { ingestLeetcodeSolves } from "@/lib/leetcode-ingest";
 import { getCurrentUser } from "@/lib/session";
-import { refreshHistoryComplete } from "@/lib/sync/runs";
-import { applySnapshot } from "@/lib/sync/upsert";
 
 export type ImportResult =
   | {
@@ -31,8 +26,6 @@ const importSchema = z.object({
   numSolved: z.number().int().nonnegative().nullable(),
 });
 
-const lcStatsSchema = z.object({ solved: z.object({ all: z.number().optional() }) });
-
 export async function importLeetcodeSolves(input: unknown): Promise<ImportResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to import your history." };
@@ -41,71 +34,15 @@ export async function importLeetcodeSolves(input: unknown): Promise<ImportResult
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid import." };
   }
-  const { userName, slugs } = parsed.data;
+  const { userName, slugs, numSolved } = parsed.data;
 
-  const [account] = await db
-    .select({ id: platformAccounts.id, handle: platformAccounts.handle })
-    .from(platformAccounts)
-    .where(and(eq(platformAccounts.userId, user.id), eq(platformAccounts.platform, "leetcode")))
-    .limit(1);
-  if (!account) return { ok: false, error: "Connect your LeetCode handle first." };
-
-  if (userName.trim() === "") {
-    return { ok: false, error: "You weren't logged in on leetcode.com when you saved the file." };
-  }
-  if (userName.trim().toLowerCase() !== account.handle.toLowerCase()) {
-    return {
-      ok: false,
-      error: `This file belongs to ${userName.trim()}, but your connected LeetCode handle is ${account.handle}.`,
-    };
-  }
-
-  try {
-    const result = await applySnapshot(
-      { accountId: account.id, userId: user.id, platform: "leetcode" },
-      {
-        solves: slugs.map((s) => ({
-          platform: "leetcode" as const,
-          externalProblemId: s,
-          problemFallback: slugFallback(s),
-        })),
-        extras: [],
-      },
-      { source: "import" },
-    );
-    const complete = await refreshHistoryComplete(account.id);
-
-    const [stat] = await db
-      .select({ payload: platformStats.payload })
-      .from(platformStats)
-      .where(
-        and(
-          eq(platformStats.accountId, account.id),
-          eq(platformStats.kind, "lc_difficulty_counts"),
-        ),
-      )
-      .limit(1);
-    const lifetime =
-      lcStatsSchema.safeParse(stat?.payload).data?.solved.all ?? parsed.data.numSolved ?? null;
-
-    const [known] = await db
-      .select({ n: count() })
-      .from(solves)
-      .where(and(eq(solves.userId, user.id), eq(solves.accountId, account.id)));
-
-    const { solvesInserted, solvesSkipped } = result;
-    refresh();
-    return {
-      ok: true,
-      imported: solvesInserted,
-      alreadyKnown: Math.max(0, slugs.length - solvesInserted - solvesSkipped),
-      skipped: solvesSkipped,
-      complete,
-      known: known?.n ?? 0,
-      lifetime,
-    };
-  } catch (err) {
-    console.error("LeetCode import failed", err);
-    return { ok: false, error: "Something went wrong while importing. Try again." };
-  }
+  const result = await ingestLeetcodeSolves(
+    user.id,
+    { userName, numSolved, solves: slugs.map((slug) => ({ slug, solvedAt: null })) },
+    "import",
+  );
+  if (!result.ok) return { ok: false, error: result.error };
+  refresh();
+  const { imported, alreadyKnown, skipped, complete, known, lifetime } = result;
+  return { ok: true, imported, alreadyKnown, skipped, complete, known, lifetime };
 }

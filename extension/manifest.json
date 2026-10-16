@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "CodeLogs: LeetCode history",
+  "version": "0.1.0",
+  "description": "Sends your LeetCode solved list (problem slugs and solve dates only) to your CodeLogs account.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://leetcode.com/*", "http://localhost:3000/*"],
+  "optional_host_permissions": ["https://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "CodeLogs" }
+}

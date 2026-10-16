@@ -36,6 +36,20 @@
       "when": 1792030898820,
       "tag": "0004_social_links",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792046572613,
+      "tag": "0005_contest_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792047142813,
+      "tag": "0006_api_tokens",
+      "breakpoints": true
     }
   ]
 }

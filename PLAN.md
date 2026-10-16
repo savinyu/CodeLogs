@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links built; M6 contests + badges moved to Later)
+Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links merged; M6 contests + badges built, PR open)
 
 ---
 
@@ -241,7 +241,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - **Done when:** the owner adds X, Instagram, a website and an email, and they show logged out on `/u/savinyu`; a `javascript:` or `http://` website and a malformed handle are rejected.
 
 ### Later
-#### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison; moved to Later on 15 Oct 2026)
+#### M6: Contests + LeetCode badges (added 14 Oct 2026, from the Codolio comparison; moved to Later on 15 Oct 2026; built 15 Oct 2026, see §12)
 - 🧭 Schema: `contest_results` (account_id, contest_key, name, started_at, rank, old_rating, new_rating, rated bool), unique(account_id, contest_key). LC badges and the LC contest summary go in `platform_stats` (kinds `lc_badges` and `lc_contest`), so they need no new table. Extend `PlatformSnapshot.extras` or add `fetchContests(handle)` to the adapter contract
 - 🤖∥ CF: `user.rating`, one call per sync, replacing the stored rows (the list is small and append-only) + fixture test
 - 🤖∥ LC: `userContestRanking` + `userContestRankingHistory` (attended only) + `matchedUser.badges`, each sent as its own query (§5) + fixture tests, with no-contest users covered
@@ -249,8 +249,10 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - AtCoder: skipped while robots.txt disallows `/users/*/history/` (§4 open #8). The card says "AtCoder contests not available"
 - **Done when:** CF shows `savinyu`'s 20 contests with rating 839 as the last point; `lee215` on LC shows 27 contests and the Guardian badge; `CptDailyBird` shows its LC badges and an empty contest state; a second sync changes nothing.
 
-- M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token)
-- M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
+- M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token). Built 15 Oct 2026 (branch `m8-extension`, see §12):
+  - 🧭 `api_tokens` (hash only, prefix for display, last used; max 5 per user), Bearer auth, `GET /api/extension/me` + `POST /api/extension/leetcode` (`{ userName, solves: [{ slug, solvedAt | null }] }`), shared `lib/leetcode-ingest.ts` with the JSON import (same handle check, same `history_complete` rule; extension solves count like imports)
+  - 🤖 Settings "Browser extension" card (create once-visible tokens, list, revoke); 🤖 `extension/`: reads `leetcode.com/api/problems/all/` (+ optionally `api/submissions/` for dates) in the user's browser and posts slugs + dates. Never sends cookies or code
+- M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver). Built 15 Oct 2026 for Blind 75 and NeetCode 150 (branch `m9-sheets`, see §12). Striver is left out: takeuforward publishes no openly licensed problem list, and its sheets mix LeetCode with GFG / Coding Ninjas links (owner to decide)
 - M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
 - M11: Profile bands (idea, added 15 Oct 2026; not started, see §4 open #9). A band comes from the number of verified solves across platforms, and each band sets the background of `/u/[username]` and its OG image:
   - 🧭 Band rule in pure code (`lib/profile-band.ts`, tested): thresholds as one table, computed from the same verified totals the public page already shows. No new table unless the owner wants a band history
@@ -364,14 +366,27 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [ ] 👤 Owner: check the dashboard layout at wide and narrow widths
   - [x] Streak flame (15 Oct 2026): the Active days card shows the current streak LeetCode-style, as a flame icon with the number beside it in the card header, instead of a "Current streak" row. The flame is orange (`--streak` token) once today (UTC) has activity and grey while the streak still waits on today; hover says which. Hidden when the period doesn't include today (past years), like before. `StreakFlame` in `components/dashboard/active-days.tsx`
   - Known limits: imported LC solves have no dates, so they don't show on the heatmap or in recent solves. LC slugs missing from the catalog get a stub problem row built from the slug (title and URL only, no difficulty or tags), so no solve is dropped; the weekly catalog sync then fills them in. The picker stays open while the account is still `partial`. The stale cron only covers users active in the last 30 days or with a public profile
+- [ ] M8 browser extension for full LeetCode history (branch `m8-extension`, stacked on `m6-contests`)
+  - [x] `api_tokens` (migration `0006`, applied to Neon): SHA-256 hash only, `cl_…` tokens shown once, max 5 per user, revoke = delete, `last_used_at` written at most once a minute. Pure helpers in `lib/api-tokens-shared.ts` (tested)
+  - [x] `GET /api/extension/me`, `POST /api/extension/leetcode` (Bearer only, never cookies; 1 MB cap; zod-checked). `lib/leetcode-ingest.ts` is shared with the Connect page import
+  - [x] Solves: an undated solve (from an import) now takes the first date seen, from the extension or a later LC sync (`ON CONFLICT … DO UPDATE … WHERE first_solved_at IS NULL`); dated rows never change, so a repeat sync still writes nothing. Owner: this refines the §4 "DO NOTHING" rule; revert if unwanted
+  - [x] Settings "Browser extension" card (Sonnet); `extension/` MV3, plain JS, no build (Sonnet)
+  - [x] Verified live against the dev server with a temp user (then deleted): 401 without / with a bad or revoked token, 409 for another LeetCode login, 400 for bad JSON; undated upload → 4 solves, history complete; repeat → 0 written; dated upload → 4 dates filled; repeat → 0
+  - [x] Settings checked with a temp signed-in user in headless Chrome (CDP): create → token shown once, list, revoke; no overflow at 360 px from the new card
+  - [ ] 👤 Owner: load `extension/` unpacked, create a token in Settings, sync while logged in to leetcode.com. The dates endpoint (`/api/submissions/`) is unofficial and untested by us (synthetic fixture)
+  - Known limits: the extension is load-unpacked only (no Web Store listing) and its host permission covers `http://localhost:3000` plus any https origin you approve. Found while testing: the signed-in site header is 8 px wider than a 360 px screen (the avatar), on every page; not fixed here
+- [ ] M9 sheets (branch `m9-sheets`, stacked on `m8-extension`)
+  - [x] Data: NeetCode's public problem list (`neetcode-gh/leetcode`, MIT; license kept in `lib/sheets/NEETCODE_LICENSE`), generated into `lib/sheets/neetcode-data.ts` by `pnpm sheets:neetcode` (dev only; never fetched at runtime). 150 problems in 18 sections, 75 flagged Blind 75; all 150 slugs exist in our LC catalog and its 7 premium flags match ours
+  - [x] `lib/sheets/` (pure, tested): sheet definitions, progress per sheet / section / difficulty; `getLeetcodeSolvedSlugs` counts every LC solve source
+  - [x] UI (Sonnet): `/sheets?sheet=` page (owner only), a Sheets card on the dashboard (all / LeetCode filter), "Sheets" in the user menu (not the header: it must fit in 360 px). Honest note while LC history isn't complete
+  - [x] Verified: typecheck, lint, format, 336 tests; headless Chrome with a temp signed-in user synced to LC `CptDailyBird` (then deleted): `/sheets` shows 7 / 150 (Blind 75: 4 / 75) with the 20-recent-solves note, dashboard card, nothing in `main` wider than 360 px
+  - [ ] 👤 Owner: check `/sheets`; decide whether sheet progress belongs on the public profile, and whether to add Striver (needs a source)
 - [ ] M7 social links (branch `m7-socials`; M6 contests + badges moved to Later on 15 Oct 2026)
   - [x] `social_links` table (migration `0004`, applied to Neon); GitHub comes from the login and isn't stored
   - [x] `lib/social-links-shared.ts`: X and Instagram handles (bare, `@handle` or a pasted profile URL), `https://` websites (a bare domain gets `https://`), plain emails; 9 tests
   - [x] Settings "Social links" card (one field per kind, atomic replace); icon row on `/u/[username]` and the dashboard (with an "Add social links" / "Edit links" link); links in the JSON export
   - [x] Verified: typecheck, lint, format, 279 tests; live with a temp public user (then deleted): a second save replaced the first set, `/u/<name>` rendered every href with `rel="me nofollow noopener noreferrer"`, delete cascaded; headless Chrome screenshot of the icons
   - [ ] 👤 Owner: add links in Settings, check them on the dashboard and logged out on `/u/savinyu`
-<<<<<<< Updated upstream
-=======
 - [ ] M6 contests + LeetCode badges (branch `m6-contests`)
   - [x] `contest_results` (account_id, contest_key, name, held_at, rank, old/new rating, rated), PK (account_id, contest_key); migration `0005`, applied to Neon. `held_at` replaces the planned `started_at`: CF's `user.rating` only gives the rating update time (the contest's end), LC gives the start
   - [x] Contract: `PlatformSnapshot.contests?` is the account's complete list. When present (even empty) `applySnapshot` replaces the stored set in one `db.batch` (delete keys no longer listed + change-only upsert); undefined leaves it alone. `LcContestSummary` (`lc_contest`) and `LcBadge[]` (`lc_badges`) live in `platform_stats`
@@ -379,12 +394,3 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Dashboard: `contests` + `leetcodeBadges` in the view model (pure, tested), narrowed by `?platform=`; public pages only show verified handles' contests and badges (same `accountsFilter`). UI (Sonnet): Contests card (one rating line per platform, stat block per platform, newest 5 contests, AtCoder robots.txt footnote) and a LeetCode badges strip (plain `<img>`, no optimizer). Contests in the JSON export
   - [x] Verified: typecheck, lint, format, 309 tests; live with temp users (then deleted): CF `savinyu` 20 contests, last CodeTON Round 5 at 839; LC `lee215` 27 contests, Guardian, top 0.9 %; a second sync left every contest row's `xmin` unchanged; `CptDailyBird` shows "No rated contests yet" and 4 badges; headless Chrome at 1280 px and inside a 360 px frame
   - [ ] 👤 Owner: check the Contests card and badges on the dashboard (Sync now first so CF and LC fetch contests)
-- [ ] M11 profile bands (idea, 15 Oct 2026; not started)
-  - [ ] 👤 Owner: pick the background style and thresholds (§4 open #9)
-  - [ ] 🧭 `lib/profile-band.ts`: band rule from verified solve totals (pure, tested)
-  - [ ] Band tokens (`--band-*`, light and dark) and the background on `/u/[username]` + OG image
-  - [ ] Owner's dashboard shows the band and what the next one needs
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes

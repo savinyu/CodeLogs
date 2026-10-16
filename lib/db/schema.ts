@@ -115,6 +115,27 @@ export const socialLinks = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.kind] })],
 );
 
+/**
+ * Personal tokens for the browser extension (M8). Only a SHA-256 hash is stored; the token is
+ * shown once when created. Deleting a row revokes it.
+ */
+export const apiTokens = pgTable(
+  "api_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    /** The first characters of the token ("cl_AbCd12"), so the user can tell tokens apart. */
+    tokenPrefix: text("token_prefix").notNull(),
+    createdAt: createdAt(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  },
+  (t) => [index("api_tokens_user_id_idx").on(t.userId)],
+);
+
 export const PLATFORMS = ["codeforces", "atcoder", "leetcode"] as const;
 export const platformEnum = pgEnum("platform", PLATFORMS);
 
@@ -252,6 +273,29 @@ export const platformStats = pgTable(
     fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.accountId, t.kind] })],
+);
+
+/**
+ * Contests an account took part in (CF user.rating, LC contest history). Each sync replaces the
+ * account's set; only changed rows are rewritten.
+ */
+export const contestResults = pgTable(
+  "contest_results",
+  {
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => platformAccounts.id, { onDelete: "cascade" }),
+    /** CF contest id, LC contest slug. */
+    contestKey: text("contest_key").notNull(),
+    name: text("name").notNull(),
+    /** CF: rating update time (the contest's end); LC: the contest's start. */
+    heldAt: timestamp("held_at", { withTimezone: true }).notNull(),
+    rank: integer("rank"),
+    oldRating: integer("old_rating"),
+    newRating: integer("new_rating"),
+    rated: boolean("rated").notNull().default(true),
+  },
+  (t) => [primaryKey({ columns: [t.accountId, t.contestKey] })],
 );
 
 export const syncRuns = pgTable(

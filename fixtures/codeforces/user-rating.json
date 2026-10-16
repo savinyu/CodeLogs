@@ -1,0 +1,185 @@
+{
+  "status": "OK",
+  "result": [
+    {
+      "contestId": 1782,
+      "contestName": "Codeforces Round 844 (Div. 1 + Div. 2, based on VK Cup 2022 - Elimination Round)",
+      "handle": "savinyu",
+      "rank": 8122,
+      "ratingUpdateTimeSeconds": 1673795100,
+      "oldRating": 0,
+      "newRating": 369
+    },
+    {
+      "contestId": 1792,
+      "contestName": "Educational Codeforces Round 142 (Rated for Div. 2)",
+      "handle": "savinyu",
+      "rank": 13922,
+      "ratingUpdateTimeSeconds": 1674578100,
+      "oldRating": 369,
+      "newRating": 582
+    },
+    {
+      "contestId": 1778,
+      "contestName": "Codeforces Round 848 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 13524,
+      "ratingUpdateTimeSeconds": 1675269300,
+      "oldRating": 582,
+      "newRating": 710
+    },
+    {
+      "contestId": 1791,
+      "contestName": "Codeforces Round 849 (Div. 4)",
+      "handle": "savinyu",
+      "rank": 16021,
+      "ratingUpdateTimeSeconds": 1675443600,
+      "oldRating": 710,
+      "newRating": 794
+    },
+    {
+      "contestId": 1788,
+      "contestName": "Codeforces Round 851 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 13083,
+      "ratingUpdateTimeSeconds": 1675960500,
+      "oldRating": 794,
+      "newRating": 842
+    },
+    {
+      "contestId": 1793,
+      "contestName": "Codeforces Round 852 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 7460,
+      "ratingUpdateTimeSeconds": 1676198100,
+      "oldRating": 842,
+      "newRating": 881
+    },
+    {
+      "contestId": 1795,
+      "contestName": "Educational Codeforces Round 143 (Rated for Div. 2)",
+      "handle": "savinyu",
+      "rank": 9763,
+      "ratingUpdateTimeSeconds": 1676565300,
+      "oldRating": 881,
+      "newRating": 882
+    },
+    {
+      "contestId": 1794,
+      "contestName": "Codeforces Round 856 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 6700,
+      "ratingUpdateTimeSeconds": 1677958500,
+      "oldRating": 882,
+      "newRating": 859
+    },
+    {
+      "contestId": 1804,
+      "contestName": "Nebius Welcome Round (Div. 1 + Div. 2)",
+      "handle": "savinyu",
+      "rank": 8449,
+      "ratingUpdateTimeSeconds": 1678638900,
+      "oldRating": 859,
+      "newRating": 834
+    },
+    {
+      "contestId": 1806,
+      "contestName": "Codeforces Round 858 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 9271,
+      "ratingUpdateTimeSeconds": 1679149200,
+      "oldRating": 834,
+      "newRating": 814
+    },
+    {
+      "contestId": 1808,
+      "contestName": "Codeforces Round 861 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 5164,
+      "ratingUpdateTimeSeconds": 1680087900,
+      "oldRating": 814,
+      "newRating": 887
+    },
+    {
+      "contestId": 1810,
+      "contestName": "CodeTON Round 4 (Div. 1 + Div. 2, Rated, Prizes!)",
+      "handle": "savinyu",
+      "rank": 10434,
+      "ratingUpdateTimeSeconds": 1680280500,
+      "oldRating": 887,
+      "newRating": 846
+    },
+    {
+      "contestId": 1811,
+      "contestName": "Codeforces Round 863 (Div. 3)",
+      "handle": "savinyu",
+      "rank": 6437,
+      "ratingUpdateTimeSeconds": 1680627000,
+      "oldRating": 846,
+      "newRating": 949
+    },
+    {
+      "contestId": 1797,
+      "contestName": "Codeforces Round 864 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 4712,
+      "ratingUpdateTimeSeconds": 1680969900,
+      "oldRating": 949,
+      "newRating": 1026
+    },
+    {
+      "contestId": 1816,
+      "contestName": "Codeforces Round 865 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 5740,
+      "ratingUpdateTimeSeconds": 1681059600,
+      "oldRating": 1026,
+      "newRating": 1042
+    },
+    {
+      "contestId": 1833,
+      "contestName": "Codeforces Round 874 (Div. 3)",
+      "handle": "savinyu",
+      "rank": 9919,
+      "ratingUpdateTimeSeconds": 1684515000,
+      "oldRating": 1042,
+      "newRating": 1000
+    },
+    {
+      "contestId": 1838,
+      "contestName": "Codeforces Round 877 (Div. 2)",
+      "handle": "savinyu",
+      "rank": 6506,
+      "ratingUpdateTimeSeconds": 1685897100,
+      "oldRating": 1000,
+      "newRating": 1045
+    },
+    {
+      "contestId": 1840,
+      "contestName": "Codeforces Round 878 (Div. 3)",
+      "handle": "savinyu",
+      "rank": 7217,
+      "ratingUpdateTimeSeconds": 1686070200,
+      "oldRating": 1045,
+      "newRating": 1062
+    },
+    {
+      "contestId": 1841,
+      "contestName": "Educational Codeforces Round 150 (Rated for Div. 2)",
+      "handle": "savinyu",
+      "rank": 12875,
+      "ratingUpdateTimeSeconds": 1686587700,
+      "oldRating": 1062,
+      "newRating": 946
+    },
+    {
+      "contestId": 1842,
+      "contestName": "CodeTON Round 5 (Div. 1 + Div. 2, Rated, Prizes!)",
+      "handle": "savinyu",
+      "rank": 10469,
+      "ratingUpdateTimeSeconds": 1687626300,
+      "oldRating": 946,
+      "newRating": 839
+    }
+  ]
+}

@@ -162,7 +162,7 @@ describe("fetchPage recent submissions (token 2)", () => {
     });
     expect(inorder?.problemFallback?.difficultyRaw).toBeUndefined();
 
-    expect(res.nextPage).toBe(3);
+    expect(res.nextPage).toBe(4);
     expect(res.resumeCursor).toEqual({ platform: "leetcode", lastAcceptedAt: 1791437578 });
   });
 
@@ -176,7 +176,7 @@ describe("fetchPage recent submissions (token 2)", () => {
       expect(s.firstSolvedAt!.getTime()).toBeGreaterThan(1790840378 * 1000);
     }
     expect(res.resumeCursor).toEqual({ platform: "leetcode", lastAcceptedAt: 1791437578 });
-    expect(res.nextPage).toBe(3);
+    expect(res.nextPage).toBe(4);
   });
 
   it("returns no solves and a null resumeCursor when nothing is new", async () => {
@@ -184,7 +184,233 @@ describe("fetchPage recent submissions (token 2)", () => {
     const res = await leetcodeAdapter.fetchPage(HANDLE, cursor(1791437578), 2);
     expect(res.snapshot.solves).toEqual([]);
     expect(res.resumeCursor).toBeNull();
+    expect(res.nextPage).toBe(4);
+  });
+});
+
+const CONTEST = gqlRoute("userContestRanking(", {
+  json: loadFixture("leetcode/contest-ranking.json"),
+});
+const HISTORY = gqlRoute("userContestRankingHistory(", {
+  json: loadFixture("leetcode/contest-history.json"),
+});
+const BADGES = gqlRoute("badges {", { json: loadFixture("leetcode/badges.json") });
+
+function historyJson(rows: unknown[] | null): unknown {
+  return { data: { userContestRankingHistory: rows } };
+}
+
+function histRow(slug: string, attended: boolean, rating: number, ranking: number, start = 1000) {
+  return {
+    attended,
+    rating,
+    ranking,
+    contest: { title: `Title ${slug}`, titleSlug: slug, startTime: start },
+  };
+}
+
+describe("fetchPage contest summary (token 4)", () => {
+  it("maps the ranking and advances to 5", async () => {
+    const http = mockHttp([CONTEST]);
+    const res = await leetcodeAdapter.fetchPage("lee215", null, 4);
+    const body = parseBody(http.calls[0]);
+    expect(body.variables).toEqual({ username: "lee215" });
+    expect(body.query).not.toContain("lee215");
+    expect(res.nextPage).toBe(5);
+    expect(res.resumeCursor).toBeNull();
+    expect(res.snapshot.solves).toEqual([]);
+    expect(res.snapshot.extras).toEqual([
+      {
+        kind: "lc_contest",
+        payload: {
+          attended: 27,
+          rating: 2204.316,
+          globalRanking: 7558,
+          totalParticipants: 887132,
+          topPercentage: 0.9,
+          badge: "Guardian",
+        },
+      },
+    ]);
+  });
+
+  it("returns an empty summary for a null ranking", async () => {
+    mockHttp([{ ...CONTEST, json: loadFixture("leetcode/contest-ranking-none.json") }]);
+    const res = await leetcodeAdapter.fetchPage(HANDLE, null, 4);
+    expect(res.snapshot.extras).toEqual([
+      {
+        kind: "lc_contest",
+        payload: {
+          attended: 0,
+          rating: null,
+          globalRanking: null,
+          totalParticipants: null,
+          topPercentage: null,
+          badge: null,
+        },
+      },
+    ]);
+    expect(res.nextPage).toBe(5);
+  });
+
+  it("throws when the response has no data", async () => {
+    mockHttp([{ ...CONTEST, json: { errors: [{ message: "boom" }] } }]);
+    await expect(leetcodeAdapter.fetchPage(HANDLE, null, 4)).rejects.toThrow(/boom/);
+  });
+});
+
+describe("fetchPage contest history (token 5)", () => {
+  it("maps attended rows oldest first and advances to 6", async () => {
+    const http = mockHttp([HISTORY]);
+    const res = await leetcodeAdapter.fetchPage("lee215", null, 5);
+    const body = parseBody(http.calls[0]);
+    expect(body.variables).toEqual({ username: "lee215" });
+    expect(body.query).not.toContain("lee215");
+    expect(res.nextPage).toBe(6);
+    expect(res.resumeCursor).toBeNull();
+    expect(res.snapshot.solves).toEqual([]);
+    expect(res.snapshot.extras).toEqual([]);
+    const contests = res.snapshot.contests;
+    expect(contests).toHaveLength(27);
+    expect(contests?.[0]).toEqual({
+      contestKey: "leetcode-weekly-contest-16a",
+      name: "Weekly Contest 16A",
+      heldAt: new Date(1485012600 * 1000),
+      rank: 145,
+      oldRating: null,
+      newRating: 1556,
+      rated: true,
+    });
+    const last = contests?.[26];
+    expect(last).toMatchObject({
+      contestKey: "weekly-contest-416",
+      name: "Weekly Contest 416",
+      heldAt: new Date(1726972200 * 1000),
+      rank: 2663,
+      newRating: 2204,
+    });
+    expect(last?.oldRating).toBe(contests?.[25]?.newRating);
+  });
+
+  it("returns an empty list (not undefined) for no contests", async () => {
+    mockHttp([{ ...HISTORY, json: loadFixture("leetcode/contest-history-none.json") }]);
+    const res = await leetcodeAdapter.fetchPage(HANDLE, null, 5);
+    expect(res.snapshot.contests).toEqual([]);
+    expect(res.nextPage).toBe(6);
+  });
+
+  it("throws on a null list so stored rows are not wiped", async () => {
+    mockHttp([{ ...HISTORY, json: historyJson(null) }]);
+    await expect(leetcodeAdapter.fetchPage(HANDLE, null, 5)).rejects.toThrow(/contest history/);
+  });
+
+  it("skips unattended rows and chains oldRating across them; dedupes by slug", async () => {
+    mockHttp([
+      {
+        ...HISTORY,
+        json: historyJson([
+          histRow("a", true, 1500.4, 10, 1000),
+          histRow("b", false, 1500.4, 0, 2000),
+          histRow("c", true, 1600.6, 0, 3000),
+          histRow("c", true, 1700, 5, 3000),
+        ]),
+      },
+    ]);
+    const res = await leetcodeAdapter.fetchPage(HANDLE, null, 5);
+    expect(res.snapshot.contests).toEqual([
+      {
+        contestKey: "a",
+        name: "Title a",
+        heldAt: new Date(1000 * 1000),
+        rank: 10,
+        oldRating: null,
+        newRating: 1500,
+        rated: true,
+      },
+      {
+        contestKey: "c",
+        name: "Title c",
+        heldAt: new Date(3000 * 1000),
+        rank: null,
+        oldRating: 1500,
+        newRating: 1601,
+        rated: true,
+      },
+    ]);
+  });
+});
+
+describe("fetchPage badges (token 6)", () => {
+  it("prefixes relative icons and advances to the calendar page", async () => {
+    const http = mockHttp([BADGES]);
+    const res = await leetcodeAdapter.fetchPage(HANDLE, null, 6);
+    const body = parseBody(http.calls[0]);
+    expect(body.variables).toEqual({ username: HANDLE });
+    expect(body.query).not.toContain(HANDLE);
     expect(res.nextPage).toBe(3);
+    expect(res.resumeCursor).toBeNull();
+    expect(res.snapshot.solves).toEqual([]);
+    const extra = res.snapshot.extras[0];
+    expect(extra?.kind).toBe("lc_badges");
+    const payload = extra?.payload as {
+      id: string;
+      name: string;
+      icon: string;
+      earnedAt: string | null;
+      category: string | null;
+    }[];
+    expect(payload).toHaveLength(4);
+    for (const b of payload) {
+      expect(b.icon).toMatch(/^https?:\/\//);
+      expect(b.earnedAt === null || /^\d{4}-\d{2}-\d{2}$/.test(b.earnedAt)).toBe(true);
+    }
+    expect(payload.map((b) => b.icon)).toContain(
+      "https://leetcode.com/static/images/badges/dcc-2024-11.png",
+    );
+  });
+
+  it("maps the Guardian badge", async () => {
+    mockHttp([{ ...BADGES, json: loadFixture("leetcode/badges-lee215.json") }]);
+    const res = await leetcodeAdapter.fetchPage("lee215", null, 6);
+    const payload = res.snapshot.extras[0]?.payload as { name: string; icon: string }[];
+    expect(payload).toHaveLength(3);
+    expect(payload.find((b) => b.name === "Guardian")?.icon).toBe(
+      "https://leetcode.com/static/images/badges/guardian.png",
+    );
+  });
+
+  it("drops badges without a usable icon and handles null badges", async () => {
+    mockHttp([
+      {
+        ...BADGES,
+        json: {
+          data: {
+            matchedUser: {
+              badges: [
+                { id: "1", displayName: "A", icon: "", creationDate: "2024-01-02", category: "X" },
+                { id: "2", displayName: "B", icon: "javascript:x", creationDate: "bad" },
+                { id: "3", displayName: "C", icon: "https://cdn.x/c.png", creationDate: "bad" },
+              ],
+            },
+          },
+        },
+      },
+    ]);
+    const res = await leetcodeAdapter.fetchPage(HANDLE, null, 6);
+    expect(res.snapshot.extras[0]?.payload).toEqual([
+      { id: "3", name: "C", icon: "https://cdn.x/c.png", earnedAt: null, category: null },
+    ]);
+
+    mockHttp([{ ...BADGES, json: { data: { matchedUser: { badges: null } } } }]);
+    const empty = await leetcodeAdapter.fetchPage(HANDLE, null, 6);
+    expect(empty.snapshot.extras[0]?.payload).toEqual([]);
+  });
+
+  it("throws for an unknown user", async () => {
+    mockHttp([{ ...BADGES, json: UNKNOWN }]);
+    const err = leetcodeAdapter.fetchPage("nobody", null, 6);
+    await expect(err).rejects.toThrow('No LeetCode user named "nobody".');
+    await expect(err).rejects.toBeInstanceOf(PlatformUserNotFoundError);
   });
 });
 

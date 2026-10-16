@@ -2,7 +2,10 @@
 // Pure: HTTP in, normalized data out. No DB, env or server-only imports.
 //
 // PageToken semantics for fetchPage(handle, cursor, page), one HTTP request per call:
-//   page === null  user.info -> cf_rating extra, no solves. nextPage = 1, resumeCursor = null.
+//   page === null  user.info -> cf_rating extra, no solves. nextPage = 0, resumeCursor = null.
+//   page === 0     user.rating -> snapshot.contests (the complete rated-contest list, oldest
+//                  first; replaces stored rows), no solves. nextPage = 1, resumeCursor = null.
+//                  Runs on every sync, first and incremental.
 //   page = k >= 1  and cursor === null (first sync):
 //                  user.status with no from/count = the whole history in one call.
 //                  nextPage = null; resumeCursor = max submission id over ALL verdicts.
@@ -24,6 +27,7 @@ import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import type {
   CatalogAdapter,
   CatalogProblem,
+  NormalizedContest,
   NormalizedSolve,
   PageToken,
   PlatformAdapter,
@@ -70,6 +74,15 @@ interface CfSubmission {
   creationTimeSeconds: number;
   verdict?: string;
   problem: CfProblem;
+}
+
+interface CfRatingChange {
+  contestId: number;
+  contestName: string;
+  rank: number;
+  ratingUpdateTimeSeconds: number;
+  oldRating: number;
+  newRating: number;
 }
 
 interface CfProblemset {
@@ -188,6 +201,24 @@ function cursorFor(maxSubmissionId: number | null): SyncCursor | null {
   return maxSubmissionId === null ? null : { platform: "codeforces", maxSubmissionId };
 }
 
+function contestsFrom(changes: CfRatingChange[]): NormalizedContest[] {
+  const byKey = new Map<string, NormalizedContest>();
+  for (const c of changes) {
+    const contestKey = String(c.contestId);
+    if (byKey.has(contestKey)) continue;
+    byKey.set(contestKey, {
+      contestKey,
+      name: c.contestName,
+      heldAt: new Date(c.ratingUpdateTimeSeconds * 1000),
+      rank: c.rank,
+      oldRating: c.oldRating,
+      newRating: c.newRating,
+      rated: true, // user.rating only lists rated contests
+    });
+  }
+  return [...byKey.values()];
+}
+
 function emptySnapshot(extras: PlatformExtra[] = []) {
   return { solves: [], extras };
 }
@@ -222,7 +253,17 @@ async function fetchPage(
         maxRank: user.maxRank ?? null,
       },
     };
-    return { snapshot: emptySnapshot([extra]), nextPage: 1, resumeCursor: null };
+    return { snapshot: emptySnapshot([extra]), nextPage: 0, resumeCursor: null };
+  }
+
+  if (page === 0) {
+    const api = await callApi<CfRatingChange[]>("user.rating", { handle });
+    const contests = contestsFrom(unwrap("user.rating", api));
+    return {
+      snapshot: { solves: [], extras: [], contests },
+      nextPage: 1,
+      resumeCursor: null,
+    };
   }
 
   const lastSeen = cursor?.platform === "codeforces" ? cursor.maxSubmissionId : null;
