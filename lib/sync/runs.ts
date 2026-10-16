@@ -126,13 +126,13 @@ export async function finishAccountSync(args: {
 
 /**
  * Recomputes `history_complete` for a recent-only account (LeetCode): complete when at least one
- * solve came from an import and the known solve count reaches LeetCode's lifetime total
+ * solve came from an import or the browser extension and the known solve count reaches LeetCode's lifetime total
  * (platform_stats `lc_difficulty_counts`; a missing stat counts as complete). Also sets status to
  * ok/partial, never overwriting "syncing". One UPDATE. Returns the new value.
  */
 export async function refreshHistoryComplete(accountId: string): Promise<boolean> {
   const complete = sql<boolean>`(
-    EXISTS (SELECT 1 FROM ${solves} WHERE ${solves.accountId} = ${platformAccounts.id} AND ${solves.source} = 'import')
+    EXISTS (SELECT 1 FROM ${solves} WHERE ${solves.accountId} = ${platformAccounts.id} AND ${solves.source} IN ('import', 'extension'))
     AND COALESCE(
       (SELECT count(*) FROM ${solves} WHERE ${solves.accountId} = ${platformAccounts.id})
         >= (SELECT (${platformStats.payload}->'solved'->>'all')::int FROM ${platformStats}

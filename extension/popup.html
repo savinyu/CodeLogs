@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CodeLogs</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>CodeLogs: LeetCode history</h1>
+
+    <section>
+      <label for="baseUrl">CodeLogs URL</label>
+      <input id="baseUrl" type="url" value="http://localhost:3000" spellcheck="false" />
+      <label for="token">Token</label>
+      <input
+        id="token"
+        type="password"
+        placeholder="cl_..."
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div class="row">
+        <button id="save" type="button">Save</button>
+        <button id="check" type="button" class="secondary">Check connection</button>
+      </div>
+      <p id="conn" class="note" role="status"></p>
+    </section>
+
+    <section>
+      <label class="inline"
+        ><input id="dates" type="checkbox" checked /> Include solve dates (slower)</label
+      >
+      <button id="sync" type="button" class="primary">Sync LeetCode history</button>
+      <p id="status" class="note" role="status"></p>
+      <p id="result" class="result" role="status"></p>
+    </section>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
