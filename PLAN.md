@@ -57,6 +57,7 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 | 6 | Final product name | CodeLogs for now |
 | 7 | More platforms, as Codolio has (CodeChef, GFG, HackerRank, InterviewBit, Code360). Codolio most likely reads their internal JSON endpoints or scrapes HTML from its server. That conflicts with §4 "never by server-side scraping" and with §5 (CodeChef and GFG terms forbid bots; HackerRank's `/rest` is disallowed by robots.txt) | Keep the §4 decision (extension only, M10). If the owner wants counts sooner: a per-platform check of terms and robots.txt, then **solved counts only**, fetched on demand like LeetCode, for the platforms that pass |
 | 8 | `robots.txt` consistency (found 14 Oct 2026): LeetCode's robots.txt disallows `/graphql`, which our LC adapter already uses (§4 accepted on-demand, user-triggered fetches), and AtCoder's disallows `/users/*/history/`, the only source of AtCoder contest history. §5 cites robots.txt as the reason HackerRank was excluded | LeetCode stays as decided. AtCoder contest history is left out of M6 |
+| 9 | Profile bands (idea, 15 Oct 2026, M11): bands by solved count, each with its own public profile background, like CF's rank colors. Thresholds, the background style and whether bands are shown on logged-out profiles are open | Bands count verified solves only, so unverified handles can't move a profile up a band. Thresholds to be proposed once the owner picks the style |
 
 ## 5. Platform data facts (re-verified 12 Oct 2026; full detail and design impact in `scripts/spike/FINDINGS.md`)
 - **Codeforces (official API):**
@@ -253,6 +254,11 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - 🤖 Settings "Browser extension" card (create once-visible tokens, list, revoke); 🤖 `extension/`: reads `leetcode.com/api/problems/all/` (+ optionally `api/submissions/` for dates) in the user's browser and posts slugs + dates. Never sends cookies or code
 - M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver). Built 15 Oct 2026 for Blind 75 and NeetCode 150 (branch `m9-sheets`, see §12). Striver is left out: takeuforward publishes no openly licensed problem list, and its sheets mix LeetCode with GFG / Coding Ninjas links (owner to decide)
 - M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
+- M11: Profile bands (idea, added 15 Oct 2026; not started, see §4 open #9). A band comes from the number of verified solves across platforms, and each band sets the background of `/u/[username]` and its OG image:
+  - 🧭 Band rule in pure code (`lib/profile-band.ts`, tested): thresholds as one table, computed from the same verified totals the public page already shows. No new table unless the owner wants a band history
+  - 🧭 Backgrounds use theme tokens (`--band-*`, light and dark), never hex (CLAUDE.md). Each band needs a legible name and text colour
+  - 🤖 Apply the band on `/u/[username]` (background + band name) and in the OG image; the owner's dashboard shows their band and what the next one needs
+  - **Done when:** the owner's public page shows the band for the verified solve count, the band changes when a threshold is crossed, and an unverified handle doesn't change it
 
 ## 8. How the captain/subagent split works
 - **Before each milestone:** the Captain (Opus) writes a todo list. Each 🤖 task gets a spec: files to create, interfaces to import, the fixture to test against, and the "done when" check.
