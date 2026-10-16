@@ -62,6 +62,7 @@ export function DashboardView({
   year,
   isOwner,
   solveNext,
+  sheets,
 }: {
   data: DashboardData;
   filter: PlatformFilter;
@@ -70,6 +71,8 @@ export function DashboardView({
   isOwner: boolean;
   /** Owner-only "Solve next" body (async server component, wrapped in Suspense by the page). */
   solveNext?: React.ReactNode;
+  /** Owner-only sheets summary (async server component, wrapped in Suspense by the page). */
+  sheets?: React.ReactNode;
 }) {
   if (all.accounts.length === 0) {
     return isOwner ? (
@@ -131,6 +134,11 @@ export function DashboardView({
           description="Your weakest topics, with unsolved problems at your level."
         >
           {solveNext}
+        </Section>
+      )}
+      {sheets && (
+        <Section title="Sheets" description="Your progress through popular LeetCode problem lists.">
+          {sheets}
         </Section>
       )}
       <div className="grid gap-6 lg:grid-cols-2">

@@ -21,7 +21,8 @@
     "spike:cf": "tsx scripts/spike/cf.ts",
     "spike:atcoder": "tsx scripts/spike/atcoder.ts",
     "spike:leetcode": "tsx scripts/spike/leetcode.ts",
-    "inngest:dev": "pnpm dlx inngest-cli@1.46.0 dev -u http://localhost:3000/api/inngest"
+    "inngest:dev": "pnpm dlx inngest-cli@1.46.0 dev -u http://localhost:3000/api/inngest",
+    "sheets:neetcode": "tsx scripts/dev/sheets-neetcode.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

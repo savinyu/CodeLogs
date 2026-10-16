@@ -56,6 +56,7 @@ lib/github-username.ts  sets users.username from GitHub (Better Auth account hoo
 lib/platforms.ts        per-platform display metadata and handle patterns
 lib/api-tokens*.ts      extension tokens (hash-only storage, Bearer auth); lib/leetcode-ingest.ts writes a full LC list (import + extension)
 extension/              Chrome MV3 extension (plain JS, no build); app/api/extension/* is its API
+lib/sheets/             Blind 75 / NeetCode 150 (generated neetcode-data.ts: `pnpm sheets:neetcode`), progress (pure), queries.ts
 fixtures/<platform>/    saved real API responses for adapter tests
 tests/                  vitest
 scripts/spike/          M0 probes + FINDINGS.md

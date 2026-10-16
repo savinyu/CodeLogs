@@ -251,7 +251,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 - M8: Chrome MV3 extension for full LeetCode history (sends accepts to our API with our token). Built 15 Oct 2026 (branch `m8-extension`, see §12):
   - 🧭 `api_tokens` (hash only, prefix for display, last used; max 5 per user), Bearer auth, `GET /api/extension/me` + `POST /api/extension/leetcode` (`{ userName, solves: [{ slug, solvedAt | null }] }`), shared `lib/leetcode-ingest.ts` with the JSON import (same handle check, same `history_complete` rule; extension solves count like imports)
   - 🤖 Settings "Browser extension" card (create once-visible tokens, list, revoke); 🤖 `extension/`: reads `leetcode.com/api/problems/all/` (+ optionally `api/submissions/` for dates) in the user's browser and posts slugs + dates. Never sends cookies or code
-- M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver)
+- M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver). Built 15 Oct 2026 for Blind 75 and NeetCode 150 (branch `m9-sheets`, see §12). Striver is left out: takeuforward publishes no openly licensed problem list, and its sheets mix LeetCode with GFG / Coding Ninjas links (owner to decide)
 - M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
 
 ## 8. How the captain/subagent split works
@@ -369,6 +369,12 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Settings checked with a temp signed-in user in headless Chrome (CDP): create → token shown once, list, revoke; no overflow at 360 px from the new card
   - [ ] 👤 Owner: load `extension/` unpacked, create a token in Settings, sync while logged in to leetcode.com. The dates endpoint (`/api/submissions/`) is unofficial and untested by us (synthetic fixture)
   - Known limits: the extension is load-unpacked only (no Web Store listing) and its host permission covers `http://localhost:3000` plus any https origin you approve. Found while testing: the signed-in site header is 8 px wider than a 360 px screen (the avatar), on every page; not fixed here
+- [ ] M9 sheets (branch `m9-sheets`, stacked on `m8-extension`)
+  - [x] Data: NeetCode's public problem list (`neetcode-gh/leetcode`, MIT; license kept in `lib/sheets/NEETCODE_LICENSE`), generated into `lib/sheets/neetcode-data.ts` by `pnpm sheets:neetcode` (dev only; never fetched at runtime). 150 problems in 18 sections, 75 flagged Blind 75; all 150 slugs exist in our LC catalog and its 7 premium flags match ours
+  - [x] `lib/sheets/` (pure, tested): sheet definitions, progress per sheet / section / difficulty; `getLeetcodeSolvedSlugs` counts every LC solve source
+  - [x] UI (Sonnet): `/sheets?sheet=` page (owner only), a Sheets card on the dashboard (all / LeetCode filter), "Sheets" in the user menu (not the header: it must fit in 360 px). Honest note while LC history isn't complete
+  - [x] Verified: typecheck, lint, format, 336 tests; headless Chrome with a temp signed-in user synced to LC `CptDailyBird` (then deleted): `/sheets` shows 7 / 150 (Blind 75: 4 / 75) with the 20-recent-solves note, dashboard card, nothing in `main` wider than 360 px
+  - [ ] 👤 Owner: check `/sheets`; decide whether sheet progress belongs on the public profile, and whether to add Striver (needs a source)
 - [ ] M7 social links (branch `m7-socials`; M6 contests + badges moved to Later on 15 Oct 2026)
   - [x] `social_links` table (migration `0004`, applied to Neon); GitHub comes from the login and isn't stored
   - [x] `lib/social-links-shared.ts`: X and Instagram handles (bare, `@handle` or a pasted profile URL), `https://` websites (a bare domain gets `https://`), plain emails; 9 tests

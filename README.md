@@ -20,6 +20,7 @@ CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subto
 - **Full LeetCode history:** upload the JSON that `leetcode.com/api/problems/all/` gives you while logged in. Only the list of solved problem slugs is sent; your cookies never leave the browser.
 - **Browser extension** (`extension/`, Chrome MV3): does the same from your logged-in browser in one click, and can add solve dates from your submission list. It authenticates with a personal token from Settings and sends only problem slugs and dates; never cookies or code.
 - **Contests and badges:** Codeforces and LeetCode contest history on one rating-over-time chart, with contests entered, current and max rating, best rank, and LeetCode's global rank and Knight / Guardian badge. Your LeetCode badges show as a strip of icons.
+- **Sheets:** progress through Blind 75 and NeetCode 150, by section and difficulty (problem list from [NeetCode](https://github.com/neetcode-gh/leetcode), MIT).
 - **Social links:** add X, Instagram, a website and an email in Settings. They show as icons, next to your GitHub, on your dashboard and public profile.
 - **Your data:** export everything as JSON, or delete your account, from Settings.
 
