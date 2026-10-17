@@ -1,41 +1,12 @@
-import { cn } from "cn";
 import { RatingLine } from "@/components/charts/rating-line";
 import { Chip } from "@/components/kit/chip";
-import { Disclosure } from "@/components/kit/disclosure";
 import { Panel, PanelHeader } from "@/components/kit/panel";
 import { PlatformDot } from "@/components/kit/platform-dot";
+import { contestFormat, contestTitle } from "@/lib/dashboard/contest-format";
+import type { PlatformContests } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
-import type { ContestEntry, PlatformContests } from "@/lib/dashboard/types";
 
 const num = (n: number) => n.toLocaleString("en");
-const fullDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-
-function deltaOf(c: ContestEntry): number | null {
-  return c.oldRating !== null && c.newRating !== null ? c.newRating - c.oldRating : null;
-}
-
-function Delta({ value }: { value: number | null }) {
-  if (value === null) {
-    return <span className="min-w-[54px] text-right font-bold text-muted-foreground">—</span>;
-  }
-  return (
-    <span
-      className={cn(
-        "min-w-[54px] text-right font-bold whitespace-nowrap tabular-nums",
-        value >= 0 ? "text-good" : "text-primary-ink",
-      )}
-    >
-      {value >= 0 ? "+" : "−"}
-      {num(Math.abs(value))}
-    </span>
-  );
-}
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -46,15 +17,26 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** One platform's rating chart, stats and contest history (Coach's .rating-card). */
+/** One platform's rating chart (hover a point for that contest) and stats (Coach's .rating-card). */
 export function ContestCard({ contests }: { contests: PlatformContests }) {
   const { platform } = contests;
   const name = PLATFORM_META[platform].name;
-  const list = [...contests.contests].reverse();
-  const last = list[0];
-  const points = contests.contests.flatMap((c) =>
-    c.newRating === null ? [] : [{ at: c.heldAt, rating: c.newRating, name: c.name }],
-  );
+  const shared = contests.contests.length;
+  const points = contests.contests.flatMap((c) => {
+    if (c.newRating === null) return [];
+    const format = contestFormat(platform, c.name);
+    return [
+      {
+        at: c.heldAt,
+        rating: c.newRating,
+        // The format line under the title says what the "(Div. 2)" suffix did.
+        name: format ? contestTitle(c.name) : c.name,
+        format,
+        rank: c.rank,
+        delta: c.oldRating === null ? null : c.newRating - c.oldRating,
+      },
+    ];
+  });
   const dash = (n: number | null | undefined) => (n == null ? "–" : num(n));
 
   return (
@@ -78,7 +60,7 @@ export function ContestCard({ contests }: { contests: PlatformContests }) {
           ) : undefined
         }
       />
-      {!last ? (
+      {shared === 0 ? (
         <p className="text-muted-foreground">No rated contests yet.</p>
       ) : (
         <>
@@ -94,59 +76,11 @@ export function ContestCard({ contests }: { contests: PlatformContests }) {
               <Stat label="Global rank" value={num(contests.globalRanking)} />
             )}
           </div>
-          <Disclosure
-            className="mt-4"
-            summaryClassName="flex-wrap gap-y-1 font-semibold"
-            summary={
-              <>
-                <span className="flex-1 whitespace-nowrap">
-                  <span className="group-open:hidden">Show contest history</span>
-                  <span className="hidden group-open:inline">Hide contest history</span>{" "}
-                  <span className="font-medium text-muted-foreground">
-                    ({list.length}
-                    {contests.attended > list.length ? ` of ${num(contests.attended)}` : ""})
-                  </span>
-                </span>
-                <span className="min-w-0 truncate text-sm font-medium text-muted-foreground">
-                  Last: {last.name.replace(/^Codeforces /, "")}
-                </span>
-                <Delta value={deltaOf(last)} />
-              </>
-            }
-          >
-            <ul aria-label={`${name} contests`} className="grid max-h-[360px] overflow-y-auto">
-              {list.map((c) => (
-                <li
-                  key={c.contestKey}
-                  className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2.5 py-2.5 text-[0.9375rem] not-first:shadow-[0_-1px_0_var(--border)]"
-                >
-                  <span className="[overflow-wrap:anywhere]">
-                    <a
-                      href={c.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline-offset-4 hover:underline"
-                    >
-                      {c.name}
-                    </a>
-                    <small className="block text-[0.8125rem] text-muted-foreground">
-                      {fullDate(c.heldAt)}
-                      {c.rank !== null && ` · rank ${num(c.rank)}`}
-                    </small>
-                  </span>
-                  <span className="text-muted-foreground tabular-nums">
-                    {c.newRating === null ? "—" : num(c.newRating)}
-                  </span>
-                  <Delta value={deltaOf(c)} />
-                </li>
-              ))}
-            </ul>
-            {contests.attended > list.length && (
-              <p className="mt-2 text-[0.84rem] text-muted-foreground">
-                {name} shares the latest {list.length} of your {num(contests.attended)} contests.
-              </p>
-            )}
-          </Disclosure>
+          {contests.attended > shared && (
+            <p className="mt-2 text-[0.84rem] text-muted-foreground">
+              {name} shares the latest {shared} of your {num(contests.attended)} contests.
+            </p>
+          )}
         </>
       )}
     </Panel>
