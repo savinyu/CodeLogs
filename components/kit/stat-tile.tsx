@@ -1,9 +1,12 @@
 import { cn } from "cn";
 
-/** The grid that lays out StatTiles (Coach's .tiles). */
+/**
+ * The grid that lays out StatTiles (Coach's .tiles). auto-fill keeps the empty tracks, so two or
+ * three tiles stay a quarter of the row wide instead of stretching across it.
+ */
 export function StatTiles({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-3.5">{children}</div>
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3.5">{children}</div>
   );
 }
 

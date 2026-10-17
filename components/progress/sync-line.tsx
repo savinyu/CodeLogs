@@ -1,3 +1,4 @@
+import { AutoRefresh } from "@/app/connect/auto-refresh";
 import { SyncButton } from "@/app/connect/sync-button";
 import { Chip } from "@/components/kit/chip";
 import type { AccountSummary } from "@/lib/dashboard/types";
@@ -45,6 +46,8 @@ export function SyncLine({ accounts }: { accounts: AccountSummary[] }) {
       {issue ? <Chip tone="primary">{issue}</Chip> : <Chip tone="good">All synced</Chip>}
       <span>{last ? `Last synced ${formatSynced(last)}` : "Not synced yet"}</span>
       <SyncButton label="Sync now" disabled={syncing} />
+      {/* Pages stay in the client cache for a while, so poll until the sync lands. */}
+      {syncing ? <AutoRefresh /> : null}
     </div>
   );
 }

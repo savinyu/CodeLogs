@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useOptimistic, useTransition } from "react";
+import { toast } from "sonner";
+import { setPickDone } from "@/app/today/actions";
 import { Panel, PanelHeader } from "@/components/kit/panel";
 import { Ring } from "@/components/kit/ring";
 import { Button } from "@/components/ui/button";
 import type { TodayPick } from "@/lib/today/set";
-import type { GoalProgress } from "@/lib/today/week";
+import { goalDone, goalProgress, type GoalProgress } from "@/lib/today/week";
 import { cn } from "cn";
 import { PickItem } from "./pick-item";
 
@@ -35,14 +40,56 @@ function GoalPill({ goal }: { goal: GoalProgress }) {
   );
 }
 
-/** Today's set: the daily goal and the ordered picks. */
+const keyOf = (pick: TodayPick) => `${pick.problem.platform}:${pick.problem.externalId}`;
+
+/**
+ * Today's set: the daily goal and the ordered picks. "Mark done" is optimistic here, so the goal
+ * ring moves with the tick instead of waiting for the server round trip.
+ */
 export function TodaysSet({
   picks,
-  goal,
+  todayTotal,
+  dailyGoal,
 }: {
   picks: { pick: TodayPick; marked: boolean; track: string | null }[];
-  goal: GoalProgress;
+  /** Today's synced solves. */
+  todayTotal: number;
+  dailyGoal: number;
 }) {
+  const [marks, setMark] = useOptimistic(
+    new Set(picks.filter((p) => p.marked).map((p) => keyOf(p.pick))),
+    (state, { key, done }: { key: string; done: boolean }) => {
+      const next = new Set(state);
+      if (done) next.add(key);
+      else next.delete(key);
+      return next;
+    },
+  );
+  const [, startTransition] = useTransition();
+
+  function change(pick: TodayPick, done: boolean) {
+    startTransition(async () => {
+      setMark({ key: keyOf(pick), done });
+      const result = await setPickDone({
+        platform: pick.problem.platform,
+        externalId: pick.problem.externalId,
+        done,
+      });
+      if (!result.ok) toast.error(result.error);
+    });
+  }
+
+  const goal = goalProgress(
+    goalDone(
+      todayTotal,
+      picks.map(({ pick }) => ({
+        marked: marks.has(keyOf(pick)),
+        solvedToday: pick.problem.solvedToday,
+      })),
+    ),
+    dailyGoal,
+  );
+
   return (
     <Panel size="lg" aria-labelledby="todays-set">
       <PanelHeader
@@ -54,12 +101,13 @@ export function TodaysSet({
       {picks.length > 0 ? (
         <>
           <ol className="grid gap-3">
-            {picks.map(({ pick, marked, track }) => (
+            {picks.map(({ pick, track }) => (
               <PickItem
-                key={`${pick.problem.platform}:${pick.problem.externalId}`}
+                key={keyOf(pick)}
                 pick={pick}
-                marked={marked}
+                marked={marks.has(keyOf(pick))}
                 track={track}
+                onMarkedChange={(done) => change(pick, done)}
               />
             ))}
           </ol>

@@ -43,3 +43,14 @@ export function goalProgress(todayTotal: number, goal: number): GoalProgress {
   const fraction = goal > 0 ? Math.min(1, done / goal) : 1;
   return { done, goal, fraction, met: done >= goal };
 }
+
+/**
+ * What the daily goal counts: today's synced solves, plus picks marked done that haven't synced
+ * as solved today (those are already in `todayTotal`).
+ */
+export function goalDone(
+  todayTotal: number,
+  picks: readonly { marked: boolean; solvedToday: boolean }[],
+): number {
+  return todayTotal + picks.filter((p) => p.marked && !p.solvedToday).length;
+}
