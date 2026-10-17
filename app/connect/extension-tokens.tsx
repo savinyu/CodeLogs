@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ApiTokenSummary } from "@/lib/api-tokens";
-import { createExtensionToken, revokeExtensionToken, type CreateTokenState } from "./actions";
+import {
+  createExtensionToken,
+  revokeExtensionToken,
+  type CreateTokenState,
+} from "./extension-actions";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {

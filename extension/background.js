@@ -42,7 +42,7 @@ async function checkMe(base, token) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (res.status === 401)
-    throw new SyncError("Token invalid or revoked. Create a new one in CodeLogs Settings.");
+    throw new SyncError("Token invalid or revoked. Create a new one on the CodeLogs Connect page.");
   if (!res.ok) throw new SyncError(`CodeLogs returned HTTP ${res.status}.`);
   return /** @type {{ username: string, leetcodeHandle: string | null }} */ (await res.json());
 }

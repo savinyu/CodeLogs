@@ -197,6 +197,13 @@ export function LeetcodeImport({
       ) : (
         <p className="text-sm font-medium">Import your full LeetCode history</p>
       )}
+      <p className="text-sm text-muted-foreground">
+        Or let the{" "}
+        <a href="#extension" className="text-foreground underline underline-offset-2">
+          browser extension
+        </a>{" "}
+        keep it complete for you.
+      </p>
       {open && picker}
     </div>
   );
