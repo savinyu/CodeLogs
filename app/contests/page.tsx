@@ -1,16 +1,84 @@
+import { Suspense } from "react";
+import { ContestCard } from "@/components/contests/contest-card";
+import { LeetcodeBadgesGrid } from "@/components/contests/badges-grid";
+import { ConnectPrompt } from "@/components/kit/connect-prompt";
+import { Note } from "@/components/kit/note";
 import { Page } from "@/components/kit/page";
 import { PageHead } from "@/components/kit/page-head";
+import { Panel, PanelHeader } from "@/components/kit/panel";
+import { PlatformDot } from "@/components/kit/platform-dot";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getDashboardData } from "@/lib/dashboard/queries";
+import { requireUser } from "@/lib/session";
 
 export const metadata = { title: "Contests" };
 
-// Placeholder until V7 (PLAN-v2.md §7) builds the page.
 export default function ContestsPage() {
   return (
     <Page>
       <PageHead
         title="Contests"
-        description="Rating over time, and every contest's rating change."
+        description="Rating over time. Each contest’s rating change is one click away under the chart."
       />
+      <Suspense fallback={<ContestsSkeleton />}>
+        <ContestsContent />
+      </Suspense>
     </Page>
+  );
+}
+
+async function ContestsContent() {
+  const user = await requireUser();
+  const data = await getDashboardData(user.id);
+  const has = (p: string) => data.accounts.some((a) => a.platform === p);
+
+  if (data.accounts.length === 0) return <ConnectPrompt />;
+
+  return (
+    <div className="grid gap-5">
+      {data.contests.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5 min-[900px]:grid-cols-2">
+          {data.contests.map((c) => (
+            <ContestCard key={c.platform} contests={c} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">
+          Contest history comes from Codeforces and LeetCode. Connect either one to see it here.
+        </p>
+      )}
+      {has("atcoder") && (
+        <Note icon={<PlatformDot platform="atcoder" className="mt-2" />}>
+          <b>AtCoder.</b> AtCoder contest history isn’t available. AtCoder’s robots.txt disallows
+          it.
+        </Note>
+      )}
+      {has("leetcode") && (
+        <Panel size="lg" aria-labelledby="lc-badges">
+          <PanelHeader
+            titleId="lc-badges"
+            title="LeetCode badges"
+            action={
+              <span className="text-muted-foreground">{data.leetcodeBadges.length} earned</span>
+            }
+            className="mb-0"
+          />
+          {data.leetcodeBadges.length > 0 ? (
+            <LeetcodeBadgesGrid badges={data.leetcodeBadges} />
+          ) : (
+            <p className="mt-4 text-muted-foreground">No badges yet.</p>
+          )}
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+function ContestsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-5 min-[900px]:grid-cols-2">
+      <Skeleton className="h-96 rounded-card-lg" />
+      <Skeleton className="h-96 rounded-card-lg" />
+    </div>
   );
 }
