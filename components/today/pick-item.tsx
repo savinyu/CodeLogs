@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useOptimistic, useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { setPickDone } from "@/app/today/actions";
+import { CheckLabel } from "@/components/kit/check-label";
 import { Chip } from "@/components/kit/chip";
 import { DifficultyBadge } from "@/components/kit/difficulty-badge";
 import { PlatformDot } from "@/components/kit/platform-dot";
@@ -25,7 +26,6 @@ export function PickItem({
   track: string | null;
 }) {
   const { problem, topic } = pick;
-  const id = useId();
   const [isMarked, setMarked] = useOptimistic(marked);
   const [, startTransition] = useTransition();
   // A synced solve ticks the pick by itself and can't be undone here.
@@ -81,27 +81,14 @@ export function PickItem({
         </p>
       </div>
       <div className="flex items-center justify-between gap-3.5 min-[560px]:justify-start">
-        <label
-          htmlFor={id}
-          className={cn(
-            "inline-flex items-center gap-2 text-[0.906rem] font-semibold text-muted-foreground",
-            synced ? "cursor-default" : "cursor-pointer",
-          )}
+        <CheckLabel
+          checked={done}
+          disabled={synced}
+          tone={synced ? "good" : "primary"}
+          onCheckedChange={change}
         >
-          <input
-            id={id}
-            type="checkbox"
-            checked={done}
-            disabled={synced}
-            onChange={(e) => change(e.target.checked)}
-            className={cn(
-              "peer grid size-6 shrink-0 appearance-none place-items-center rounded-lg bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-              "after:hidden after:h-[11px] after:w-1.5 after:-translate-x-px after:-translate-y-px after:rotate-45 after:border-r-[2.5px] after:border-b-[2.5px] after:border-primary-foreground checked:after:block",
-              synced ? "checked:bg-good" : "cursor-pointer checked:bg-primary",
-            )}
-          />
           {synced ? "Solved today" : "Mark done"}
-        </label>
+        </CheckLabel>
         <Button
           nativeButton={false}
           render={<a href={problem.url} target="_blank" rel="noopener noreferrer" />}

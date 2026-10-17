@@ -32,6 +32,7 @@ export function PanelHeader({
   titleId,
   info,
   action,
+  align = "baseline",
   className,
   children,
 }: {
@@ -40,13 +41,20 @@ export function PanelHeader({
   /** Explanation shown in an info tip beside the title. */
   info?: React.ReactNode;
   action?: React.ReactNode;
+  /** "center" for a tall action, such as a ring, beside the title. */
+  align?: "baseline" | "center";
   className?: string;
   /** Sub line under the title row. */
   children?: React.ReactNode;
 }) {
   return (
     <div className={cn("mb-4", className)}>
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
+      <div
+        className={cn(
+          "flex flex-wrap justify-between gap-3",
+          align === "center" ? "items-center" : "items-baseline",
+        )}
+      >
         <div className="flex items-center gap-2">
           <h2
             id={titleId}

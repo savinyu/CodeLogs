@@ -45,7 +45,12 @@ export function TodaysSet({
 }) {
   return (
     <Panel size="lg" aria-labelledby="todays-set">
-      <PanelHeader title="Today’s set" titleId="todays-set" action={<GoalPill goal={goal} />} />
+      <PanelHeader
+        title="Today’s set"
+        titleId="todays-set"
+        align="center"
+        action={<GoalPill goal={goal} />}
+      />
       {picks.length > 0 ? (
         <>
           <ol className="grid gap-3">
