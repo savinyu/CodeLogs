@@ -18,7 +18,7 @@ export function SignInButton({
     setPending(true);
     try {
       // On success the browser navigates to GitHub, so keep the pending state.
-      const result = await signIn.social({ provider: "github", callbackURL: "/dashboard" });
+      const result = await signIn.social({ provider: "github", callbackURL: "/today" });
       if (result.error) throw new Error(result.error.message);
     } catch {
       toast.error("Could not start GitHub sign-in. Please try again.");

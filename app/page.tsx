@@ -9,8 +9,8 @@ async function HeroCta() {
   const user = await getCurrentUser();
   if (user) {
     return (
-      <Link href="/dashboard" className={buttonVariants({ size: "lg" })}>
-        Go to dashboard
+      <Link href="/today" className={buttonVariants({ size: "lg" })}>
+        Open Today
       </Link>
     );
   }

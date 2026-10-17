@@ -1,7 +1,9 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { platformAccounts, problems, solves } from "@/lib/db/schema";
+import { platformAccounts, problems, sheetFollows, sheetTicks, solves } from "@/lib/db/schema";
+import { followedSheets } from "./follow";
+import type { SheetState } from "./types";
 
 export interface LeetcodeSolvedSlugs {
   slugs: Set<string>;
@@ -26,5 +28,23 @@ export async function getLeetcodeSolvedSlugs(userId: string): Promise<LeetcodeSo
   return {
     slugs: new Set(rows.map((r) => r.slug)),
     historyComplete: account?.historyComplete ?? null,
+  };
+}
+
+/** Solves, ticks and follows in one go: everything a page needs to show sheets. */
+export async function getSheetState(userId: string): Promise<SheetState> {
+  const [{ slugs, historyComplete }, ticks, follows] = await Promise.all([
+    getLeetcodeSolvedSlugs(userId),
+    db.select({ slug: sheetTicks.slug }).from(sheetTicks).where(eq(sheetTicks.userId, userId)),
+    db
+      .select({ sheetId: sheetFollows.sheetId, following: sheetFollows.following })
+      .from(sheetFollows)
+      .where(eq(sheetFollows.userId, userId)),
+  ]);
+  return {
+    solvedSlugs: slugs,
+    tickedSlugs: new Set(ticks.map((t) => t.slug)),
+    followed: followedSheets(new Map(follows.map((f) => [f.sheetId, f.following]))),
+    historyComplete,
   };
 }
