@@ -89,7 +89,8 @@ try {
   const loaded = new Promise<void>((resolve) =>
     listeners.push((m) => m === "Page.loadEventFired" && resolve()),
   );
-  await send("Page.navigate", { url });
+  const nav = await send<{ errorText?: string }>("Page.navigate", { url });
+  if (nav.errorText) throw new Error(`Could not load ${url}: ${nav.errorText}`);
   await loaded;
   await new Promise((r) => setTimeout(r, wait));
 
@@ -97,9 +98,16 @@ try {
     returnByValue: true,
     expression: `(() => {
       const w = document.documentElement.clientWidth;
+      // Inside a sideways scroller or a clipped box, extra width is intended.
+      const contained = (el) => {
+        for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+          if (["auto", "scroll", "hidden", "clip"].includes(getComputedStyle(p).overflowX)) return true;
+        }
+        return false;
+      };
       return [...document.querySelectorAll("body *")]
-        .filter((el) => el.getBoundingClientRect().right > w + 1 && getComputedStyle(el).position !== "fixed"
-          && !el.closest("[data-overflow-ok], [style*='overflow'], .overflow-x-auto, .overflow-auto"))
+        .filter((el) => el.getBoundingClientRect().right > w + 1
+          && getComputedStyle(el).position !== "fixed" && !contained(el))
         .slice(0, 8)
         .map((el) => el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + "." + String(el.className).split(" ").slice(0, 3).join("."));
     })()`,

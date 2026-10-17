@@ -39,6 +39,12 @@ export function initials(name: string) {
   return letters.join("").toUpperCase() || "?";
 }
 
+const TONE = {
+  default: "bg-muted text-foreground",
+  primary: "bg-primary text-primary-foreground",
+  soft: "bg-primary-soft text-primary-ink",
+} as const;
+
 /** A user's picture, or their initials (Coach's .pav, .pub-avatar). */
 export function UserAvatar({
   name,
@@ -52,7 +58,7 @@ export function UserAvatar({
   image?: string | null;
   size?: Size;
   shape?: "circle" | "squircle";
-  tone?: "default" | "primary";
+  tone?: keyof typeof TONE;
   className?: string;
 }) {
   const squircle = shape === "squircle";
@@ -62,11 +68,7 @@ export function UserAvatar({
         <AvatarImage src={image} alt="" className={cn(squircle && SQUIRCLE_INNER[size])} />
       ) : null}
       <AvatarFallback
-        className={cn(
-          FALLBACK_TEXT[size],
-          squircle && SQUIRCLE_INNER[size],
-          tone === "primary" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
-        )}
+        className={cn(FALLBACK_TEXT[size], squircle && SQUIRCLE_INNER[size], TONE[tone])}
       >
         {initials(name)}
       </AvatarFallback>

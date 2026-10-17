@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { isDeleteConfirmed } from "@/lib/account-export-shared";
 import { createApiToken, revokeApiToken } from "@/lib/api-tokens";
 import { parseTokenName, TOKEN_NAME_MAX } from "@/lib/api-tokens-shared";
@@ -17,6 +18,43 @@ import {
   type SocialKind,
   type SocialLinks,
 } from "@/lib/social-links-shared";
+
+export type PublicProfileState = { ok: true } | { ok: false; error: string };
+
+/** Opt in to (or out of) the public /u/<username> page. */
+export async function setPublicProfile(enabled: unknown): Promise<PublicProfileState> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Sign in to change your profile." };
+  const parsed = z.boolean().safeParse(enabled);
+  if (!parsed.success) return { ok: false, error: "Invalid setting." };
+  if (!user.username) return { ok: false, error: "Your account has no username for a public URL." };
+
+  await db.update(users).set({ publicProfile: parsed.data }).where(eq(users.id, user.id));
+  refresh();
+  return { ok: true };
+}
+
+/** Opt in to (or out of) the global weekly board. Turning it on needs a public profile. */
+export async function setGlobalBoard(enabled: unknown): Promise<PublicProfileState> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Sign in to change your profile." };
+  const parsed = z.boolean().safeParse(enabled);
+  if (!parsed.success) return { ok: false, error: "Invalid setting." };
+  if (parsed.data) {
+    const [row] = await db
+      .select({ publicProfile: users.publicProfile })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+    if (!row?.publicProfile) {
+      return { ok: false, error: "Make your profile public to join the global leaderboard." };
+    }
+  }
+
+  await db.update(users).set({ globalBoard: parsed.data }).where(eq(users.id, user.id));
+  refresh();
+  return { ok: true };
+}
 
 export type SocialLinksState = {
   ok: boolean;
