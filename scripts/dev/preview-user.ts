@@ -4,7 +4,7 @@
 // (gitignored) and is never printed.
 //
 //   pnpm dev:preview create [--from savinyu] [--name "Anvi Kapoor"] [--empty]
-//   pnpm dev:preview delete
+//   pnpm dev:preview delete <preview-username> | --all
 import { randomBytes, createHmac, randomUUID } from "node:crypto";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { config } from "dotenv";
@@ -103,11 +103,17 @@ async function create() {
   console.log(`Cookie file: ${file}  (pnpm dev:shot <url> <out.png> --cookie ${file})`);
 }
 
+/** Deletes one preview user, or every one with --all (other people's checks may be using them). */
 async function remove() {
-  const rows = await sql.query(`delete from users where id like $1 returning username`, [
-    `${PREFIX}%`,
-  ]);
-  rmSync(DIR, { recursive: true, force: true });
+  const target = process.argv[3];
+  if (!target) throw new Error("Name the preview user to delete, or pass --all");
+  const all = target === "--all";
+  if (!all && !target.startsWith(PREFIX)) throw new Error(`Not a preview user: ${target}`);
+  const rows = await sql.query(
+    `delete from users where id like $1 and ($2 or username = $3) returning username`,
+    [`${PREFIX}%`, all, target],
+  );
+  for (const r of rows) rmSync(`${DIR}/${r.username}.cookie`, { force: true });
   console.log(`Deleted ${rows.length} preview user(s).`);
 }
 
@@ -116,7 +122,7 @@ if (command === "create") await create();
 else if (command === "delete") await remove();
 else {
   console.error(
-    "Usage: pnpm dev:preview create [--from <username>] [--name <name>] [--empty] | delete",
+    "Usage: pnpm dev:preview create [--from <username>] [--name <name>] [--empty] | delete <username> | delete --all",
   );
   process.exit(1);
 }
