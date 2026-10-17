@@ -5,7 +5,7 @@ import { filterDashboard } from "@/lib/dashboard/aggregate";
 import { PLATFORM_COLOR, type DashboardData, type PlatformFilter } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
 import { getSolveNext } from "@/lib/topics/recommend";
-import { DifficultyBadge } from "./difficulty-badge";
+import { DifficultyBadge } from "@/components/kit/difficulty-badge";
 
 const MAX_TOPICS = 3;
 

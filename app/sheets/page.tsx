@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Circle, CircleCheck } from "lucide-react";
-import { DifficultyBadge } from "@/components/dashboard/difficulty-badge";
+import { DifficultyBadge } from "@/components/kit/difficulty-badge";
 import { ProgressBar } from "@/components/sheets/progress-bar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
