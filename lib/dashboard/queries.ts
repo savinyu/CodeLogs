@@ -1,7 +1,7 @@
 // Dashboard reads. Every query on user data is scoped by userId; aggregate.ts does the shaping.
 
 import "server-only";
-import { and, count, eq, inArray, isNotNull, lte, sql, type SQL } from "drizzle-orm";
+import { and, count, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { cacheLife } from "next/cache";
 import { db } from "@/lib/db/client";
 import {
@@ -13,22 +13,10 @@ import {
   solves,
   users,
 } from "@/lib/db/schema";
-import type { PlatformId } from "@/lib/adapters/types";
 import { ratingOf } from "@/lib/topics/recommend";
 import { cfCatalogCap, type TagSetCount } from "@/lib/topics/scoring";
-import { buildDashboard, codeforcesLevel, RECENT_LIMIT, type DashboardRaw } from "./aggregate";
+import { buildDashboard, codeforcesLevel, RECENT_LIMIT } from "./aggregate";
 import type { DashboardData, DifficultyBand } from "./types";
-
-/** Tag frequencies across each platform's whole catalog. Global and slow-moving, so cached. */
-async function getCatalogTags(): Promise<DashboardRaw["catalogTags"]> {
-  "use cache";
-  cacheLife("days");
-  const result = await db.execute<{ platform: PlatformId; tag: string; count: number }>(sql`
-    SELECT p.platform, t.tag, count(*)::int AS count
-    FROM ${problems} p CROSS JOIN LATERAL jsonb_array_elements_text(p.raw_tags) AS t(tag)
-    GROUP BY 1, 2`);
-  return result.rows;
-}
 
 /**
  * Catalog problems grouped by identical tag sets, for topic expectations. Codeforces: rated
@@ -48,20 +36,6 @@ async function getCatalogTagSets(
     WHERE ${problems.platform} = ${platform} AND ${problems.catalogUpdatedAt} IS NOT NULL
       AND ${filter}
     GROUP BY 1`);
-  return result.rows;
-}
-
-async function getSolvedTags(
-  userId: string,
-  accountFilter: SQL | undefined,
-): Promise<DashboardRaw["solvedTags"]> {
-  const result = await db.execute<{ platform: PlatformId; tag: string; count: number }>(sql`
-    SELECT p.platform, t.tag, count(*)::int AS count
-    FROM ${solves}
-    JOIN ${problems} p ON p.id = ${solves.problemId}
-    CROSS JOIN LATERAL jsonb_array_elements_text(p.raw_tags) AS t(tag)
-    WHERE ${solves.userId} = ${userId} ${accountFilter ? sql`AND ${accountFilter}` : sql``}
-    GROUP BY 1, 2`);
   return result.rows;
 }
 
@@ -114,8 +88,6 @@ export async function getDashboardData(
     solveDays,
     calendarDays,
     difficulty,
-    solvedTags,
-    catalogTags,
     recent,
     cfSolves,
     contests,
@@ -167,8 +139,6 @@ export async function getDashboardData(
       .innerJoin(problems, eq(problems.id, solves.problemId))
       .where(and(eq(solves.userId, userId), solvesFilter))
       .groupBy(problems.platform, problems.difficultyNorm),
-    getSolvedTags(userId, solvesFilter),
-    getCatalogTags(),
     db
       .select({
         platform: ranked.platform,
@@ -220,8 +190,6 @@ export async function getDashboardData(
       solveDays,
       calendarDays,
       difficulty,
-      solvedTags,
-      catalogTags,
       cfSolves,
       cfCatalog,
       lcCatalog,

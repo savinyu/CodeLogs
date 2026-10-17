@@ -4,8 +4,6 @@ import {
   buildDashboard,
   contestUrl,
   filterDashboard,
-  GAP_TAGS_PER_PLATFORM,
-  humanizeSlug,
   parsePlatformFilter,
   RECENT_LIMIT,
   type DashboardRaw,
@@ -62,16 +60,6 @@ function raw(overrides: Partial<DashboardRaw> = {}): DashboardRaw {
       { platform: "codeforces", band: null, count: 6 },
       { platform: "leetcode", band: 3, count: 10 },
     ],
-    solvedTags: [
-      { platform: "codeforces", tag: "greedy", count: 21 },
-      { platform: "leetcode", tag: "array", count: 9 },
-    ],
-    catalogTags: [
-      { platform: "codeforces", tag: "greedy", count: 3590 },
-      { platform: "codeforces", tag: "dp", count: 2544 },
-      { platform: "leetcode", tag: "array", count: 2273 },
-      { platform: "leetcode", tag: "hash-table", count: 843 },
-    ],
     recent: [],
     cfSolves: [],
     cfCatalog: [],
@@ -86,11 +74,6 @@ describe("helpers", () => {
     expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
     expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
     expect(addDays(ASOF, -364)).toBe("2025-10-14");
-  });
-
-  it("humanizes LeetCode slugs", () => {
-    expect(humanizeSlug("hash-table")).toBe("Hash Table");
-    expect(humanizeSlug("dp")).toBe("Dp");
   });
 
   it("parses the platform filter, defaulting to all", () => {
@@ -188,38 +171,8 @@ describe("buildDashboard", () => {
     expect(d.difficulty.map((r) => r.total)).toEqual([121, 0, 195, 43, 0, 6]);
   });
 
-  it("lists solved tags first, then popular unsolved catalog tags as gaps", () => {
-    const d = buildDashboard(raw(), ASOF);
-    expect(d.tags.map((t) => [t.platform, t.source])).toEqual([
-      ["codeforces", "tracked"],
-      ["leetcode", "reported"],
-    ]);
-    expect(d.tags[0]!.tags).toEqual([
-      { tag: "greedy", label: "greedy", solved: 21, catalogCount: 3590 },
-      { tag: "dp", label: "dp", solved: 0, catalogCount: 2544 },
-    ]);
-    // LC: reported counts win over solve rows; zero-count reported tags aren't "solved".
-    expect(d.tags[1]!.tags).toEqual([
-      { tag: "array", label: "Array", solved: 183, catalogCount: 2273 },
-      { tag: "hash-table", label: "Hash Table", solved: 0, catalogCount: 843 },
-    ]);
-  });
-
-  it("caps gap tags per platform", () => {
-    const catalogTags = Array.from({ length: GAP_TAGS_PER_PLATFORM + 10 }, (_, i) => ({
-      platform: "codeforces" as const,
-      tag: `tag${i}`,
-      count: 1000 - i,
-    }));
-    const d = buildDashboard(raw({ catalogTags, solvedTags: [] }), ASOF);
-    expect(d.tags.find((t) => t.platform === "codeforces")!.tags).toHaveLength(
-      GAP_TAGS_PER_PLATFORM,
-    );
-  });
-
-  it("leaves out tag sections for platforms that aren't connected", () => {
+  it("lists only connected platforms in the totals", () => {
     const d = buildDashboard(raw({ accounts: [account("atcoder")] }), ASOF);
-    expect(d.tags).toEqual([]);
     expect(d.totals).toEqual([{ platform: "atcoder", solved: 0, source: "tracked", listed: 0 }]);
   });
 });
@@ -301,7 +254,6 @@ describe("filterDashboard", () => {
     expect(lc.totals.map((t) => t.platform)).toEqual(["leetcode"]);
     expect(lc.activity).toEqual([{ day: "2026-10-01", counts: { leetcode: 4 }, total: 4 }]);
     expect(lc.difficulty.map((r) => r.total)).toEqual([81, 0, 195, 43, 0, 0]);
-    expect(lc.tags.map((t) => t.platform)).toEqual(["leetcode"]);
   });
 });
 

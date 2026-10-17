@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { SOCIAL_META } from "@/components/social-links";
+import { SOCIAL_META } from "@/components/social-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

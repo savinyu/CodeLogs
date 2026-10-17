@@ -38,12 +38,15 @@ Before calling work done, run `pnpm typecheck && pnpm lint && pnpm format:check 
 
 ## Layout
 ```
-app/                    routes; api/auth/[...all] is the Better Auth handler
+app/                    routes: today (home), progress, topics, sheets, friends, contests, connect, settings, u/[username]; /dashboard redirects to /today; api/auth/[...all] is the Better Auth handler
   connect/              add/remove platform handles (server actions)
   dashboard/
-components/ui/          shadcn components (generated: prefer re-adding over hand-editing)
+components/ui/          shadcn components (generated: prefer re-adding over hand-editing; button.tsx is re-cut to v2 pills)
+components/kit/         v2 design primitives (Panel, Chip, Bar, Meter, Ring, StatTile, SegmentedLinks, CheckLabel, …): build pages from these
+components/shell/       header, pill nav, profile panel, streak pill, theme toggle
+components/charts/      server-rendered SVG charts (heatmap, stacked columns, rating line)
+components/<page>/      today, progress, topics, sheets, friends, contests, profile (/u/[username])
 components/             app components (site-header, theme-toggle, auth/…)
-components/dashboard/   dashboard sections; dashboard-view.tsx is shared by /dashboard and /u/[username]
 lib/env.ts              zod-validated env(), lazy so tests and adapters don't need env vars
 lib/auth.ts             Better Auth server config  · lib/auth-client.ts for client hooks
 lib/session.ts          getCurrentUser() / requireUser(): the only way pages read the session
@@ -57,7 +60,10 @@ lib/github-username.ts  sets users.username from GitHub (Better Auth account hoo
 lib/platforms.ts        per-platform display metadata and handle patterns
 lib/api-tokens*.ts      extension tokens (hash-only storage, Bearer auth); lib/leetcode-ingest.ts writes a full LC list (import + extension)
 extension/              Chrome MV3 extension (plain JS, no build); app/api/extension/* is its API
-lib/sheets/             Blind 75 / NeetCode 150 (generated neetcode-data.ts: `pnpm sheets:neetcode`), progress (pure), queries.ts
+lib/sheets/             Blind 75 / NeetCode 150 (generated neetcode-data.ts: `pnpm sheets:neetcode`), progress with manual ticks, follows (pure), queries.ts
+lib/today/              Today's set and week strip (pure), daily marks query
+lib/friends/            points, week, usernames (pure), friends and board queries
+lib/user-settings.ts    publicProfile, globalBoard, dailyGoal · lib/streak.ts for the header streak
 fixtures/<platform>/    saved real API responses for adapter tests
 tests/                  vitest
 scripts/spike/          M0 probes + FINDINGS.md
@@ -70,7 +76,8 @@ scripts/spike/          M0 probes + FINDINGS.md
 - **Inngest steps:** fetch and write inside one `step.run` and return only small plain data (step outputs are size-limited and JSON round-tripped). Keep DB imports out of `sync-account-core.ts` so it stays unit-testable.
 - **Platform politeness:** respect `minDelayMs` (CF 2000 ms, AtCoder 1100, LC 1000). LeetCode is fetched only on demand or daily. No scraping of HackerRank, CodeChef or GFG, and never ask for platform passwords or cookies.
 - **Schema changes:** edit `lib/db/schema.ts`, run `pnpm db:generate --name …`, review the SQL and commit it with the schema. Don't rename Better Auth's columns (`users`, `sessions`, `accounts`, `verifications`). `accounts` holds OAuth links; platform handles live in `platform_accounts`.
-- **Colors:** use the theme tokens (`bg-platform-codeforces`, `fill-heat-2`, `PLATFORM_COLOR` in `lib/dashboard/types.ts`), never hex, so dark mode keeps working. Recharts bars use `isAnimationActive={false}`.
+- **Colors:** use the theme tokens in `app/globals.css` (`bg-card`, `bg-raised`, `text-primary-ink`, `bg-platform-codeforces`, `fill-heat-2`, `bg-cov-3`, …), never hex, so dark mode keeps working. Tailwind needs literal class names: map values with static `Record<…, string>` tables. The OG image is the only place with literal colours.
+- **Visual checks:** `pnpm dev:preview create` makes a throwaway signed-in user cloned from the owner's data (cookie in `.preview/`, never printed; `pnpm dev:preview delete <user>` removes it). `pnpm dev:shot <url> <png> [--width 360] [--dark] [--full] [--cookie …]` screenshots it and reports horizontal overflow. Don't run a dev server in the main checkout while agent worktrees exist under `.claude/worktrees/` (the file watcher sees them and the page reloads in a loop).
 - **Turbopack cache:** if `pnpm build` output ignores a CSS change, delete `.next/cache/turbopack` and rebuild. The dev server can also serve stale `globals.css` until the file is saved again.
 - **Secrets:** only in `.env.local` (gitignored). Keep `.env.example` in sync with `lib/env.ts`. Never print secret values.
 

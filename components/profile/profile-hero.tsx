@@ -3,7 +3,7 @@ import { AddFriendButton } from "@/components/friends/add-friend-button";
 import { Chip } from "@/components/kit/chip";
 import { PlatformDot } from "@/components/kit/platform-dot";
 import { UserAvatar } from "@/components/kit/user-avatar";
-import { SOCIAL_META } from "@/components/social-links";
+import { SOCIAL_META } from "@/components/social-icons";
 import type { PlatformId } from "@/lib/adapters/types";
 import type { Friendship } from "@/lib/friends/queries";
 import { PLATFORM_META } from "@/lib/platforms";

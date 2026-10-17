@@ -1,6 +1,6 @@
 # CodeLogs
 
-One dashboard for your competitive programming and DSA progress across **Codeforces, AtCoder and LeetCode**: totals, an activity heatmap, difficulty and topic breakdowns, your weak topics, and what to solve next.
+Your competitive programming and DSA progress across **Codeforces, AtCoder and LeetCode** in one place: a daily set of problems from your weakest topics, totals and an activity heatmap, a topic map, sheets, contests, and weekly boards with friends.
 
 ## The problem
 
@@ -14,14 +14,16 @@ CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subto
 
 - **Connect handles** for Codeforces, AtCoder and LeetCode. Handles are checked against the platform when you add them.
 - **Background sync** of solved problems, incremental after the first run, plus a daily refresh of every active account.
-- **Dashboard:** totals per platform, an activity heatmap (last 12 months or any year you were active), a difficulty chart on a shared 5-band scale, platform tags with "gaps" (popular tags you haven't touched), and recent solves with Easy / Medium / Hard tags.
-- **Topics:** coverage per shared topic, weak-topic scoring, and "Solve next" picks (Codeforces problems rated +100–200 above your level, plus free LeetCode problems).
+- **Today:** up to five problems from your weakest topics (Codeforces problems rated +100–200 above your level, plus free LeetCode problems), a daily goal you set, Mark done, this week's activity, and the next problems in the sheet you follow.
+- **Progress:** totals per platform, an activity heatmap (last 12 months or any year you were active), solves per month, a difficulty chart on a shared 5-band scale, and recent solves with Easy / Medium / Hard tags.
+- **Topics:** a map of the 10 shared topics, sized by what's expected at your level and coloured by coverage. Each topic opens a panel with its sub-topics, practice picks and the sheet sections that train it.
+- **Friends:** mutual friend requests and weekly boards (friends, and an opt-in global one), ranked by difficulty-weighted points from verified handles.
 - **Public profile:** opt-in, read-only, with an Open Graph preview image. Only handles you've **verified** (by pasting a short code into your platform profile) appear on it.
 - **Full LeetCode history:** upload the JSON that `leetcode.com/api/problems/all/` gives you while logged in. Only the list of solved problem slugs is sent; your cookies never leave the browser.
 - **Browser extension** (`extension/`, Chrome MV3): does the same from your logged-in browser in one click, and can add solve dates from your submission list. It authenticates with a personal token from Settings and sends only problem slugs and dates; never cookies or code.
-- **Contests and badges:** Codeforces and LeetCode contest history on one rating-over-time chart, with contests entered, current and max rating, best rank, and LeetCode's global rank and Knight / Guardian badge. Your LeetCode badges show as a strip of icons.
-- **Sheets:** progress through Blind 75 and NeetCode 150, by section and difficulty (problem list from [NeetCode](https://github.com/neetcode-gh/leetcode), MIT).
-- **Social links:** add X, Instagram, a website and an email in Settings. They show as icons, next to your GitHub, on your dashboard and public profile.
+- **Contests and badges:** a rating-over-time chart per platform (Codeforces, LeetCode) with contests entered, current and max rating, best rank, LeetCode's global rank and Knight / Guardian badge, and the full contest history. Your LeetCode badges show with their icons.
+- **Sheets:** follow Blind 75 and NeetCode 150 (problem list from [NeetCode](https://github.com/neetcode-gh/leetcode), MIT). Synced solves tick problems off, and you can tick one by hand ("Solved it") until your full LeetCode history is imported. Every section maps to a topic.
+- **Social links:** add X, Instagram, a website and an email in Settings. They show next to your GitHub on your public profile.
 - **Your data:** export everything as JSON, or delete your account, from Settings.
 
 ## Architecture
@@ -44,7 +46,7 @@ Inngest ── webhook ──> /api/inngest   (each step is its own short invoca
 - **Sync** (`lib/sync/`, `lib/inngest/`) runs on Inngest. Every page fetch and its database write is one step, so no single serverless invocation runs long, and a retry repeats only that page. Writes are idempotent (`ON CONFLICT DO NOTHING`, change-only upserts), and each account keeps a cursor so later syncs only read newer submissions.
 - **Catalogs** (every problem on each platform, with tags and difficulty) are refreshed by a separate cron, not by user syncs.
 - **Topics** (`lib/topics/`): a two-level taxonomy, Codeforces and LeetCode tag mappings, coverage scoring, and recommendations. All pure and unit-tested except the database reads.
-- **Dashboard** (`lib/dashboard/`): user-scoped queries feed pure aggregation code, rendered by server components with Recharts charts and a custom SVG heatmap.
+- **Dashboard** (`lib/dashboard/`): user-scoped queries feed pure aggregation code, rendered by server components as small SVG charts (heatmap, stacked columns, rating lines, the topic treemap).
 
 **Stack:** Next.js 16 (App Router, Cache Components), React 19, TypeScript, Tailwind 4 + shadcn/ui (Base UI), Drizzle ORM on Neon Postgres, Better Auth (GitHub login), Inngest, Vitest.
 
@@ -84,4 +86,4 @@ Checks (CI runs the same): `pnpm typecheck && pnpm lint && pnpm format:check && 
 
 ## Status
 
-A side project. See [`PLAN.md`](PLAN.md) for decisions, milestones and progress, and [`scripts/spike/FINDINGS.md`](scripts/spike/FINDINGS.md) for what each platform's API actually returns.
+A side project. See [`PLAN.md`](PLAN.md) for decisions, milestones and progress (v1), [`PLAN-v2.md`](PLAN-v2.md) for the v2 interface, and [`scripts/spike/FINDINGS.md`](scripts/spike/FINDINGS.md) for what each platform's API actually returns.
