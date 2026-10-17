@@ -1,32 +1,27 @@
 import { Suspense } from "react";
-import { eq } from "drizzle-orm";
 import { FriendsCard } from "@/components/friends/friends-card";
 import { Leaderboard } from "@/components/friends/leaderboard";
 import { Page } from "@/components/kit/page";
 import { PageHead } from "@/components/kit/page-head";
 import { Skeleton } from "@/components/ui/skeleton";
-import { db } from "@/lib/db/client";
-import { users } from "@/lib/db/schema";
 import { rankBoard } from "@/lib/friends/points";
 import { getBoardEntries, getFriendsState, getGlobalBoard } from "@/lib/friends/queries";
 import { weekLabel, weekStart } from "@/lib/friends/week";
+import { renderNow } from "@/lib/clock";
 import { requireUser } from "@/lib/session";
+import { getUserSettings } from "@/lib/user-settings";
 
 export const metadata = { title: "Friends" };
 
 async function FriendsContent({ searchParams }: Pick<PageProps<"/friends">, "searchParams">) {
   const [user, query] = await Promise.all([requireUser(), searchParams]);
   const board = query.board === "global" ? "global" : "friends";
-  const now = new Date();
+  const now = new Date(await renderNow());
   const since = weekStart(now);
 
-  const [state, mine, global] = await Promise.all([
+  const [state, settings, global] = await Promise.all([
     getFriendsState(user.id),
-    db
-      .select({ publicProfile: users.publicProfile })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1),
+    getUserSettings(user.id),
     board === "global" ? getGlobalBoard(user.id, since) : null,
   ]);
 
@@ -45,7 +40,7 @@ async function FriendsContent({ searchParams }: Pick<PageProps<"/friends">, "sea
         friendCount={state.friends.length}
         listed={global?.listed ?? 0}
         isListed={global?.isListed ?? false}
-        isPublic={mine[0]?.publicProfile ?? false}
+        isPublic={settings.publicProfile}
       />
       <FriendsCard state={state} />
     </div>

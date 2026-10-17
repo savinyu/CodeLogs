@@ -1,7 +1,7 @@
 "use server";
 
-import { refresh } from "next/cache";
 import { z } from "zod";
+import { userDataChanged } from "@/lib/cache";
 import { ingestLeetcodeSolves } from "@/lib/leetcode-ingest";
 import { getCurrentUser } from "@/lib/session";
 
@@ -42,7 +42,7 @@ export async function importLeetcodeSolves(input: unknown): Promise<ImportResult
     "import",
   );
   if (!result.ok) return { ok: false, error: result.error };
-  refresh();
+  userDataChanged(user.id);
   const { imported, alreadyKnown, skipped, complete, known, lifetime } = result;
   return { ok: true, imported, alreadyKnown, skipped, complete, known, lifetime };
 }

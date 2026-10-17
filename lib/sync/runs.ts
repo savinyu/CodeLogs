@@ -1,8 +1,11 @@
 // Sync bookkeeping: claiming accounts for a sync, sync_runs / catalog_syncs rows, and the
 // account status the UI shows. The Inngest functions call these; they hold no fetch logic.
+// Every status change drops the user's cached reads (lib/cache.ts), so Progress sees it.
 
 import "server-only";
 import { and, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import { CATALOG_TAG, invalidateUser } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { catalogSyncs, platformAccounts, platformStats, solves, syncRuns } from "@/lib/db/schema";
 import type { HistoryCompleteness, PlatformId, SyncCursor } from "@/lib/adapters/types";
@@ -32,7 +35,7 @@ export async function claimAccountsForSync(
   const requestedBefore = (cutoff: typeof cooldownCutoff) =>
     or(isNull(platformAccounts.syncRequestedAt), lt(platformAccounts.syncRequestedAt, cutoff));
 
-  return db
+  const claimed = await db
     .update(platformAccounts)
     .set({ status: "syncing", syncRequestedAt: sql`now()`, lastError: null })
     .where(
@@ -44,15 +47,19 @@ export async function claimAccountsForSync(
       ),
     )
     .returning({ accountId: platformAccounts.id, platform: platformAccounts.platform });
+  if (claimed.length > 0) invalidateUser(userId);
+  return claimed;
 }
 
 /** Undo a claim when the sync event couldn't be sent. */
 export async function releaseClaim(accountIds: string[], error: string): Promise<void> {
   if (accountIds.length === 0) return;
-  await db
+  const rows = await db
     .update(platformAccounts)
     .set({ status: "error", lastError: error, syncRequestedAt: null })
-    .where(inArray(platformAccounts.id, accountIds));
+    .where(inArray(platformAccounts.id, accountIds))
+    .returning({ userId: platformAccounts.userId });
+  for (const userId of new Set(rows.map((r) => r.userId))) invalidateUser(userId);
 }
 
 export interface SyncAccount {
@@ -83,6 +90,7 @@ export async function startAccountSync(
     db.insert(syncRuns).values({ accountId }).returning({ id: syncRuns.id }),
   ]);
   if (!run) throw new Error("Could not create a sync_runs row");
+  invalidateUser(account.userId);
 
   return {
     runId: run.id,
@@ -105,7 +113,7 @@ export async function finishAccountSync(args: {
   historyComplete: boolean;
 }): Promise<void> {
   const status = args.history === "full" || args.historyComplete ? "ok" : "partial";
-  await db.batch([
+  const [accounts] = await db.batch([
     db
       .update(platformAccounts)
       .set({
@@ -114,7 +122,8 @@ export async function finishAccountSync(args: {
         lastSyncedAt: sql`now()`,
         lastError: null,
       })
-      .where(eq(platformAccounts.id, args.accountId)),
+      .where(eq(platformAccounts.id, args.accountId))
+      .returning({ userId: platformAccounts.userId }),
     db
       .update(syncRuns)
       .set({ status: "ok", finishedAt: sql`now()`, items: args.items })
@@ -122,6 +131,7 @@ export async function finishAccountSync(args: {
   ]);
   // LeetCode only shows the latest 20 solves: a gap since the import flips the account back to partial.
   if (args.history === "recent_only") await refreshHistoryComplete(args.accountId);
+  if (accounts[0]) invalidateUser(accounts[0].userId);
 }
 
 /**
@@ -147,7 +157,11 @@ export async function refreshHistoryComplete(accountId: string): Promise<boolean
         WHEN ${complete} THEN 'ok'::account_status ELSE 'partial'::account_status END`,
     })
     .where(eq(platformAccounts.id, accountId))
-    .returning({ historyComplete: platformAccounts.historyComplete });
+    .returning({
+      historyComplete: platformAccounts.historyComplete,
+      userId: platformAccounts.userId,
+    });
+  if (row) invalidateUser(row.userId);
   return row?.historyComplete ?? false;
 }
 
@@ -173,16 +187,18 @@ export async function failAccountSync(args: {
             .orderBy(desc(syncRuns.startedAt))
             .limit(1),
         );
-  await db.batch([
+  const [accounts] = await db.batch([
     db
       .update(platformAccounts)
       .set({ status: "error", lastError: error })
-      .where(eq(platformAccounts.id, args.accountId)),
+      .where(eq(platformAccounts.id, args.accountId))
+      .returning({ userId: platformAccounts.userId }),
     db
       .update(syncRuns)
       .set({ status: "error", finishedAt: sql`now()`, error })
       .where(runFilter),
   ]);
+  if (accounts[0]) invalidateUser(accounts[0].userId);
 }
 
 export async function startCatalogSync(platform: PlatformId): Promise<number> {
@@ -199,6 +215,8 @@ export async function finishCatalogSync(id: number, rows: number): Promise<void>
     .update(catalogSyncs)
     .set({ status: "ok", finishedAt: sql`now()`, rows })
     .where(eq(catalogSyncs.id, id));
+  // Picks and topic expectations read the catalog; the next read refreshes them in the background.
+  if (rows > 0) revalidateTag(CATALOG_TAG, "max");
 }
 
 /** Closes a catalog run as failed. Without an id, closes the platform's latest open run (for onFailure). */

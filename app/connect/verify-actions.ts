@@ -1,10 +1,10 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { refresh } from "next/cache";
 import { z } from "zod";
 import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import { ADAPTERS } from "@/lib/adapters/index";
+import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { PLATFORMS, platformAccounts } from "@/lib/db/schema";
 import { PLATFORM_META } from "@/lib/platforms";
@@ -50,7 +50,7 @@ export async function startVerification(
     return { ok: false, error: "Couldn't generate a code. Try again in a moment." };
   }
 
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 
@@ -117,6 +117,6 @@ export async function checkVerification(
     return { ok: false, error: "Couldn't save the result. Try again in a moment." };
   }
 
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }

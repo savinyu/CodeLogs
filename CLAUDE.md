@@ -50,6 +50,8 @@ components/             app components (site-header, theme-toggle, auth/…)
 lib/env.ts              zod-validated env(), lazy so tests and adapters don't need env vars
 lib/auth.ts             Better Auth server config  · lib/auth-client.ts for client hooks
 lib/session.ts          getCurrentUser() / requireUser(): the only way pages read the session
+lib/cache.ts            cache tags for user data; userDataChanged() (actions) / invalidateUser() (elsewhere)
+lib/clock.ts            renderNow() / utcToday(): the clock for signed-in renders
 lib/db/                 schema.ts, client.ts, migrations/
 lib/adapters/           types.ts (contract), http.ts, errors.ts, {codeforces,atcoder,leetcode}.ts, index.ts (registry), validate.ts
 lib/sync/               upsert.ts, runs.ts (DB writes, server-only); cursor.ts, rows.ts, difficulty.ts (pure); request.ts
@@ -71,7 +73,8 @@ scripts/spike/          M0 probes + FINDINGS.md
 
 ## Rules
 - **Cache Components:** a component that reads `headers()`, `cookies()` or the session must render inside `<Suspense>`. Never await the session at the top level of a layout. Read `node_modules/next/dist/docs/` for any Next API you're unsure of; this version differs from older training data (`middleware` is now `proxy.ts`, and so on).
-- **Auth:** server actions and route handlers re-check `getCurrentUser()`. `proxy.ts` is only an optimistic redirect. Every query on user data is scoped by `userId`.
+- **Auth:** server actions and route handlers re-check `getCurrentUser()`. `proxy.ts` is only an optimistic redirect, plus it refreshes Better Auth's 5-minute session cookie cache (Server Components can't set cookies), so renders read the session without a DB lookup. Every query on user data is scoped by `userId`.
+- **Caching:** user-data reads are `"use cache: remote"` functions tagged `userTag(userId)` (`lib/cache.ts`), and pages stay in the client router for 30 minutes. Any new write to a user's rows must call `userDataChanged(...)` in a server action or `invalidateUser(...)` elsewhere (sync writes in `lib/sync/` already do), or pages keep showing old data. In signed-in renders read the time through `lib/clock.ts`, never `new Date()`: pages are prefetched per session, and a prefetch can't read the clock.
 - **Adapters are pure:** HTTP in, normalized data (`lib/adapters/types.ts`) out. No DB imports, so fixture tests run offline. All HTTP goes through `lib/adapters/http.ts`; tests mock it with `tests/helpers/mock-http.ts`. `validateHandle` returns `valid | invalid | retry`. Throw `PlatformUserNotFoundError` for a missing handle so the sync fails without retries.
 - **Inngest steps:** fetch and write inside one `step.run` and return only small plain data (step outputs are size-limited and JSON round-tripped). Keep DB imports out of `sync-account-core.ts` so it stays unit-testable.
 - **Platform politeness:** respect `minDelayMs` (CF 2000 ms, AtCoder 1100, LC 1000). LeetCode is fetched only on demand or daily. No scraping of HackerRank, CodeChef or GFG, and never ask for platform passwords or cookies.

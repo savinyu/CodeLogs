@@ -1,8 +1,8 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { refresh } from "next/cache";
 import { z } from "zod";
+import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { sheetFollows, sheetTicks } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
@@ -32,7 +32,7 @@ export async function setSheetFollow(input: unknown): Promise<SheetActionResult>
       target: [sheetFollows.userId, sheetFollows.sheetId],
       set: { following, updatedAt: new Date() },
     });
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 
@@ -51,6 +51,6 @@ export async function setSheetTick(input: unknown): Promise<SheetActionResult> {
       .delete(sheetTicks)
       .where(and(eq(sheetTicks.userId, user.id), eq(sheetTicks.slug, slug)));
   }
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }

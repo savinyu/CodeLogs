@@ -11,6 +11,9 @@ export const auth = betterAuth({
   secret: env().BETTER_AUTH_SECRET,
   baseURL: env().BETTER_AUTH_URL,
   database: drizzleAdapter(db, { provider: "pg", schema, usePlural: true }),
+  // Pages read the session on every render. A signed cookie holding it for 5 minutes saves a
+  // sessions + users lookup per request; a sign-out or revoke takes effect within that window.
+  session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
   socialProviders: {
     github: {
       clientId: env().GITHUB_CLIENT_ID,

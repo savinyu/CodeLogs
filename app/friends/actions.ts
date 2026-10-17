@@ -1,8 +1,8 @@
 "use server";
 
 import { and, count, eq, sql } from "drizzle-orm";
-import { refresh } from "next/cache";
 import { z } from "zod";
+import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { friendships, users } from "@/lib/db/schema";
 import { pairWhere } from "@/lib/friends/queries";
@@ -74,7 +74,7 @@ export async function sendFriendRequest(username: unknown): Promise<FriendAction
     await db
       .insert(friendships)
       .values({ requesterId: user.id, addresseeId: other.id, status: "pending" });
-    refresh();
+    userDataChanged(user.id, other.id);
     return { ok: true, message: `Request sent to @${target}.` };
   } catch {
     return { ok: false, error: FAILED };
@@ -106,11 +106,11 @@ export async function respondToRequest(input: unknown): Promise<FriendActionResu
         .where(match)
         .returning({ id: friendships.requesterId });
       if (updated.length === 0) return { ok: false, error: "That request is no longer there." };
-      refresh();
+      userDataChanged(user.id, other.id);
       return { ok: true, message: `${other.name} is now your friend and joins your board.` };
     }
     await db.delete(friendships).where(match);
-    refresh();
+    userDataChanged(user.id, other.id);
     return { ok: true, message: "Request declined. They are not told." };
   } catch {
     return { ok: false, error: FAILED };
@@ -136,7 +136,7 @@ export async function cancelRequest(username: unknown): Promise<FriendActionResu
           ),
         );
     }
-    refresh();
+    userDataChanged(user.id, ...(other ? [other.id] : []));
     return { ok: true, message: "Request cancelled." };
   } catch {
     return { ok: false, error: FAILED };
@@ -156,7 +156,7 @@ export async function removeFriend(username: unknown): Promise<FriendActionResul
         .delete(friendships)
         .where(and(pairWhere(user.id, other.id), eq(friendships.status, "accepted")));
     }
-    refresh();
+    userDataChanged(user.id, ...(other ? [other.id] : []));
     return { ok: true, message: "Friend removed." };
   } catch {
     return { ok: false, error: FAILED };

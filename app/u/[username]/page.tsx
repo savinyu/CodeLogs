@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cn } from "cn";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LeetcodeBadgesGrid } from "@/components/contests/badges-grid";
@@ -18,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { countUnverifiedAccounts } from "@/lib/accounts";
 import { getDashboardData, getPublicProfile } from "@/lib/dashboard/queries";
 import { getFriendship } from "@/lib/friends/queries";
+import { renderNow } from "@/lib/clock";
 import { PLATFORM_META } from "@/lib/platforms";
 import { getCurrentUser } from "@/lib/session";
 import { getSocialLinks } from "@/lib/social-links";
@@ -31,11 +33,6 @@ export async function generateMetadata({ params }: PageProps<"/u/[username]">): 
     title: `${profile.name} (@${profile.username}) · CodeLogs`,
     description: `${profile.name}'s solved problems across Codeforces, AtCoder and LeetCode.`,
   };
-}
-
-/** Read after the data fetch, so it is request time (the React purity lint can't see through it). */
-function renderTime(): number {
-  return Date.now();
 }
 
 const fmt = (n: number) => n.toLocaleString("en-US");
@@ -60,7 +57,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
     // The owner's unverified handles are hidden here, so count them for the banner.
     isOwner ? countUnverifiedAccounts(profile.userId) : 0,
   ]);
-  const now = renderTime();
+  const now = await renderNow();
 
   const banner = isOwner ? <OwnerBanner hiddenCount={hiddenCount} /> : null;
   const cta = viewer ? null : <SignupCta />;
@@ -162,7 +159,12 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
       ) : null}
 
       {contests.length > 0 ? (
-        <div className="mt-5 grid grid-cols-1 gap-5 min-[900px]:grid-cols-2">
+        <div
+          className={cn(
+            "mt-5 grid grid-cols-1 gap-5",
+            contests.length > 1 && "min-[900px]:grid-cols-2",
+          )}
+        >
           {contests.map((c) => (
             <ContestCard key={c.platform} contests={c} />
           ))}

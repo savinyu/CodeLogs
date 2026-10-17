@@ -2,7 +2,9 @@
 
 import "server-only";
 import { and, count, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
+import { CATALOG_TAG, userTag } from "@/lib/cache";
+import { utcToday } from "@/lib/clock";
 import { db } from "@/lib/db/client";
 import {
   activityDays,
@@ -26,8 +28,9 @@ async function getCatalogTagSets(
   platform: "codeforces" | "leetcode",
   maxRating: number,
 ): Promise<TagSetCount[]> {
-  "use cache";
-  cacheLife("days");
+  "use cache: remote";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG);
   const filter =
     platform === "codeforces" ? sql`${ratingOf()} <= ${maxRating}` : sql`NOT ${problems.paidOnly}`;
   const result = await db.execute<{ tags: string[]; count: number }>(sql`
@@ -44,12 +47,22 @@ export interface DashboardOptions {
   verifiedOnly?: boolean;
 }
 
-/** Call after reading the request (session or params): it uses the current time. */
 export async function getDashboardData(
   userId: string,
   { verifiedOnly = false }: DashboardOptions = {},
 ): Promise<DashboardData> {
-  const asOf = new Date().toISOString().slice(0, 10);
+  return loadDashboard(userId, verifiedOnly, await utcToday());
+}
+
+/** Cached per user and UTC day (`asOf`); every write to the user's rows drops it (lib/cache.ts). */
+async function loadDashboard(
+  userId: string,
+  verifiedOnly: boolean,
+  asOf: string,
+): Promise<DashboardData> {
+  "use cache: remote";
+  cacheLife("user");
+  cacheTag(userTag(userId));
   // Applied to every query: solves by their account, the rest through platform_accounts.
   const solvesFilter = verifiedOnly
     ? inArray(
@@ -81,6 +94,7 @@ export async function getDashboardData(
     .as("ranked");
   const solvedDay = sql<string>`to_char(${solves.firstSolvedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`;
 
+  // One HTTP round trip to Neon for all nine reads, instead of nine.
   const [
     accounts,
     solveCounts,
@@ -91,7 +105,7 @@ export async function getDashboardData(
     recent,
     cfSolves,
     contests,
-  ] = await Promise.all([
+  ] = await db.batch([
     db
       .select({
         platform: platformAccounts.platform,
