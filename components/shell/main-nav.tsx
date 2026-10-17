@@ -47,6 +47,10 @@ export function MainNav({ signedIn, host }: { signedIn: boolean; host: string })
           <Link
             key={href}
             href={href}
+            // Full prefetch: Progress, Topics, Sheets and Friends read searchParams, so the
+            // default App Shell prefetch leaves their content out and the click shows a skeleton.
+            // The reads behind it are server-cached (lib/cache.ts), so this costs no queries.
+            prefetch={true}
             aria-current={active ? "page" : undefined}
             className={cn(
               "inline-flex items-center rounded-full px-4 py-2 text-[0.9375rem] font-semibold whitespace-nowrap outline-none focus-visible:ring-3 focus-visible:ring-ring/50",

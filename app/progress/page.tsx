@@ -15,15 +15,11 @@ import { activityYears, dashboardHref, parseActivityPeriod } from "@/lib/dashboa
 import { monthlyTotals } from "@/lib/dashboard/monthly";
 import { getDashboardData } from "@/lib/dashboard/queries";
 import { DIFFICULTY_BANDS } from "@/lib/dashboard/types";
+import { renderNow } from "@/lib/clock";
 import { PLATFORM_META } from "@/lib/platforms";
 import { requireUser } from "@/lib/session";
 
 export const metadata = { title: "Progress" };
-
-/** Read after the data fetch, so it is request time (the React purity lint can't see through it). */
-function renderTime(): number {
-  return Date.now();
-}
 
 export default function ProgressPage({ searchParams }: PageProps<"/progress">) {
   return (
@@ -51,7 +47,7 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
   const shown = data.accounts.map((a) => a.platform);
   const years = activityYears(data.activity);
   const period = parseActivityPeriod(params.year, years);
-  const now = renderTime();
+  const now = await renderNow();
 
   const platformLinks = [
     {

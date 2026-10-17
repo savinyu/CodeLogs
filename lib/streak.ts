@@ -2,6 +2,9 @@
 
 import "server-only";
 import { and, eq, gt, gte, isNotNull, sql } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
+import { userTag } from "@/lib/cache";
+import { utcToday } from "@/lib/clock";
 import { addDays } from "@/lib/dashboard/aggregate";
 import { activityStats } from "@/lib/dashboard/heatmap";
 import { db } from "@/lib/db/client";
@@ -14,12 +17,18 @@ export interface HeaderStreak {
   litToday: boolean;
 }
 
-/** Call after reading the session: it uses the current time. */
 export async function getHeaderStreak(userId: string): Promise<HeaderStreak> {
-  const asOf = new Date().toISOString().slice(0, 10);
+  return loadStreak(userId, await utcToday());
+}
+
+/** Cached per user and UTC day; every write to the user's rows drops it (lib/cache.ts). */
+async function loadStreak(userId: string, asOf: string): Promise<HeaderStreak> {
+  "use cache: remote";
+  cacheLife("user");
+  cacheTag(userTag(userId));
   const since = addDays(asOf, -400);
   const solvedDay = sql<string>`to_char(${solves.firstSolvedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`;
-  const [solveDays, calendarDays] = await Promise.all([
+  const [solveDays, calendarDays] = await db.batch([
     db
       .selectDistinct({ day: solvedDay })
       .from(solves)

@@ -2,7 +2,9 @@
 
 import "server-only";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
 import type { PlatformId } from "@/lib/adapters/types";
+import { GLOBAL_BOARD_TAG, userTag } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { friendships, platformAccounts, problems, solves, users } from "@/lib/db/schema";
 import { rankBoard, type BoardEntry, type RankedEntry } from "./points";
@@ -31,7 +33,11 @@ const personColumns = {
   image: users.image,
 };
 
+/** Friendship actions drop both people's tags (lib/cache.ts), so this stays current. */
 export async function getFriendsState(userId: string): Promise<FriendsState> {
+  "use cache: remote";
+  cacheLife("user");
+  cacheTag(userTag(userId));
   // One row per pair you're in, joined to the other person.
   const rows = await db
     .select({
@@ -96,8 +102,14 @@ export async function getBoardEntries(
   userIds: string[],
   since: Date,
 ): Promise<(BoardEntry & { isPublic: boolean })[]> {
+  "use cache: remote";
+  cacheLife("user");
+  // Any of these people syncing drops the board (cacheTag takes at most 128 tags per call).
+  for (let i = 0; i < userIds.length; i += 128) {
+    cacheTag(...userIds.slice(i, i + 128).map(userTag));
+  }
   if (userIds.length === 0) return [];
-  const [people, aggregates] = await Promise.all([
+  const [people, aggregates] = await db.batch([
     db
       .select({ ...personColumns, isPublic: users.publicProfile })
       .from(users)
@@ -148,6 +160,9 @@ export type GlobalBoard = {
 
 /** The opt-in global board: users with a public profile and the switch on. */
 export async function getGlobalBoard(userId: string, since: Date): Promise<GlobalBoard> {
+  "use cache: remote";
+  cacheLife("board");
+  cacheTag(GLOBAL_BOARD_TAG);
   const listedUsers = await db
     .select({ id: users.id })
     .from(users)

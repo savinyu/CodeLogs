@@ -9,6 +9,7 @@ import { isDeleteConfirmed } from "@/lib/account-export-shared";
 import { createApiToken, revokeApiToken } from "@/lib/api-tokens";
 import { parseTokenName, TOKEN_NAME_MAX } from "@/lib/api-tokens-shared";
 import { auth } from "@/lib/auth";
+import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { socialLinks, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
@@ -30,7 +31,7 @@ export async function setPublicProfile(enabled: unknown): Promise<SettingResult>
   if (!user.username) return { ok: false, error: "Your account has no username for a public URL." };
 
   await db.update(users).set({ publicProfile: parsed.data }).where(eq(users.id, user.id));
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 
@@ -52,7 +53,7 @@ export async function setGlobalBoard(enabled: unknown): Promise<SettingResult> {
   }
 
   await db.update(users).set({ globalBoard: parsed.data }).where(eq(users.id, user.id));
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 
@@ -68,7 +69,7 @@ export async function setDailyGoal(input: unknown): Promise<SettingResult> {
   } catch {
     return { ok: false, error: "Could not save your goal. Please try again." };
   }
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 

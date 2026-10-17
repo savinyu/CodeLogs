@@ -5,6 +5,7 @@
 
 import "server-only";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
+import { invalidateUser } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { activityDays, contestResults, platformStats, problems, solves } from "@/lib/db/schema";
 import type {
@@ -124,6 +125,7 @@ export async function applySnapshot(
 
   if (snapshot.contests !== undefined) await replaceContests(accountId, snapshot.contests);
 
+  invalidateUser(userId);
   return { solvesInserted, stubsInserted, solvesSkipped, datesFilled };
 }
 

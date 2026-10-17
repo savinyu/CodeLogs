@@ -5,6 +5,8 @@
 
 import "server-only";
 import { and, eq, not, sql, type SQL } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
+import { CATALOG_TAG, userTag } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { problems, solves } from "@/lib/db/schema";
 import type { DashboardData } from "@/lib/dashboard/types";
@@ -89,17 +91,33 @@ export function codeforcesBand(level: number): { lo: number; hi: number } {
   return { lo: Math.ceil((level + 100) / 100) * 100, hi: Math.ceil((level + 200) / 100) * 100 };
 }
 
+/** The topic slug and its focus micro-topic's slug: all a pick query needs from a WeakTopic. */
+type TopicKey = {
+  slug: WeakTopic["slug"];
+  focus: NonNullable<WeakTopic["focus"]>["slug"] | null;
+};
+
+const topicKey = (topic: WeakTopic): TopicKey => ({
+  slug: topic.slug,
+  focus: topic.focus?.slug ?? null,
+});
+
+// The pick queries scan the catalog, so they are cached per user, topic and day (the seed holds
+// the day). A sync drops them through the user's tag, a catalog sync through CATALOG_TAG.
 async function codeforcesPicks(
   userId: string,
   level: number,
-  topic: WeakTopic,
+  topic: TopicKey,
   seed: string,
   limit: number,
   since?: string,
 ) {
+  "use cache: remote";
+  cacheLife("user");
+  cacheTag(userTag(userId), CATALOG_TAG);
   const tags = tagsForTopic("codeforces", topic.slug);
   if (tags.length === 0) return [];
-  const focus = topic.focus ? tagsForTopic("codeforces", topic.focus.slug) : [];
+  const focus = topic.focus ? tagsForTopic("codeforces", topic.focus) : [];
   const { lo, hi } = codeforcesBand(level);
   const rating = ratingOf();
   return db
@@ -128,14 +146,17 @@ async function codeforcesPicks(
 async function leetcodePicks(
   userId: string,
   difficulty: "Easy" | "Medium",
-  topic: WeakTopic,
+  topic: TopicKey,
   seed: string,
   limit: number,
   since?: string,
 ) {
+  "use cache: remote";
+  cacheLife("user");
+  cacheTag(userTag(userId), CATALOG_TAG);
   const tags = tagsForTopic("leetcode", topic.slug);
   if (tags.length === 0) return [];
-  const focus = topic.focus ? tagsForTopic("leetcode", topic.focus.slug) : [];
+  const focus = topic.focus ? tagsForTopic("leetcode", topic.focus) : [];
   return db
     .select(columnsFor(userId, since))
     .from(problems)
@@ -178,12 +199,14 @@ export async function getSolveNext(
   const fetched = await Promise.all(
     weak.map(async (topic) => {
       const [cf, lc] = await Promise.all([
-        cfLevel !== null ? codeforcesPicks(userId, cfLevel, topic, seed, cfCount + 3, since) : [],
+        cfLevel !== null
+          ? codeforcesPicks(userId, cfLevel, topicKey(topic), seed, cfCount + 3, since)
+          : [],
         lcAccount
           ? leetcodePicks(
               userId,
               lcSolved < LC_EASY_UNTIL ? "Easy" : "Medium",
-              topic,
+              topicKey(topic),
               seed,
               lcCount + 3,
               since,

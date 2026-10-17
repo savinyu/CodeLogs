@@ -1,9 +1,9 @@
 "use server";
 
-import { refresh } from "next/cache";
 import { z } from "zod";
 import { addPlatformAccount, removePlatformAccount } from "@/lib/accounts";
 import { validateHandle } from "@/lib/adapters/validate";
+import { userDataChanged } from "@/lib/cache";
 import { PLATFORMS } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import { requestSync } from "@/lib/sync/request";
@@ -50,7 +50,7 @@ export async function connectPlatform(
     console.error("Could not queue the first sync", err);
   }
 
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 
@@ -67,7 +67,7 @@ export async function disconnectPlatform(
   const result = await removePlatformAccount(user.id, parsed.data.platform);
   if (!result.ok) return result;
 
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
 
@@ -84,7 +84,7 @@ export async function syncNow(_prevState: SyncState, formData: FormData): Promis
 
   try {
     const result = await requestSync(user.id, platform ? { platforms: [platform] } : {});
-    refresh();
+    userDataChanged(user.id);
     return result;
   } catch (err) {
     console.error("Could not request a sync", err);

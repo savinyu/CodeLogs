@@ -1,8 +1,8 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { refresh } from "next/cache";
 import { z } from "zod";
+import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { dailyMarks } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
@@ -45,6 +45,6 @@ export async function setPickDone(raw: unknown): Promise<PickDoneState> {
   } catch {
     return { ok: false, error: "Could not save that. Try again." };
   }
-  refresh();
+  userDataChanged(user.id);
   return { ok: true };
 }
