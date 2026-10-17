@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { platformAccounts } from "@/lib/db/schema";
 import { PLATFORM_META } from "@/lib/platforms";
@@ -44,6 +44,15 @@ export async function listPlatformAccounts(userId: string): Promise<PlatformAcco
  * Inserts a new account. Never upserts: replacing a handle must drop the old solves, so the
  * user removes the current one first (the FK cascade on delete clears its data).
  */
+/** Connected handles not verified yet: the public profile hides them. */
+export async function countUnverifiedAccounts(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(platformAccounts)
+    .where(and(eq(platformAccounts.userId, userId), eq(platformAccounts.verified, false)));
+  return row?.n ?? 0;
+}
+
 export async function addPlatformAccount(
   userId: string,
   platform: PlatformId,
