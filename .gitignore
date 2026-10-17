@@ -31,3 +31,6 @@ spike-output/
 *.pem
 npm-debug.log*
 .pnpm-debug.log*
+
+# preview-user session cookies (scripts/dev/preview-user.ts)
+.preview/
