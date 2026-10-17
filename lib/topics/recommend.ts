@@ -21,6 +21,8 @@ export interface Recommendation {
   tags: string[];
   /** LeetCode only: we can't rule out an old solve we never saw. */
   maybeSolved: boolean;
+  /** Solved (a dated solve) on or after `keepSolvedSince`; false when that option is omitted. */
+  solvedToday: boolean;
 }
 
 export interface TopicPicks extends WeakTopic {
@@ -50,18 +52,37 @@ export function ratingOf(): SQL<number | null> {
     THEN ${problems.difficultyRaw}::int END)`;
 }
 
-function unsolvedBy(userId: string): SQL {
-  return sql`NOT EXISTS (SELECT 1 FROM ${solves}
-    WHERE ${solves.userId} = ${userId} AND ${solves.problemId} = ${problems.id})`;
+/** Start of a UTC day (YYYY-MM-DD) as a timestamptz. */
+function dayStart(day: string): SQL {
+  return sql`(${`${day}T00:00:00Z`})::timestamptz`;
 }
 
-const columns = {
-  externalId: problems.externalId,
-  title: problems.title,
-  url: problems.url,
-  difficultyRaw: problems.difficultyRaw,
-  tags: problems.rawTags,
-};
+/**
+ * Not solved by the user. With `since`, a solve dated on or after that day doesn't count, so a
+ * pick solved today stays in the set; undated solves still count as solved.
+ */
+function unsolvedBy(userId: string, since?: string): SQL {
+  const old = since
+    ? sql` AND (${solves.firstSolvedAt} IS NULL OR ${solves.firstSolvedAt} < ${dayStart(since)})`
+    : sql``;
+  return sql`NOT EXISTS (SELECT 1 FROM ${solves}
+    WHERE ${solves.userId} = ${userId} AND ${solves.problemId} = ${problems.id}${old})`;
+}
+
+function columnsFor(userId: string, since?: string) {
+  return {
+    externalId: problems.externalId,
+    title: problems.title,
+    url: problems.url,
+    difficultyRaw: problems.difficultyRaw,
+    tags: problems.rawTags,
+    solvedToday: since
+      ? sql<boolean>`EXISTS (SELECT 1 FROM ${solves}
+          WHERE ${solves.userId} = ${userId} AND ${solves.problemId} = ${problems.id}
+          AND ${solves.firstSolvedAt} >= ${dayStart(since)})`
+      : sql<boolean>`false`,
+  };
+}
 
 /** CF's band for a level: 839 → 1000–1100 (ratings are multiples of 100). */
 export function codeforcesBand(level: number): { lo: number; hi: number } {
@@ -74,6 +95,7 @@ async function codeforcesPicks(
   topic: WeakTopic,
   seed: string,
   limit: number,
+  since?: string,
 ) {
   const tags = tagsForTopic("codeforces", topic.slug);
   if (tags.length === 0) return [];
@@ -81,7 +103,7 @@ async function codeforcesPicks(
   const { lo, hi } = codeforcesBand(level);
   const rating = ratingOf();
   return db
-    .select(columns)
+    .select(columnsFor(userId, since))
     .from(problems)
     .where(
       and(
@@ -91,7 +113,7 @@ async function codeforcesPicks(
         sql`${rating} BETWEEN ${lo - 200} AND ${hi + 300}`,
         hasAny(tags),
         not(sql`${problems.rawTags} ? '*special'`),
-        unsolvedBy(userId),
+        unsolvedBy(userId, since),
       ),
     )
     .orderBy(
@@ -109,12 +131,13 @@ async function leetcodePicks(
   topic: WeakTopic,
   seed: string,
   limit: number,
+  since?: string,
 ) {
   const tags = tagsForTopic("leetcode", topic.slug);
   if (tags.length === 0) return [];
   const focus = topic.focus ? tagsForTopic("leetcode", topic.focus.slug) : [];
   return db
-    .select(columns)
+    .select(columnsFor(userId, since))
     .from(problems)
     .where(
       and(
@@ -122,7 +145,7 @@ async function leetcodePicks(
         eq(problems.difficultyRaw, difficulty),
         not(problems.paidOnly),
         hasAny(tags),
-        unsolvedBy(userId),
+        unsolvedBy(userId, since),
       ),
     )
     .orderBy(...focusFirst(focus), sql`md5(${problems.externalId} || ${seed})`)
@@ -132,8 +155,15 @@ async function leetcodePicks(
 /**
  * Picks for the weak topics (else the lowest-coverage ones) of an already platform-filtered
  * dashboard. Picks rotate daily (seeded by user and day) and a problem shows under one topic only.
+ * `keepSolvedSince` (YYYY-MM-DD, UTC) keeps problems solved on or after that day in the picks,
+ * flagged `solvedToday`, so the set doesn't reshuffle as the day's solves sync.
  */
-export async function getSolveNext(userId: string, data: DashboardData): Promise<TopicPicks[]> {
+export async function getSolveNext(
+  userId: string,
+  data: DashboardData,
+  options: { keepSolvedSince?: string } = {},
+): Promise<TopicPicks[]> {
+  const since = options.keepSolvedSince;
   const weak = practiceTopics(data.topics);
   if (weak.length === 0) return [];
 
@@ -148,7 +178,7 @@ export async function getSolveNext(userId: string, data: DashboardData): Promise
   const fetched = await Promise.all(
     weak.map(async (topic) => {
       const [cf, lc] = await Promise.all([
-        cfLevel !== null ? codeforcesPicks(userId, cfLevel, topic, seed, cfCount + 3) : [],
+        cfLevel !== null ? codeforcesPicks(userId, cfLevel, topic, seed, cfCount + 3, since) : [],
         lcAccount
           ? leetcodePicks(
               userId,
@@ -156,6 +186,7 @@ export async function getSolveNext(userId: string, data: DashboardData): Promise
               topic,
               seed,
               lcCount + 3,
+              since,
             )
           : [],
       ]);
