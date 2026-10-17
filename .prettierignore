@@ -4,3 +4,4 @@ spike-output/
 lib/db/migrations/
 .next/
 *.md
+.claude/

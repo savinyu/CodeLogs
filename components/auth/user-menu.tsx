@@ -11,16 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { initials } from "@/components/kit/user-avatar";
 import { getCurrentUser } from "@/lib/session";
-
-function initials(name: string) {
-  const letters = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]);
-  return letters.join("").toUpperCase() || "?";
-}
 
 /** Reads the session, so it must render inside <Suspense>. */
 export async function UserMenu() {

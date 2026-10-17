@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { cn } from "cn";
 import type { PlatformId } from "@/lib/adapters/types";
 import {
   difficultyTier,
@@ -11,15 +11,15 @@ import {
 const TIER: Record<DifficultyTier, { label: string; className: string }> = {
   easy: {
     label: "Easy",
-    className: "border-difficulty-easy/40 bg-difficulty-easy/10 text-difficulty-easy",
+    className: "text-difficulty-easy",
   },
   medium: {
     label: "Medium",
-    className: "border-difficulty-medium/40 bg-difficulty-medium/10 text-difficulty-medium",
+    className: "text-difficulty-medium",
   },
   hard: {
     label: "Hard",
-    className: "border-difficulty-hard/40 bg-difficulty-hard/10 text-difficulty-hard",
+    className: "text-difficulty-hard",
   },
 };
 
@@ -31,9 +31,15 @@ export function DifficultyBadge({ platform, raw }: { platform: PlatformId; raw: 
   const kind = platform === "atcoder" ? "difficulty" : "rating";
   const title = meta && meta.label !== text ? `${meta.label} (${kind} ${text})` : undefined;
   return (
-    <Badge variant="outline" className={meta?.className} title={title}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[0.78rem] font-semibold whitespace-nowrap",
+        meta?.className,
+      )}
+      title={title}
+    >
       {text}
-    </Badge>
+    </span>
   );
 }
 

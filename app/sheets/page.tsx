@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Circle, CircleCheck } from "lucide-react";
-import { DifficultyBadge } from "@/components/dashboard/difficulty-badge";
+import { DifficultyBadge } from "@/components/kit/difficulty-badge";
 import { ProgressBar } from "@/components/sheets/progress-bar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -112,12 +112,12 @@ async function SheetsContent({ searchParams }: Pick<PageProps<"/sheets">, "searc
             <ul className="flex flex-col divide-y border-t">
               {section.problems.map((p) => (
                 <li key={p.slug} className="flex items-center gap-2 px-4 py-2 text-sm">
-                  {p.solved ? (
+                  {p.status ? (
                     <CircleCheck className="size-4 shrink-0 text-difficulty-easy" aria-hidden />
                   ) : (
                     <Circle className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                   )}
-                  <span className="sr-only">{p.solved ? "Solved" : "Not solved"}</span>
+                  <span className="sr-only">{p.status ? "Solved" : "Not solved"}</span>
                   <a
                     href={p.url}
                     target="_blank"

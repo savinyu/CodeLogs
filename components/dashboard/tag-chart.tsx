@@ -1,7 +1,7 @@
 import type { PlatformId } from "@/lib/adapters/types";
 import type { PlatformTags } from "@/lib/dashboard/types";
 import { PLATFORM_META } from "@/lib/platforms";
-import { InfoTip } from "@/components/info-tip";
+import { InfoTip } from "@/components/kit/info-tip";
 import { TagRingChart } from "./tag-ring-chart";
 
 const GAPS = 10;

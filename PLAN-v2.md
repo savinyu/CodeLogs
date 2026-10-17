@@ -76,11 +76,12 @@ components/kit/        design primitives, no data access:
 components/shell/      site-header, main-nav (client: active pill), profile-menu + profile-panel, header-streak, theme-toggle
 components/charts/     stacked-columns.tsx, heatmap.tsx, rating-line.tsx (SVG, server-renderable)
 components/<page>/     today/, progress/, topics/, sheets/, friends/, contests/, profile/
-app/<route>/           page.tsx (data + layout only), actions.ts (server actions)
+app/<route>/           page.tsx (data + layout only), actions.ts (server actions); user preferences live in app/settings/actions.ts
 lib/today/             set.ts, week.ts (pure)
 lib/topics/            treemap.ts, view.ts (pure), plus the v1 files
 lib/friends/           points.ts, week.ts (pure), queries.ts, actions helpers (server-only)
-lib/sheets/            + striver-data.ts, follow.ts (pure), state.ts (server-only)
+lib/sheets/            + striver-data.ts, follow.ts (pure); queries.ts gains getSheetState
+lib/user-settings.ts   publicProfile, globalBoard, dailyGoal (server-only)
 lib/streak.ts          current streak for the header (server-only)
 ```
 Rules: pages fetch and lay out; components receive plain props; anything computable is a pure, tested function in `lib/`. A component is shared through `components/kit` or `components/charts` the moment a second page needs it, never copied. Keep the CLAUDE.md rules (Suspense around session reads, `userId` scoping, `getCurrentUser()` in every action).
@@ -118,9 +119,10 @@ Legend as in PLAN.md: 🧭 captain (Opus), 🤖 Sonnet 5.5 subagent with a preci
 
 ### V1: Foundation (`v2-foundation`)
 - 🧭 Fonts and tokens (`globals.css`, `layout.tsx`), button variants
-- 🧭 Schema and migration `0007_v2`; Better Auth `additionalFields` (`dailyGoal`, `globalBoard`, `input: false`)
-- 🧭 Sheets contract: `topic` on every section, `sheetProgress(sheet, solved, ticked)` with a per-problem `status` (`synced | ticked | null`), `lib/sheets/follow.ts`, `getSheetState(userId)`
+- 🧭 Schema and migration `0007_v2` (the new user columns are read with `lib/user-settings.ts`, not through Better Auth)
+- 🧭 Sheets contract: `topic` on every section, `sheetProgress(sheet, solved, ticked)` with a per-problem `status` (`synced | ticked | null`), `sectionsTraining`, `sheetNamesBySlug`, `lib/sheets/follow.ts`, `getSheetState(userId)` in `lib/sheets/queries.ts`
 - 🧭 Routes: stub pages for the new routes, `/dashboard` redirect, `proxy.ts` matcher, `lib/streak.ts`
+- 🧭 Dev tools for visual checks: `pnpm dev:preview create` (a throwaway signed-in user cloned from the owner's data; `delete <user>` removes it) and `pnpm dev:shot <url> <png> [--width] [--dark] [--cookie]` (headless Chrome; reports horizontal overflow)
 - 🤖∥ `components/kit/*` primitives (§4), ported from Coach 2's CSS
 - 🤖∥ `components/shell/*`: header, pill nav, profile panel (with the global-board switch action), header streak, theme cycle
 - **Done when:** every route renders inside the new shell in light and dark at 1280 and 360 px, the migration is applied, and the checks pass.

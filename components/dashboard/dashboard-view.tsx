@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { InfoTip } from "@/components/info-tip";
+import { InfoTip } from "@/components/kit/info-tip";
 import { filterDashboard } from "@/lib/dashboard/aggregate";
 import { activityYears, parseActivityPeriod } from "@/lib/dashboard/filters";
 import { periodRange } from "@/lib/dashboard/heatmap";

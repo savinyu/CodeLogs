@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { humanizeSlug } from "@/lib/dashboard/aggregate";
 import { PLATFORM_COLOR } from "@/lib/dashboard/types";
 import type { RecentSolve } from "@/lib/dashboard/types";
-import { DifficultyBadge } from "./difficulty-badge";
+import { DifficultyBadge } from "@/components/kit/difficulty-badge";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",

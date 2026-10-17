@@ -21,3 +21,25 @@ export function SignOutMenuItem() {
 
   return <DropdownMenuItem onClick={handleClick}>Sign out</DropdownMenuItem>;
 }
+
+/** A plain button that signs the user out, for panels that aren't dropdown menus. */
+export function SignOutButton({ className, onDone }: { className?: string; onDone?: () => void }) {
+  const router = useRouter();
+
+  async function handleClick() {
+    try {
+      await signOut();
+      onDone?.();
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("Could not sign out. Please try again.");
+    }
+  }
+
+  return (
+    <button type="button" className={className} onClick={handleClick}>
+      Sign out
+    </button>
+  );
+}

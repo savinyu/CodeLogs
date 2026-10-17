@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { allSheetProgress, parseSheetId, SHEETS, sheetProgress } from "@/lib/sheets";
+import {
+  allSheetProgress,
+  parseSheetId,
+  SHEETS,
+  sectionsTraining,
+  sheetNamesBySlug,
+  sheetProgress,
+} from "@/lib/sheets";
+import { followedSheets } from "@/lib/sheets/follow";
+import { MACRO_SLUGS } from "@/lib/topics/taxonomy";
 import { NEETCODE_PROBLEMS } from "@/lib/sheets/neetcode-data";
 
 const sheet = (id: string) => SHEETS.find((s) => s.id === id)!;
@@ -42,8 +51,8 @@ describe("sheetProgress", () => {
     expect(nc.total).toBe(150);
     const arrays = nc.sections.find((s) => s.name === "Arrays & Hashing")!;
     expect(arrays.solved).toBe(2);
-    expect(arrays.problems.find((p) => p.slug === "two-sum")?.solved).toBe(true);
-    expect(arrays.problems.find((p) => p.slug === "group-anagrams")?.solved).toBe(false);
+    expect(arrays.problems.find((p) => p.slug === "two-sum")?.status).toBe("synced");
+    expect(arrays.problems.find((p) => p.slug === "group-anagrams")?.status).toBeNull();
     expect(nc.byDifficulty.Easy.solved).toBe(2);
     expect(nc.byDifficulty.Medium.solved).toBe(1);
     const totals = Object.values(nc.byDifficulty).reduce((n, d) => n + d.total, 0);
@@ -56,6 +65,49 @@ describe("sheetProgress", () => {
       ["blind-75", 0, 75],
       ["neetcode-150", 0, 150],
     ]);
+  });
+});
+
+describe("ticks, topics and follows", () => {
+  it("counts manual ticks as solved, and a synced solve wins over a tick", () => {
+    const nc = sheetProgress(
+      sheet("neetcode-150"),
+      new Set(["two-sum"]),
+      new Set(["two-sum", "lru-cache"]),
+    );
+    expect(nc.solved).toBe(2);
+    expect(nc.ticked).toBe(1);
+    const all = nc.sections.flatMap((s) => s.problems);
+    expect(all.find((p) => p.slug === "two-sum")?.status).toBe("synced");
+    expect(all.find((p) => p.slug === "lru-cache")?.status).toBe("ticked");
+  });
+
+  it("maps every section to a macro topic", () => {
+    for (const s of SHEETS) {
+      for (const section of s.sections) expect(MACRO_SLUGS).toContain(section.topic);
+    }
+    const graphs = sectionsTraining(allSheetProgress(new Set()), "graphs");
+    expect(graphs.map((g) => `${g.sheetId}/${g.section.name}`)).toContain(
+      "neetcode-150/Advanced Graphs",
+    );
+  });
+
+  it("names the followed sheets that contain a slug", () => {
+    const names = sheetNamesBySlug(["blind-75", "neetcode-150"]);
+    expect(names.get("two-sum")).toEqual(["Blind 75", "NeetCode 150"]);
+    expect(sheetNamesBySlug(["blind-75"]).get("lru-cache")).toBeUndefined();
+  });
+
+  it("follows NeetCode 150 by default, and honours explicit choices", () => {
+    expect(followedSheets(new Map())).toEqual(["neetcode-150"]);
+    expect(
+      followedSheets(
+        new Map([
+          ["neetcode-150", false],
+          ["blind-75", true],
+        ]),
+      ),
+    ).toEqual(["blind-75"]);
   });
 });
 

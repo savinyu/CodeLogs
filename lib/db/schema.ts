@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
+  check,
   date,
   index,
   integer,
@@ -30,18 +31,26 @@ const updatedAt = () =>
 // expects; don't rename them. Extra user fields are declared in lib/auth.ts too.
 // ---------------------------------------------------------------------------
 
-export const users = pgTable("users", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  image: text("image"),
-  createdAt: createdAt(),
-  updatedAt: updatedAt(),
-  /** GitHub login at sign-up; used for /u/<username>. */
-  username: text("username").unique(),
-  publicProfile: boolean("public_profile").notNull().default(false),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    /** GitHub login at sign-up; used for /u/<username>. */
+    username: text("username").unique(),
+    publicProfile: boolean("public_profile").notNull().default(false),
+    /** Today page goal: activity per UTC day, 1–20 (v2). */
+    dailyGoal: smallint("daily_goal").notNull().default(3),
+    /** Opt-in to the global weekly board; only counts while publicProfile is on (v2). */
+    globalBoard: boolean("global_board").notNull().default(false),
+  },
+  (t) => [check("users_daily_goal_range", sql`${t.dailyGoal} between 1 and 20`)],
+);
 
 export const sessions = pgTable(
   "sessions",
@@ -312,6 +321,82 @@ export const syncRuns = pgTable(
     items: integer("items"),
   },
   (t) => [index("sync_runs_account_idx").on(t.accountId, t.startedAt)],
+);
+
+// ---------------------------------------------------------------------------
+// v2 tables (PLAN-v2.md §5)
+// ---------------------------------------------------------------------------
+
+/** "Mark done" on a Today pick, for one UTC day. Synced solves tick picks without a row. */
+export const dailyMarks = pgTable(
+  "daily_marks",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    platform: platformEnum("platform").notNull(),
+    externalId: text("external_id").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day, t.platform, t.externalId] })],
+);
+
+/** Explicit follow choices only; with no row, lib/sheets/follow.ts gives the default. */
+export const sheetFollows = pgTable(
+  "sheet_follows",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sheetId: text("sheet_id").notNull(),
+    following: boolean("following").notNull(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.sheetId] })],
+);
+
+/** Manual "Solved it" ticks, by LeetCode slug. They count inside sheets only. */
+export const sheetTicks = pgTable(
+  "sheet_ticks",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.slug] })],
+);
+
+export const friendshipStatusEnum = pgEnum("friendship_status", ["pending", "accepted"]);
+
+/**
+ * One row per pair of users, whoever asked first. Declining, cancelling or removing deletes the
+ * row, so the other person isn't told.
+ */
+export const friendships = pgTable(
+  "friendships",
+  {
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    addresseeId: text("addressee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: friendshipStatusEnum("status").notNull().default("pending"),
+    createdAt: createdAt(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.requesterId, t.addresseeId] }),
+    uniqueIndex("friendships_pair_uq").on(
+      sql`least(${t.requesterId}, ${t.addresseeId})`,
+      sql`greatest(${t.requesterId}, ${t.addresseeId})`,
+    ),
+    index("friendships_addressee_idx").on(t.addresseeId),
+    check("friendships_not_self", sql`${t.requesterId} <> ${t.addresseeId}`),
+  ],
 );
 
 /** Two-level taxonomy: macro topics have parentId = null. */
