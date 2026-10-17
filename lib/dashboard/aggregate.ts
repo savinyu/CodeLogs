@@ -128,8 +128,13 @@ function buildTotals(raw: DashboardRaw, connected: PlatformId[]): PlatformTotal[
     const total: PlatformTotal = { platform, solved: tracked, source: "tracked", listed: tracked };
 
     if (platform === "leetcode") {
-      const all = stat(raw, platform, "lc_difficulty_counts", lcDifficultySchema)?.solved.all;
-      if (all !== undefined) Object.assign(total, { solved: all, source: "reported" });
+      const lc = stat(raw, platform, "lc_difficulty_counts", lcDifficultySchema)?.solved;
+      if (lc?.all !== undefined) {
+        Object.assign(total, { solved: lc.all, source: "reported" });
+        if (lc.easy !== undefined && lc.medium !== undefined && lc.hard !== undefined) {
+          total.split = { easy: lc.easy, medium: lc.medium, hard: lc.hard };
+        }
+      }
     }
     if (platform === "codeforces") {
       const r = stat(raw, platform, "cf_rating", cfRatingSchema);

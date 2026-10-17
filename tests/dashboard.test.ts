@@ -114,8 +114,27 @@ describe("buildDashboard", () => {
         rating: { current: 839, max: 1062, rank: "newbie" },
       },
       { platform: "atcoder", solved: 0, source: "tracked", listed: 0 },
-      { platform: "leetcode", solved: 319, source: "reported", listed: 17 },
+      {
+        platform: "leetcode",
+        solved: 319,
+        source: "reported",
+        listed: 17,
+        split: { easy: 81, medium: 195, hard: 43 },
+      },
     ]);
+  });
+
+  it("leaves the LeetCode split out when the payload lacks a level", () => {
+    const d = buildDashboard(
+      raw({
+        stats: [
+          { platform: "leetcode", kind: "lc_difficulty_counts", payload: { solved: { all: 50 } } },
+        ],
+      }),
+      ASOF,
+    );
+    const lc = d.totals.find((t) => t.platform === "leetcode");
+    expect(lc).toEqual({ platform: "leetcode", solved: 50, source: "reported", listed: 17 });
   });
 
   it("falls back to tracked LeetCode rows when the stats payload is missing or malformed", () => {
