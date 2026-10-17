@@ -20,7 +20,7 @@ export default function ContestsPage() {
     <Page>
       <PageHead
         title="Contests"
-        description="Rating over time. Each contest’s rating change is one click away under the chart."
+        description="Rating over time. Hover a point on the chart to see that contest’s format, rank and rating change."
       />
       <Suspense fallback={<ContestsSkeleton />}>
         <ContestsContent />
