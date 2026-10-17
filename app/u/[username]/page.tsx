@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LeetcodeBadgesGrid } from "@/components/contests/badges-grid";
 import { ContestCard } from "@/components/contests/contest-card";
+import { Chip } from "@/components/kit/chip";
 import { Note } from "@/components/kit/note";
 import { Page } from "@/components/kit/page";
 import { Panel, PanelHeader } from "@/components/kit/panel";
@@ -16,7 +17,7 @@ import { ActivityRow } from "@/components/progress/activity-row";
 import { RecentSolvesList } from "@/components/progress/recent-solves";
 import { MapLegend, TopicMap } from "@/components/topics/topic-map";
 import { Skeleton } from "@/components/ui/skeleton";
-import { countUnverifiedAccounts } from "@/lib/accounts";
+import { listUnverifiedPlatforms } from "@/lib/accounts";
 import { getDashboardData, getPublicProfile } from "@/lib/dashboard/queries";
 import { getFriendship } from "@/lib/friends/queries";
 import { renderNow } from "@/lib/clock";
@@ -50,16 +51,16 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
 
   const viewer = await getCurrentUser();
   const isOwner = viewer?.id === profile.userId;
-  const [data, links, friendship, hiddenCount] = await Promise.all([
+  const [data, links, friendship, hiddenPlatforms] = await Promise.all([
     getDashboardData(profile.userId, { verifiedOnly: true }),
     getSocialLinks(profile.userId),
     viewer && !isOwner ? getFriendship(viewer.id, profile.userId) : undefined,
-    // The owner's unverified handles are hidden here, so count them for the banner.
-    isOwner ? countUnverifiedAccounts(profile.userId) : 0,
+    // The owner's unverified handles are hidden here, so name them in the banner.
+    isOwner ? listUnverifiedPlatforms(profile.userId) : [],
   ]);
   const now = await renderNow();
 
-  const banner = isOwner ? <OwnerBanner hiddenCount={hiddenCount} /> : null;
+  const banner = isOwner ? <OwnerBanner hidden={hiddenPlatforms} /> : null;
   const cta = viewer ? null : <SignupCta />;
   const hero = (
     <ProfileHero
@@ -87,7 +88,6 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
 
   const total = data.totals.reduce((n, t) => n + t.solved, 0);
   const platformNames = data.totals.map((t) => PLATFORM_META[t.platform].name);
-  const cfRating = data.totals.find((t) => t.platform === "codeforces")?.rating;
   const lcContests = data.contests.find((c) => c.platform === "leetcode");
   // Tile size is problems solved, so topics with none would be empty slivers.
   const solvedTopics = topicViews(data.topics).filter((t) => Math.round(t.solved) > 0);
@@ -106,34 +106,47 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
           value={fmt(total)}
           sub={joinNames(platformNames)}
         />
-        {cfRating ? (
-          <StatTile
-            label={
-              <>
-                <PlatformDot platform="codeforces" />
-                Codeforces
-              </>
-            }
-            value={fmt(cfRating.current)}
-            sub={`${cfRating.rank ? `${cfRating.rank} · ` : ""}max ${fmt(cfRating.max)}`}
-          />
-        ) : null}
-        {lcContests?.currentRating != null ? (
-          <StatTile
-            label={
-              <>
-                <PlatformDot platform="leetcode" />
-                LeetCode
-              </>
-            }
-            value={fmt(lcContests.currentRating)}
-            sub={
-              lcContests.topPercentage != null
-                ? `contest rating · top ${lcContests.topPercentage}%`
-                : "contest rating"
-            }
-          />
-        ) : null}
+        {data.totals
+          .filter((t) => t.solved > 0)
+          .map((t) => {
+            const lcRating = t.platform === "leetcode" ? lcContests?.currentRating : null;
+            const lcTop = t.platform === "leetcode" ? lcContests?.topPercentage : null;
+            return (
+              <StatTile
+                key={t.platform}
+                label={
+                  <>
+                    <PlatformDot platform={t.platform} />
+                    {PLATFORM_META[t.platform].name}
+                  </>
+                }
+                value={fmt(t.solved)}
+                sub={
+                  t.rating ? (
+                    <>
+                      solved · rating {fmt(t.rating.current)}
+                      {t.rating.rank ? ` (${t.rating.rank})` : ""} · max {fmt(t.rating.max)}
+                    </>
+                  ) : lcRating != null ? (
+                    <>
+                      solved · contest rating {fmt(lcRating)}
+                      {lcTop != null ? ` · top ${lcTop}%` : ""}
+                    </>
+                  ) : (
+                    "solved"
+                  )
+                }
+              >
+                {t.split ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    <Chip>Easy {fmt(t.split.easy)}</Chip>
+                    <Chip>Medium {fmt(t.split.medium)}</Chip>
+                    <Chip>Hard {fmt(t.split.hard)}</Chip>
+                  </div>
+                ) : null}
+              </StatTile>
+            );
+          })}
       </StatTiles>
 
       <div className="mt-5">

@@ -1,8 +1,8 @@
 import "server-only";
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { platformAccounts } from "@/lib/db/schema";
-import { PLATFORM_META } from "@/lib/platforms";
+import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
 import type { PlatformId } from "@/lib/adapters/types";
 
 export type PlatformAccountRow = {
@@ -45,12 +45,13 @@ export async function listPlatformAccounts(userId: string): Promise<PlatformAcco
  * user removes the current one first (the FK cascade on delete clears its data).
  */
 /** Connected handles not verified yet: the public profile hides them. */
-export async function countUnverifiedAccounts(userId: string): Promise<number> {
-  const [row] = await db
-    .select({ n: count() })
+/** The user's connected platforms whose handles aren't verified, in PLATFORM_ORDER. */
+export async function listUnverifiedPlatforms(userId: string): Promise<PlatformId[]> {
+  const rows = await db
+    .select({ platform: platformAccounts.platform })
     .from(platformAccounts)
     .where(and(eq(platformAccounts.userId, userId), eq(platformAccounts.verified, false)));
-  return row?.n ?? 0;
+  return PLATFORM_ORDER.filter((id) => rows.some((r) => r.platform === id));
 }
 
 export async function addPlatformAccount(
