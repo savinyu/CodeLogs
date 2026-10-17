@@ -1,9 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
-import { setPickDone } from "@/app/today/actions";
 import { CheckLabel } from "@/components/kit/check-label";
 import { Chip } from "@/components/kit/chip";
 import { DifficultyBadge } from "@/components/kit/difficulty-badge";
@@ -13,36 +10,24 @@ import { PLATFORM_META } from "@/lib/platforms";
 import type { TodayPick } from "@/lib/today/set";
 import { cn } from "cn";
 
-/** One pick in Today's set (Coach's .q-item) with its optimistic "Mark done" checkbox. */
+/** One pick in Today's set (Coach's .q-item) with its "Mark done" checkbox. */
 export function PickItem({
   pick,
   marked,
   track,
+  onMarkedChange,
 }: {
   pick: TodayPick;
-  /** Marked done today (daily_marks). */
+  /** Marked done today (daily_marks), optimistically. */
   marked: boolean;
   /** Name of a followed sheet that contains the problem. */
   track: string | null;
+  onMarkedChange: (marked: boolean) => void;
 }) {
   const { problem, topic } = pick;
-  const [isMarked, setMarked] = useOptimistic(marked);
-  const [, startTransition] = useTransition();
   // A synced solve ticks the pick by itself and can't be undone here.
   const synced = problem.solvedToday;
-  const done = synced || isMarked;
-
-  function change(next: boolean) {
-    startTransition(async () => {
-      setMarked(next);
-      const result = await setPickDone({
-        platform: problem.platform,
-        externalId: problem.externalId,
-        done: next,
-      });
-      if (!result.ok) toast.error(result.error);
-    });
-  }
+  const done = synced || marked;
 
   return (
     <li
@@ -85,7 +70,7 @@ export function PickItem({
           checked={done}
           disabled={synced}
           tone={synced ? "good" : "primary"}
-          onCheckedChange={change}
+          onCheckedChange={onMarkedChange}
         >
           {synced ? "Solved today" : "Mark done"}
         </CheckLabel>

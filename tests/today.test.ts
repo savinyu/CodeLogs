@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { todaySet } from "@/lib/today/set";
-import { goalProgress, weekStrip } from "@/lib/today/week";
+import { goalDone, goalProgress, weekStrip } from "@/lib/today/week";
 import type { Recommendation, TopicPicks } from "@/lib/topics/recommend";
 
 function rec(id: string, extra: Partial<Recommendation> = {}): Recommendation {
@@ -110,5 +110,19 @@ describe("goalProgress", () => {
   });
   it("handles zero", () => {
     expect(goalProgress(0, 3)).toMatchObject({ fraction: 0, met: false });
+  });
+});
+
+describe("goalDone", () => {
+  it("adds marked picks to today's synced solves", () => {
+    const picks = [
+      { marked: true, solvedToday: false },
+      { marked: false, solvedToday: false },
+      { marked: true, solvedToday: false },
+    ];
+    expect(goalDone(1, picks)).toBe(3);
+  });
+  it("doesn't count a marked pick twice once it syncs as solved today", () => {
+    expect(goalDone(1, [{ marked: true, solvedToday: true }])).toBe(1);
   });
 });

@@ -159,7 +159,7 @@ function ProgressSkeleton() {
   return (
     <div className="grid gap-5" aria-hidden>
       <Skeleton className="h-16 rounded-card" />
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-3.5">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3.5">
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-40 rounded-card" />
         ))}

@@ -13,7 +13,7 @@ import { sheetNamesBySlug, SHEETS, sheetProgress } from "@/lib/sheets";
 import { getSheetState } from "@/lib/sheets/queries";
 import { todaySet } from "@/lib/today/set";
 import { getDailyMarks } from "@/lib/today/queries";
-import { goalProgress, weekStrip } from "@/lib/today/week";
+import { weekStrip } from "@/lib/today/week";
 import { getSolveNext } from "@/lib/topics/recommend";
 import { getUserSettings } from "@/lib/user-settings";
 
@@ -32,7 +32,12 @@ export default function TodayPage() {
 async function TodayContent() {
   const user = await requireUser();
   const firstName = user.name.trim().split(/\s+/)[0] || "there";
-  const data = await getDashboardData(user.id);
+  // Settings and sheets don't need the dashboard, so they load alongside it (one round trip less).
+  const [data, settings, sheetState] = await Promise.all([
+    getDashboardData(user.id),
+    getUserSettings(user.id),
+    getSheetState(user.id),
+  ]);
 
   if (data.accounts.length === 0) {
     return (
@@ -43,10 +48,8 @@ async function TodayContent() {
     );
   }
 
-  const [settings, topicPicks, sheetState, marks] = await Promise.all([
-    getUserSettings(user.id),
+  const [topicPicks, marks] = await Promise.all([
     getSolveNext(user.id, data, { keepSolvedSince: data.asOf }),
-    getSheetState(user.id),
     getDailyMarks(user.id, data.asOf),
   ]);
 
@@ -61,7 +64,6 @@ async function TodayContent() {
   }));
 
   const todayTotal = data.activity.find((a) => a.day === data.asOf)?.total ?? 0;
-  const goal = goalProgress(todayTotal, settings.dailyGoal);
   const week = weekStrip(data.activity, data.asOf);
 
   const firstSheet = SHEETS.find((s) => s.id === sheetState.followed[0]);
@@ -77,7 +79,7 @@ async function TodayContent() {
         weak={topicPicks.every((t) => t.weak)}
       />
       <div className="grid items-start gap-5 min-[900px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <TodaysSet picks={picks} goal={goal} />
+        <TodaysSet picks={picks} todayTotal={todayTotal} dailyGoal={settings.dailyGoal} />
         <div className="grid min-w-0 gap-5">
           <ThisWeek week={week} />
           {topicPicks.length > 0 ? <WhyThese topics={topicPicks} /> : null}
