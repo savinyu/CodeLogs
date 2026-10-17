@@ -57,24 +57,6 @@ export interface DifficultyRow {
   total: number;
 }
 
-export interface TagStat {
-  /** Raw platform tag: CF "dp", LC slug "hash-table". */
-  tag: string;
-  /** Display name: "dp", "Hash Table". */
-  label: string;
-  solved: number;
-  /** How many catalog problems carry the tag; used to surface popular tags you haven't solved. */
-  catalogCount: number;
-}
-
-/** Raw tags per platform (M4 maps them onto one shared topic list). AtCoder has no tags. */
-export interface PlatformTags {
-  platform: PlatformId;
-  source: CountSource;
-  /** Sorted by solved desc, then catalogCount desc. Includes popular tags with solved = 0 (gaps). */
-  tags: TagStat[];
-}
-
 /** One platform's part of a topic. See lib/topics/scoring.ts for the formula. */
 export interface TopicPlatformStat {
   platform: PlatformId;
@@ -163,8 +145,6 @@ export interface DashboardData {
   /** Every day with activity up to asOf (all years), ascending. The heatmap picks its period. */
   activity: ActivityDay[];
   difficulty: DifficultyRow[];
-  /** Only platforms that have tags and are connected. */
-  tags: PlatformTags[];
   /** Every macro topic, in taxonomy order (lib/topics). */
   topics: MacroTopicStat[];
   /** The CF rating that weights and recommendations use (lib/topics/scoring.ts cfLevel). */
@@ -184,11 +164,4 @@ export const DIFFICULTY_BANDS: Record<DifficultyBand, { label: string; hint: str
   3: { label: "Band 3", hint: "Medium · CF 1400–1600 · AtCoder 600–899 · LC Medium" },
   4: { label: "Band 4", hint: "Hard · CF 1700–2000 · AtCoder 900–1299 · LC Hard" },
   5: { label: "Band 5", hint: "Hard · CF 2100+ · AtCoder 1300+" },
-};
-
-/** Chart color per platform, as CSS variables from app/globals.css (they switch with the theme). */
-export const PLATFORM_COLOR: Record<PlatformId, string> = {
-  codeforces: "var(--platform-codeforces)",
-  atcoder: "var(--platform-atcoder)",
-  leetcode: "var(--platform-leetcode)",
 };

@@ -16,10 +16,8 @@ import type {
   LeetcodeBadge,
   PlatformContests,
   PlatformFilter,
-  PlatformTags,
   PlatformTotal,
   RecentSolve,
-  TagStat,
 } from "./types";
 
 type PlatformCount = { platform: PlatformId; count: number };
@@ -36,10 +34,6 @@ export interface DashboardRaw {
   /** Platform calendars (activity_days). A platform with any rows here uses them instead of solveDays. */
   calendarDays: PlatformDayCount[];
   difficulty: (PlatformCount & { band: number | null })[];
-  /** Tag counts over the user's solves. */
-  solvedTags: (PlatformCount & { tag: string })[];
-  /** Tag counts over the whole catalog, per platform. */
-  catalogTags: (PlatformCount & { tag: string })[];
   /** Up to RECENT_LIMIT per platform, any order. */
   recent: RecentSolve[];
   /** Every Codeforces solve with its tags and raw rating, for topic scoring. */
@@ -51,8 +45,6 @@ export interface DashboardRaw {
   contests: (Omit<ContestEntry, "url" | "platform"> & { platform: PlatformId })[];
 }
 
-/** Unsolved tags shown as gaps: the most common ones in each platform's catalog. */
-export const GAP_TAGS_PER_PLATFORM = 25;
 /** Recent solves shown, overall or for one platform. */
 export const RECENT_LIMIT = 15;
 
@@ -100,15 +92,6 @@ function stat<T>(
   if (!row) return null;
   const parsed = schema.safeParse(row.payload);
   return parsed.success ? parsed.data : null;
-}
-
-/** "hash-table" → "Hash Table". */
-export function humanizeSlug(slug: string): string {
-  return slug
-    .split("-")
-    .filter(Boolean)
-    .map((w) => w[0]!.toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 /** YYYY-MM-DD plus n days (n may be negative), in UTC. */
@@ -190,49 +173,6 @@ function buildDifficulty(raw: DashboardRaw): DifficultyRow[] {
     }
   }
   return rows;
-}
-
-function buildTags(raw: DashboardRaw, connected: PlatformId[]): PlatformTags[] {
-  return connected.flatMap((platform): PlatformTags[] => {
-    const catalog = raw.catalogTags
-      .filter((t) => t.platform === platform)
-      .sort((a, b) => b.count - a.count);
-    const catalogCount = new Map(catalog.map((t) => [t.tag, t.count]));
-
-    const solved = new Map<string, { label: string; solved: number }>();
-    let source: PlatformTags["source"] = "tracked";
-    const lcTags =
-      platform === "leetcode" ? stat(raw, platform, "lc_tag_counts", lcTagCountsSchema) : null;
-    if (lcTags) {
-      source = "reported";
-      for (const t of lcTags) {
-        if (t.problemsSolved > 0)
-          solved.set(t.tagSlug, { label: t.tagName, solved: t.problemsSolved });
-      }
-    } else {
-      for (const t of raw.solvedTags) {
-        if (t.platform !== platform) continue;
-        const label = platform === "leetcode" ? humanizeSlug(t.tag) : t.tag;
-        solved.set(t.tag, { label, solved: t.count });
-      }
-    }
-
-    if (solved.size === 0 && catalog.length === 0) return []; // AtCoder: no tags at all
-
-    const tags: TagStat[] = [...solved].map(([tag, s]) => ({
-      tag,
-      label: s.label,
-      solved: s.solved,
-      catalogCount: catalogCount.get(tag) ?? 0,
-    }));
-    for (const t of catalog.slice(0, GAP_TAGS_PER_PLATFORM)) {
-      if (solved.has(t.tag)) continue;
-      const label = platform === "leetcode" ? humanizeSlug(t.tag) : t.tag;
-      tags.push({ tag: t.tag, label, solved: 0, catalogCount: t.count });
-    }
-    tags.sort((a, b) => b.solved - a.solved || b.catalogCount - a.catalogCount);
-    return [{ platform, source, tags }];
-  });
 }
 
 function cfRatingNumber(raw: string | null): number | null {
@@ -322,7 +262,6 @@ export function buildDashboard(raw: DashboardRaw, asOf: string): DashboardData {
     totals: buildTotals(raw, connected),
     activity: buildActivity(raw, asOf),
     difficulty: buildDifficulty(raw),
-    tags: buildTags(raw, connected),
     topics: buildTopics(raw, level),
     cfLevel: level,
     // Newest first; undated solves last.
@@ -353,7 +292,6 @@ export function filterDashboard(data: DashboardData, filter: PlatformFilter): Da
     totals: only(data.totals),
     activity: data.activity.map((d) => ({ day: d.day, ...pick(d.counts) })).filter((d) => d.total),
     difficulty: data.difficulty.map((r) => ({ band: r.band, ...pick(r.counts) })),
-    tags: only(data.tags),
     topics: data.topics.map((t) => ({
       ...t,
       platforms: only(t.platforms),

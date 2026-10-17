@@ -1,14 +1,7 @@
 import { GlobeIcon, MailIcon } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  SOCIAL_KINDS,
-  socialLinkHref,
-  socialLinkLabel,
-  type SocialKind,
-  type SocialLinks,
-} from "@/lib/social-links-shared";
+import type { SocialKind } from "@/lib/social-links-shared";
 
-// Lucide dropped brand icons, so GitHub, X and Instagram are drawn here in the same 24px style.
+// Icons and names for each profile link kind. Lucide dropped brand icons, so GitHub, X and Instagram are drawn here in the same 24px style.
 type IconProps = React.SVGProps<SVGSVGElement>;
 
 function StrokeIcon({ children, ...props }: IconProps) {
@@ -67,36 +60,3 @@ export const SOCIAL_META: Record<
   website: { name: "Website", Icon: GlobeIcon },
   email: { name: "Email", Icon: MailIcon },
 };
-
-/** Icon links for a profile: GitHub (from the login) first, then the saved links in a fixed order. */
-export function SocialLinksRow({ github, links }: { github: string | null; links: SocialLinks }) {
-  const entries: [LinkKind, string | null | undefined][] = [
-    ["github", github],
-    ...SOCIAL_KINDS.map((kind): [LinkKind, string | undefined] => [kind, links[kind]]),
-  ];
-  const items = entries.filter((e): e is [LinkKind, string] => !!e[1]);
-  if (items.length === 0) return null;
-
-  return (
-    <ul className="flex flex-wrap items-center gap-1">
-      {items.map(([kind, value]) => {
-        const { name, Icon } = SOCIAL_META[kind];
-        const label = `${name}: ${socialLinkLabel(kind, value)}`;
-        const external = kind !== "email";
-        return (
-          <li key={kind}>
-            <a
-              href={socialLinkHref(kind, value)}
-              aria-label={label}
-              title={label}
-              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
-              {...(external && { target: "_blank", rel: "me nofollow noopener noreferrer" })}
-            >
-              <Icon className="size-4" />
-            </a>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
