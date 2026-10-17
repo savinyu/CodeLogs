@@ -6,8 +6,18 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "CodeLogs profile";
 
-// Fixed colors: the image is rendered once for social previews, outside any theme.
-const PLATFORM_HEX = { codeforces: "#3b82f6", atcoder: "#14b8a6", leetcode: "#f59e0b" } as const;
+// Literal colors on purpose: ImageResponse can't read CSS variables, and the image is rendered for
+// social previews outside any theme. These are the v2 light-theme tokens from app/globals.css.
+// The display font (Bricolage Grotesque) is not loaded: it would need a font file fetched per render.
+const COLOR = {
+  background: "#fbf8f8",
+  foreground: "#2a1f23",
+  card: "#f4eeef",
+  primary: "#c01f4a",
+  primaryForeground: "#ffffff",
+  muted: "#6c5c62",
+};
+const PLATFORM_HEX = { codeforces: "#2563eb", atcoder: "#0d8a7e", leetcode: "#d97706" } as const;
 
 export default async function Image({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -24,40 +34,70 @@ export default async function Image({ params }: { params: Promise<{ username: st
         flexDirection: "column",
         justifyContent: "space-between",
         padding: 72,
-        background: "#0a0a0a",
-        color: "#fafafa",
+        background: COLOR.background,
+        color: COLOR.foreground,
         fontFamily: "sans-serif",
       }}
     >
-      <div style={{ display: "flex", fontSize: 32, color: "#a3a3a3" }}>CodeLogs</div>
+      <div style={{ display: "flex", fontSize: 32, fontWeight: 700, color: COLOR.primary }}>
+        CodeLogs
+      </div>
       {profile && data ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <div style={{ display: "flex", fontSize: 72, fontWeight: 700 }}>{profile.name}</div>
-          <div style={{ display: "flex", fontSize: 40, color: "#d4d4d4" }}>
-            {`${total.toLocaleString("en-US")} problems solved`}
+        <div style={{ display: "flex", alignItems: "center", gap: 48 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 168,
+              height: 168,
+              borderRadius: 54,
+              background: COLOR.primary,
+              color: COLOR.primaryForeground,
+              fontSize: 64,
+              fontWeight: 700,
+            }}
+          >
+            {profile.name.slice(0, 1).toUpperCase()}
           </div>
-          <div style={{ display: "flex", gap: 48, marginTop: 16 }}>
-            {data.totals.map((t) => (
-              <div key={t.platform} style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", fontSize: 72, fontWeight: 700 }}>{profile.name}</div>
+            <div style={{ display: "flex", fontSize: 40, color: COLOR.muted }}>
+              {`${total.toLocaleString("en-US")} problems solved`}
+            </div>
+            <div style={{ display: "flex", gap: 20, marginTop: 12 }}>
+              {data.totals.map((t) => (
                 <div
+                  key={t.platform}
                   style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    background: PLATFORM_HEX[t.platform],
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "10px 20px",
+                    borderRadius: 999,
+                    background: COLOR.card,
                   }}
-                />
-                <div style={{ display: "flex", fontSize: 32 }}>
-                  {`${PLATFORM_META[t.platform].name} ${t.solved}`}
+                >
+                  <div
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      background: PLATFORM_HEX[t.platform],
+                    }}
+                  />
+                  <div style={{ display: "flex", fontSize: 28, fontWeight: 600 }}>
+                    {`${PLATFORM_META[t.platform].name} ${t.solved}`}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", fontSize: 56 }}>Profile not found</div>
       )}
-      <div style={{ display: "flex", fontSize: 28, color: "#737373" }}>{`/u/${username}`}</div>
+      <div style={{ display: "flex", fontSize: 28, color: COLOR.muted }}>{`/u/${username}`}</div>
     </div>,
     size,
   );
