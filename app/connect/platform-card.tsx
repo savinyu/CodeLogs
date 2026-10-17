@@ -2,9 +2,11 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { Chip } from "@/components/kit/chip";
+import { Note } from "@/components/kit/note";
+import { Panel, PanelHeader } from "@/components/kit/panel";
+import { PlatformDot } from "@/components/kit/platform-dot";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlatformId } from "@/lib/adapters/types";
@@ -23,12 +25,12 @@ const STATUS_LABEL: Record<Status, string> = {
   error: "Error",
 };
 
-const STATUS_VARIANT: Record<Status, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "outline",
-  syncing: "secondary",
-  ok: "default",
-  partial: "secondary",
-  error: "destructive",
+const STATUS_TONE: Record<Status, "neutral" | "primary" | "good"> = {
+  pending: "neutral",
+  syncing: "neutral",
+  ok: "good",
+  partial: "neutral",
+  error: "primary",
 };
 
 export interface PlatformCardProps {
@@ -67,19 +69,23 @@ function formatRelative(iso: string): string {
 
 export function PlatformCard({ platform, name, handleHint, note, account }: PlatformCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{name}</CardTitle>
-        {note && <CardDescription>{note}</CardDescription>}
-      </CardHeader>
-      <CardContent>
-        {account ? (
-          <ConnectedView platform={platform} name={name} account={account} />
-        ) : (
-          <ConnectForm platform={platform} name={name} handleHint={handleHint} />
-        )}
-      </CardContent>
-    </Card>
+    <Panel aria-label={name}>
+      <PanelHeader
+        title={
+          <span className="inline-flex items-center gap-2.5">
+            <PlatformDot platform={platform} />
+            {name}
+          </span>
+        }
+      >
+        {note}
+      </PanelHeader>
+      {account ? (
+        <ConnectedView platform={platform} name={name} account={account} />
+      ) : (
+        <ConnectForm platform={platform} name={name} handleHint={handleHint} />
+      )}
+    </Panel>
   );
 }
 
@@ -109,14 +115,14 @@ function ConnectedView({
         href={account.profileUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-medium underline-offset-4 hover:underline"
+        className="font-semibold underline-offset-4 hover:underline"
       >
         {account.handle}
       </a>
-      <Badge variant={STATUS_VARIANT[account.status]}>{STATUS_LABEL[account.status]}</Badge>
-      <Badge variant={account.verified ? "default" : "outline"}>
+      <Chip tone={STATUS_TONE[account.status]}>{STATUS_LABEL[account.status]}</Chip>
+      <Chip tone={account.verified ? "good" : "neutral"}>
         {account.verified ? "Verified" : "Unverified"}
-      </Badge>
+      </Chip>
       <div className="ml-auto flex items-start gap-2">
         <SyncButton
           platform={platform}
@@ -148,14 +154,14 @@ function ConnectedView({
         </form>
       </div>
       {state && !state.ok && (
-        <p role="alert" className="basis-full text-sm text-destructive">
-          {state.error}
-        </p>
+        <Note className="basis-full">
+          <p role="alert">{state.error}</p>
+        </Note>
       )}
       {account.status === "error" && account.lastError && (
-        <p role="alert" className="basis-full text-sm text-destructive">
-          {account.lastError}
-        </p>
+        <Note className="basis-full bg-primary-soft text-primary-ink">
+          <p role="alert">{account.lastError}</p>
+        </Note>
       )}
       {!account.verified && (
         <VerifyPanel platform={platform} name={name} verifyToken={account.verifyToken} />
@@ -163,12 +169,12 @@ function ConnectedView({
       {platform === "leetcode" && (
         <LeetcodeImport handle={account.handle} historyComplete={account.historyComplete} />
       )}
-      <p className="basis-full text-xs text-muted-foreground" suppressHydrationWarning>
+      <p className="basis-full text-sm text-muted-foreground" suppressHydrationWarning>
         {account.lastSyncedAt
           ? `Last synced ${formatRelative(account.lastSyncedAt)}`
           : "Never synced"}
       </p>
-      <p className="basis-full text-xs text-muted-foreground">
+      <p className="basis-full text-sm text-muted-foreground">
         Removing a handle also deletes its synced solves.
       </p>
     </div>
@@ -201,8 +207,9 @@ function ConnectForm({
     <form action={action} className="grid gap-2">
       <input type="hidden" name="platform" value={platform} />
       <Label htmlFor={inputId}>{name} handle</Label>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Input
+          className="h-11 min-w-0 flex-1 basis-48 rounded-full border-0 bg-raised px-4 dark:bg-raised"
           id={inputId}
           name="handle"
           // React resets the form after an action; resetting to the echoed handle keeps what was typed.
@@ -221,9 +228,11 @@ function ConnectForm({
         </Button>
       </div>
       {error && (
-        <p id={`${inputId}-error`} role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
+        <Note className="bg-primary-soft text-primary-ink">
+          <p id={`${inputId}-error`} role="alert">
+            {error}
+          </p>
+        </Note>
       )}
     </form>
   );

@@ -12,3 +12,14 @@ export function exportFilename(username: string | null, userId: string, now: Dat
   const who = (username || userId).replace(/[^A-Za-z0-9._-]/g, "_");
   return `codelogs-${who}-${now.toISOString().slice(0, 10)}.json`;
 }
+
+export type FriendRelation = "friends" | "request sent" | "request received";
+
+/** One friendship row seen from `userId`'s side. */
+export function friendRelation(
+  row: { requesterId: string; status: "pending" | "accepted" },
+  userId: string,
+): FriendRelation {
+  if (row.status === "accepted") return "friends";
+  return row.requesterId === userId ? "request sent" : "request received";
+}

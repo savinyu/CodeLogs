@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Note } from "@/components/kit/note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,13 +29,14 @@ export function DeleteAccountForm({ username }: { username: string | null }) {
           autoCapitalize="off"
           spellCheck={false}
           value={value}
+          className="h-11 rounded-full border-0 bg-raised px-4 dark:bg-raised"
           onChange={(e) => setValue(e.target.value)}
         />
       </div>
       {state?.ok === false && (
-        <p role="alert" className="text-sm text-destructive">
-          {state.error}
-        </p>
+        <Note className="bg-destructive/10 text-destructive">
+          <p role="alert">{state.error}</p>
+        </Note>
       )}
       <div>
         <Button type="submit" variant="destructive" disabled={pending || value.trim() !== phrase}>

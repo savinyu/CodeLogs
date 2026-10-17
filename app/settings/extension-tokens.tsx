@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { Note } from "@/components/kit/note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +41,7 @@ export function ExtensionTokens({
             placeholder="Browser extension"
             maxLength={60}
             autoComplete="off"
-            className="min-w-0 flex-1 basis-48"
+            className="h-11 min-w-0 flex-1 basis-48 rounded-full border-0 bg-raised px-4 dark:bg-raised"
           />
           <Button type="submit" disabled={pending || atLimit}>
             {pending ? "Creating…" : "Create token"}
@@ -54,14 +55,18 @@ export function ExtensionTokens({
       </form>
 
       <div aria-live="polite">
-        {state?.ok === false && <p className="text-sm text-destructive">{state.error}</p>}
+        {state?.ok === false && (
+          <Note className="bg-primary-soft text-primary-ink">
+            <p>{state.error}</p>
+          </Note>
+        )}
         {state?.ok === true && <NewToken key={state.token} token={state.token} />}
       </div>
 
       {tokens.length === 0 ? (
         <p className="text-sm text-muted-foreground">No tokens yet.</p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="grid gap-2">
           {tokens.map((t) => (
             <TokenRow key={t.id} token={t} />
           ))}
@@ -86,14 +91,14 @@ function NewToken({ token }: { token: string }) {
   }
 
   return (
-    <div className="grid gap-2 rounded-lg border border-primary/40 bg-muted/50 p-3">
+    <div className="grid gap-2 rounded-item bg-raised p-4 ring-1 ring-primary/40">
       <div className="flex flex-wrap items-center gap-2">
         <Input
           readOnly
           value={token}
           aria-label="New API token"
           onFocus={(e) => e.currentTarget.select()}
-          className="min-w-0 flex-1 basis-48 font-mono text-xs"
+          className="h-11 min-w-0 flex-1 basis-48 rounded-full border-0 bg-card px-4 font-mono text-xs dark:bg-card"
         />
         <Button type="button" variant="outline" onClick={copy}>
           {copied ? "Copied" : "Copy"}
@@ -103,7 +108,7 @@ function NewToken({ token }: { token: string }) {
         Copy it now: you won&apos;t be able to see it again.
       </p>
       {failed && (
-        <p className="text-sm text-destructive">Could not copy. Select the text and copy it.</p>
+        <p className="text-sm text-primary-ink">Could not copy. Select the text and copy it.</p>
       )}
     </div>
   );
@@ -140,7 +145,7 @@ function TokenRow({ token }: { token: ApiTokenSummary }) {
   }
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-3">
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-item bg-raised p-4">
       <div className="min-w-0 flex-1 basis-48">
         <p className="truncate text-sm font-medium">{token.name}</p>
         <p className="truncate font-mono text-xs text-muted-foreground">{token.tokenPrefix}…</p>
@@ -150,7 +155,7 @@ function TokenRow({ token }: { token: ApiTokenSummary }) {
           {token.lastUsedAt ? `Last used ${formatDate(token.lastUsedAt)}` : "Never used"}
         </p>
         {error && (
-          <p role="alert" className="text-xs text-destructive">
+          <p role="alert" className="text-xs text-primary-ink">
             {error}
           </p>
         )}

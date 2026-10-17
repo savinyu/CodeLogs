@@ -19,10 +19,10 @@ import {
   type SocialLinks,
 } from "@/lib/social-links-shared";
 
-export type PublicProfileState = { ok: true } | { ok: false; error: string };
+export type SettingResult = { ok: true } | { ok: false; error: string };
 
 /** Opt in to (or out of) the public /u/<username> page. */
-export async function setPublicProfile(enabled: unknown): Promise<PublicProfileState> {
+export async function setPublicProfile(enabled: unknown): Promise<SettingResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to change your profile." };
   const parsed = z.boolean().safeParse(enabled);
@@ -35,7 +35,7 @@ export async function setPublicProfile(enabled: unknown): Promise<PublicProfileS
 }
 
 /** Opt in to (or out of) the global weekly board. Turning it on needs a public profile. */
-export async function setGlobalBoard(enabled: unknown): Promise<PublicProfileState> {
+export async function setGlobalBoard(enabled: unknown): Promise<SettingResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "Sign in to change your profile." };
   const parsed = z.boolean().safeParse(enabled);
@@ -52,6 +52,22 @@ export async function setGlobalBoard(enabled: unknown): Promise<PublicProfileSta
   }
 
   await db.update(users).set({ globalBoard: parsed.data }).where(eq(users.id, user.id));
+  refresh();
+  return { ok: true };
+}
+
+/** Problems per day for Today's goal ring (1 to 20). */
+export async function setDailyGoal(input: unknown): Promise<SettingResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Sign in to change your goal." };
+  const parsed = z.coerce.number().int().min(1).max(20).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Use a whole number from 1 to 20." };
+
+  try {
+    await db.update(users).set({ dailyGoal: parsed.data }).where(eq(users.id, user.id));
+  } catch {
+    return { ok: false, error: "Could not save your goal. Please try again." };
+  }
   refresh();
   return { ok: true };
 }

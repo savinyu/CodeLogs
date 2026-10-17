@@ -36,7 +36,7 @@ export function SyncButton({
         {pending ? "Starting..." : label}
       </Button>
       {state && !state.ok && (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-xs text-primary-ink">
           {state.error}
         </p>
       )}

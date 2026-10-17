@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { Note } from "@/components/kit/note";
 import { Button } from "@/components/ui/button";
 import type { PlatformId } from "@/lib/adapters/types";
 import { VERIFY_FIELD } from "@/lib/verification";
@@ -62,10 +63,10 @@ export function VerifyPanel({
           </Button>
         </form>
       ) : (
-        <ol className="grid list-inside list-decimal gap-2 text-muted-foreground">
+        <ol className="grid list-inside list-decimal gap-3 rounded-item bg-raised p-4 text-muted-foreground">
           <li>
             Copy your code:{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">
+            <code className="rounded-item bg-raised px-2 py-1 font-mono break-all text-foreground">
               {verifyToken}
             </code>{" "}
             <Button type="button" variant="outline" size="xs" onClick={copy}>
@@ -96,9 +97,9 @@ export function VerifyPanel({
         </ol>
       )}
       {error && (
-        <p role="alert" className="text-destructive">
-          {error}
-        </p>
+        <Note className="bg-primary-soft text-primary-ink">
+          <p role="alert">{error}</p>
+        </Note>
       )}
     </div>
   );
