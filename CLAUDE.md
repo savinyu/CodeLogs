@@ -5,7 +5,8 @@ A cross-platform tracker for DSA and competitive programming progress. It pulls 
 @AGENTS.md
 
 ## Start here after `/clear`
-1. **`PLAN.md` is the source of truth.** §4 lists the decisions, §6 the architecture and data model, §7 the milestones, and **§12 the progress checklist showing where we are**.
+0. **v2 interface rebuild (from 17 Oct 2026): `PLAN-v2.md` is the source of truth for it**, with §8 showing where we are. The design is the claude.ai artifact "CodeLogs Coach 2"; read only that one. Branch `v2` is the default branch; `main` is v1 and stays untouched.
+1. **`PLAN.md` is the source of truth** for v1 and every §4 decision. §4 lists the decisions, §6 the architecture and data model, §7 the milestones, and **§12 the progress checklist showing where we are**.
 2. `scripts/spike/FINDINGS.md` has the verified API facts for each platform, such as quirks, rate limits and the error shapes for unknown handles. Read it before touching an adapter.
 3. Run `git log --oneline -15` and `gh pr list` (see Git below) to see recent work.
 4. Don't change a decision in PLAN.md §4 without asking the owner first.
@@ -77,7 +78,7 @@ scripts/spike/          M0 probes + FINDINGS.md
 - This Mac has two GitHub accounts. **This repo uses the personal account `savinyu`** (remote `savinyu/CodeLogs`), never `savinyu-7u`.
 - The repo-local git identity is already set: `Savinyu <100479891+savinyu@users.noreply.github.com>`.
 - Push over HTTPS with the repo-local credential helper, which uses `gh auth token --user savinyu`. Run `gh` commands for this repo as `GH_TOKEN=$(gh auth token --user savinyu) gh …`, which leaves the globally active gh account alone.
-- One branch per milestone (`m1-foundation`, `m2-adapters-sync`, …) → PR into `main`. Commits and PRs are pre-approved by the owner.
+- One branch per milestone → PR. v2 work: `v2-*` branches (not `v2/…`, which clashes with the `v2` branch) → PR into `v2`; the captain merges into `v2` once CI and review pass. Never push to or merge into `main`. Commits and PRs are pre-approved by the owner.
 - End commit messages with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. End PR bodies with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 - Never add a "committed by Cursor" line, or any other Cursor attribution, to commit messages, PR bodies, or files.
 
