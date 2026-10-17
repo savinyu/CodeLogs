@@ -43,24 +43,25 @@ export function SocialLinksForm({ links }: { links: SocialLinks }) {
               autoCapitalize="off"
               spellCheck={false}
               aria-invalid={error ? true : undefined}
+              className="h-11 rounded-full border-0 bg-raised px-4 dark:bg-raised"
               aria-describedby={error ? `social-${kind}-error` : undefined}
             />
             {error && (
-              <p id={`social-${kind}-error`} className="text-sm text-destructive">
+              <p id={`social-${kind}-error`} className="text-sm text-primary-ink">
                 {error}
               </p>
             )}
           </div>
         );
       })}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "Saving…" : "Save links"}
         </Button>
         {state?.message && (
           <p
             role="status"
-            className={state.ok ? "text-sm text-muted-foreground" : "text-sm text-destructive"}
+            className={state.ok ? "text-sm text-muted-foreground" : "text-sm text-primary-ink"}
           >
             {state.message}
           </p>

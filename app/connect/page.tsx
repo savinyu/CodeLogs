@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import { listPlatformAccounts } from "@/lib/accounts";
 import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
 import { requireUser } from "@/lib/session";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Page } from "@/components/kit/page";
+import { PageHead } from "@/components/kit/page-head";
+import { Panel } from "@/components/kit/panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AutoRefresh } from "./auto-refresh";
 import { PlatformCard } from "./platform-card";
@@ -12,15 +14,15 @@ export const metadata = { title: "Connect platforms" };
 
 export default function ConnectPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Connect your platforms</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Add one handle per platform and we&apos;ll pull in your solved problems.
-      </p>
+    <Page className="max-w-3xl">
+      <PageHead
+        title="Connect your platforms"
+        description="Add one handle per platform and we'll pull in your solved problems."
+      />
       <Suspense fallback={<CardsSkeleton />}>
         <PlatformCards />
       </Suspense>
-    </main>
+    </Page>
   );
 }
 
@@ -32,11 +34,11 @@ async function PlatformCards() {
     <>
       {anySyncing && <AutoRefresh />}
       {accounts.length > 0 && (
-        <div className="mt-6 flex justify-end">
+        <div className="mb-3 flex justify-end">
           <SyncButton label="Sync all" disabled={anySyncing} />
         </div>
       )}
-      <div className={accounts.length > 0 ? "mt-3 grid gap-4" : "mt-8 grid gap-4"}>
+      <div className="grid gap-4">
         {PLATFORM_ORDER.map((id) => {
           const meta = PLATFORM_META[id];
           const account = accounts.find((a) => a.platform === id) ?? null;
@@ -69,16 +71,12 @@ async function PlatformCards() {
 
 function CardsSkeleton() {
   return (
-    <div className="mt-8 grid gap-4" aria-hidden>
+    <div className="grid gap-4" aria-hidden>
       {PLATFORM_ORDER.map((id) => (
-        <Card key={id}>
-          <CardHeader>
-            <Skeleton className="h-5 w-32" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-8 w-full" />
-          </CardContent>
-        </Card>
+        <Panel key={id}>
+          <Skeleton className="mb-4 h-7 w-32" />
+          <Skeleton className="h-11 w-full rounded-full" />
+        </Panel>
       ))}
     </div>
   );

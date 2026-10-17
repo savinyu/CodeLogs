@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition, type ClipboardEvent, type DragEvent } from "react";
 import { cn } from "cn";
 import { toast } from "sonner";
+import { Note } from "@/components/kit/note";
 import { Button } from "@/components/ui/button";
 import { parseLeetcodeImportText } from "@/lib/leetcode-import";
 import { importLeetcodeSolves } from "./import-actions";
@@ -108,7 +109,7 @@ export function LeetcodeImport({
 
   const picker = (
     <div className="flex flex-col gap-2">
-      <ol className="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+      <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
         <li>
           While logged in to LeetCode as {handle}, open{" "}
           <a
@@ -137,8 +138,8 @@ export function LeetcodeImport({
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cn(
-          "flex flex-col gap-2 rounded-md border border-dashed p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          dragging && "border-primary bg-muted",
+          "flex flex-col gap-2 rounded-item border border-dashed border-border bg-raised p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          dragging && "border-primary bg-primary-soft",
         )}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -163,28 +164,28 @@ export function LeetcodeImport({
           >
             Choose file
           </Button>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             or drop a saved page here (.json, or the .html that Cmd/Ctrl+S saves).
           </span>
         </div>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           It&apos;s read in your browser. Only the list of solved problem names is sent, never
           cookies.
         </span>
       </div>
       {error && (
-        <p role="alert" className="text-xs text-destructive">
-          {error}
-        </p>
+        <Note className="bg-primary-soft text-primary-ink">
+          <p role="alert">{error}</p>
+        </Note>
       )}
     </div>
   );
 
   return (
-    <div className="flex basis-full flex-col gap-2 border-t pt-3">
+    <div className="flex basis-full flex-col gap-3 border-t border-border pt-4">
       {historyComplete ? (
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Full history imported. Sync at least once every 20 solves to keep it complete.
           </p>
           {!open && (
