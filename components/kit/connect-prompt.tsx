@@ -13,7 +13,9 @@ export function ConnectPrompt({
   return (
     <Panel size="lg">
       <PanelHeader title={title}>{description}</PanelHeader>
-      <Button render={<Link href="/connect" />}>Connect platforms</Button>
+      <Button nativeButton={false} render={<Link href="/connect" />}>
+        Connect platforms
+      </Button>
     </Panel>
   );
 }
