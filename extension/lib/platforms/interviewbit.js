@@ -3,7 +3,14 @@
 // only). Counts come from the public overview endpoint. The list walks the problem catalogue
 // (/v2/problem_list/, 20 items per page) and keeps the problems the logged-in user has solved
 // (has_solved); there are no solve dates. The calendar is the per-year daily submission counts.
-import { ReaderError, buildPlatformUpload, expectData, isRecord, toCount } from "../common.js";
+import {
+  buildPlatformUpload,
+  expectData,
+  isRecord,
+  NotLoggedInError,
+  ReaderError,
+  toCount,
+} from "../common.js";
 
 const NAME = "InterviewBit";
 const PAGE_SIZE = 20;
@@ -113,7 +120,7 @@ export function parseDailySubmissions(json) {
  */
 async function read(ctx) {
   const handle = await ctx.identity();
-  if (!handle) throw new ReaderError(`Log in to ${NAME} in this browser, then try again.`);
+  if (!handle) throw new NotLoggedInError(`Log in to ${NAME} in this browser, then try again.`);
   const h = encodeURIComponent(handle);
 
   ctx.progress("Reading your InterviewBit totals...");

@@ -2,7 +2,7 @@
 // Sync for CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks. The service worker never
 // fetches these sites itself: it finds (or opens) a tab on the platform's own origin and runs small
 // functions inside it, so the requests are same-origin and use the user's own session.
-import { ReaderError, sleep, buildPlatformUpload } from "./common.js";
+import { NotLoggedInError, ReaderError, sleep, buildPlatformUpload } from "./common.js";
 import { createContext } from "./job.js";
 import { INJECTED } from "./inject.js";
 import { READERS } from "./registry.js";
@@ -33,7 +33,9 @@ async function waitForComplete(tabId) {
 
 /**
  * Runs `fn` with a tab on the platform's origin: an open one if there is one, otherwise a
- * background tab that is closed afterwards.
+ * background tab that is closed afterwards. An open tab that was loaded before the user logged
+ * in still shows them logged out (InterviewBit's page globals are set at load), so a
+ * NotLoggedInError there is retried once in a fresh tab.
  * @template T
  * @param {{ name: string, origin: string, homeUrl: string }} reader
  * @param {(tabId: number) => Promise<T>} fn
@@ -42,8 +44,24 @@ async function waitForComplete(tabId) {
 async function withPlatformTab(reader, fn) {
   const open = await chrome.tabs.query({ url: `${reader.origin}/*`, discarded: false });
   const existing = open.find((t) => t.id !== undefined && t.status === "complete") ?? open[0];
-  if (existing?.id !== undefined) return fn(existing.id);
+  if (existing?.id !== undefined) {
+    try {
+      return await fn(existing.id);
+    } catch (e) {
+      if (!(e instanceof NotLoggedInError)) throw e;
+    }
+  }
+  return withFreshTab(reader, fn);
+}
 
+/**
+ * Runs `fn` in a new background tab on the platform's home page, closed afterwards.
+ * @template T
+ * @param {{ name: string, origin: string, homeUrl: string }} reader
+ * @param {(tabId: number) => Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+async function withFreshTab(reader, fn) {
   const tab = await chrome.tabs.create({ url: reader.homeUrl, active: false });
   const tabId = tab.id;
   if (tabId === undefined) throw new ReaderError(`Could not open ${reader.name}.`);

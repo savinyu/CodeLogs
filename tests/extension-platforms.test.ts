@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlatformUpload, utcDay } from "../extension/lib/common.js";
+import { buildPlatformUpload, NotLoggedInError, utcDay } from "../extension/lib/common.js";
 import {
   code360,
   parseSolvedPage,
@@ -610,5 +610,30 @@ describe("uploads", () => {
       activity: [],
     });
     expectValidUpload(upload, "interviewbit");
+  });
+});
+
+describe("no logged-in user", () => {
+  // platform-job.js retries a NotLoggedInError in a fresh tab, so a stale tab isn't the answer.
+  it.each([codechef, code360, hackerrank, interviewbit, gfg])(
+    "$name throws NotLoggedInError",
+    async (reader) => {
+      await expect(
+        reader.read(fakePage({ identity: [null], routes: [] }).context(reader)),
+      ).rejects.toBeInstanceOf(NotLoggedInError);
+    },
+  );
+
+  it("a refused request is not a missing login", async () => {
+    const page = fakePage({
+      identity: ["some_hacker"],
+      routes: [
+        { match: "/badges", status: 404 },
+        { match: "submission_histories", status: 404 },
+        { match: "/submissions/", status: 401 },
+      ],
+    });
+    const err = await hackerrank.read(page.context(hackerrank)).catch((e: unknown) => e);
+    expect(err).not.toBeInstanceOf(NotLoggedInError);
   });
 });

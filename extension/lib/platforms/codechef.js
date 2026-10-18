@@ -4,11 +4,12 @@
 // HTML table of every submission (accepted ones are kept, earliest per problem code).
 // There is no DOMParser in a service worker, so the HTML is read with regular expressions.
 import {
-  ReaderError,
   buildPlatformUpload,
   expectData,
   isRecord,
   istToEpoch,
+  NotLoggedInError,
+  ReaderError,
   stripTags,
   toCount,
 } from "../common.js";
@@ -114,7 +115,7 @@ export function collectAccepted(into, rows) {
  */
 async function read(ctx) {
   const handle = await ctx.identity();
-  if (!handle) throw new ReaderError(`Log in to ${NAME} in this browser, then try again.`);
+  if (!handle) throw new NotLoggedInError(`Log in to ${NAME} in this browser, then try again.`);
   const h = encodeURIComponent(handle);
 
   ctx.progress("Reading your CodeChef profile...");

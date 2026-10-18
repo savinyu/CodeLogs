@@ -4,10 +4,11 @@
 // (/rest/contests/master/submissions/): every attempt, so accepted ones are kept and the earliest
 // per challenge is its solve date. Submission sources are never requested.
 import {
-  ReaderError,
   buildPlatformUpload,
   expectData,
   isRecord,
+  NotLoggedInError,
+  ReaderError,
   toCount,
   toEpochSeconds,
 } from "../common.js";
@@ -92,7 +93,7 @@ export function parseSubmissionsPage(json) {
  */
 async function read(ctx) {
   const handle = await ctx.identity();
-  if (!handle) throw new ReaderError(`Log in to ${NAME} in this browser, then try again.`);
+  if (!handle) throw new NotLoggedInError(`Log in to ${NAME} in this browser, then try again.`);
   const h = encodeURIComponent(handle);
 
   ctx.progress("Reading your HackerRank totals...");

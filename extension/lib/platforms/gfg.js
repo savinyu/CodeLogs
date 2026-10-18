@@ -4,11 +4,12 @@
 //   POST practiceapi.geeksforgeeks.org/api/v1/user/problems/submissions/  (full solved list)
 //   GET  authapi.geeksforgeeks.org/api-get/user-profile-info/             (total_problems_solved)
 import {
-  ReaderError,
   buildPlatformUpload,
   expectData,
   isRecord,
   istToEpoch,
+  NotLoggedInError,
+  ReaderError,
   toCount,
 } from "../common.js";
 
@@ -88,7 +89,7 @@ export function parseProfileInfo(json) {
  */
 async function read(ctx) {
   const handle = await ctx.identity();
-  if (!handle) throw new ReaderError(`Log in to ${NAME} in this browser, then try again.`);
+  if (!handle) throw new NotLoggedInError(`Log in to ${NAME} in this browser, then try again.`);
 
   ctx.progress("Reading your solved list from GeeksforGeeks...");
   const res = await ctx.get(SUBMISSIONS_URL, {

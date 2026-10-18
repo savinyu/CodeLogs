@@ -26,6 +26,9 @@ const MAX_COUNT = 100_000;
 /** A human message for the popup. Anything else thrown in a job is shown as a generic error. */
 export class ReaderError extends Error {}
 
+/** The platform tab shows no logged-in user. A tab loaded before the user logged in looks like this. */
+export class NotLoggedInError extends ReaderError {}
+
 /** @param {unknown} v @returns {v is Record<string, unknown>} */
 export function isRecord(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);

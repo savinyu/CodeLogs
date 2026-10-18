@@ -4,10 +4,11 @@
 // the public profile endpoint and the list from view_solved_problems (login required). Identity
 // is read again at the end: if the logged-in account changed mid-sync, the upload is dropped.
 import {
-  ReaderError,
   buildPlatformUpload,
   expectData,
   isRecord,
+  NotLoggedInError,
+  ReaderError,
   toCount,
   toEpochSeconds,
 } from "../common.js";
@@ -97,7 +98,7 @@ export function parseSolvedPage(json) {
  */
 async function read(ctx) {
   const uuid = await ctx.identity();
-  if (!uuid) throw new ReaderError(`Log in to ${NAME} in this browser, then try again.`);
+  if (!uuid) throw new NotLoggedInError(`Log in to ${NAME} in this browser, then try again.`);
 
   ctx.progress("Reading your Code360 totals...");
   const detailsRes = await ctx.get(
