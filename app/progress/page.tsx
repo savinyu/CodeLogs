@@ -14,7 +14,7 @@ import { filterDashboard, parsePlatformFilter } from "@/lib/dashboard/aggregate"
 import { activityYears, dashboardHref, parseActivityPeriod } from "@/lib/dashboard/filters";
 import { monthlyTotals } from "@/lib/dashboard/monthly";
 import { getDashboardData } from "@/lib/dashboard/queries";
-import { DIFFICULTY_BANDS } from "@/lib/dashboard/types";
+import { DIFFICULTY_BANDS, type DifficultyTier } from "@/lib/dashboard/types";
 import { renderNow } from "@/lib/clock";
 import { PLATFORM_META } from "@/lib/platforms";
 import { requireUser } from "@/lib/session";
@@ -79,7 +79,9 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
       label: r.band === null ? "Unrated" : DIFFICULTY_BANDS[r.band].label,
       hint: r.band === null ? "No difficulty available" : DIFFICULTY_BANDS[r.band].hint,
       counts: r.counts,
+      fill: r.band === null ? UNRATED_FILL : TIER_FILL[DIFFICULTY_BANDS[r.band].tier],
     }));
+  const hasUnrated = data.difficulty.some((r) => r.band === null && r.total > 0);
   const recentHint = filter === "all" ? "" : ` · ${PLATFORM_META[filter].name}`;
   const lc = data.accounts.find((a) => a.platform === "leetcode");
 
@@ -118,17 +120,25 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
           <PanelHeader
             title="Difficulty"
             titleId="difficulty-title"
+            info={
+              <>
+                Bands group your solves by difficulty so the platforms line up. Band 1 is the
+                easiest and Band 5 the hardest. Hover a bar to see each band&apos;s rating range per
+                platform. Unrated solves have no difficulty available.
+              </>
+            }
             action={
-              <span
-                className="text-sm text-muted-foreground"
-                title="Band 1 is the easiest and Band 5 the hardest. Hover a bar for its rating range per platform."
-              >
-                Band 1 easiest · hover for ranges
+              <span className="text-sm text-muted-foreground">
+                Rough equivalents across platforms
               </span>
             }
           />
-          <StackedColumns rows={difficultyRows} label="Solves by difficulty band, by platform" />
-          <PlatformLegend platforms={shown} />
+          <StackedColumns
+            rows={difficultyRows}
+            label="Solves by difficulty band, by platform"
+            totalsOnHover
+          />
+          <DifficultyLegend unrated={hasUnrated} />
         </Panel>
       </div>
       <Panel aria-labelledby="recent-title">
@@ -148,6 +158,36 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
         />
       </Panel>
     </div>
+  );
+}
+
+const TIER_FILL: Record<DifficultyTier, string> = {
+  easy: "fill-difficulty-easy",
+  medium: "fill-difficulty-medium",
+  hard: "fill-difficulty-hard",
+};
+const UNRATED_FILL = "fill-muted-foreground/40";
+
+const TIER_KEY = [
+  { label: "Easy", swatch: "bg-difficulty-easy" },
+  { label: "Medium", swatch: "bg-difficulty-medium" },
+  { label: "Hard", swatch: "bg-difficulty-hard" },
+];
+
+/** The color key under the difficulty chart, in PlatformLegend's layout. */
+function DifficultyLegend({ unrated }: { unrated: boolean }) {
+  const items = unrated
+    ? [...TIER_KEY, { label: "Unrated", swatch: "bg-muted-foreground/40" }]
+    : TIER_KEY;
+  return (
+    <ul className="m-0 mt-2.5 flex list-none flex-wrap justify-center gap-x-3.5 gap-y-1 p-0 text-sm text-muted-foreground">
+      {items.map((t) => (
+        <li key={t.label} className="inline-flex items-center gap-1.5">
+          <span className={`size-2.5 shrink-0 rounded-[2px] ${t.swatch}`} aria-hidden="true" />
+          {t.label}
+        </li>
+      ))}
+    </ul>
   );
 }
 

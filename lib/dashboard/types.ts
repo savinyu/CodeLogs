@@ -158,10 +158,20 @@ export interface DashboardData {
 }
 
 /** Neutral names: the hint says which tier and ranges each band covers (lib/sync/difficulty.ts). */
-export const DIFFICULTY_BANDS: Record<DifficultyBand, { label: string; hint: string }> = {
-  1: { label: "Band 1", hint: "Easy · CF ≤ 1100 · AtCoder < 400 · LC Easy" },
-  2: { label: "Band 2", hint: "Medium · CF 1200–1300 · AtCoder 400–599" },
-  3: { label: "Band 3", hint: "Medium · CF 1400–1600 · AtCoder 600–899 · LC Medium" },
-  4: { label: "Band 4", hint: "Hard · CF 1700–2000 · AtCoder 900–1299 · LC Hard" },
-  5: { label: "Band 5", hint: "Hard · CF 2100+ · AtCoder 1300+" },
+export const DIFFICULTY_BANDS: Record<
+  DifficultyBand,
+  { label: string; hint: string; tier: DifficultyTier }
+> = {
+  1: { label: "Band 1", hint: "Easy · CF ≤ 1100 · AtCoder < 400 · LC Easy", tier: "easy" },
+  2: { label: "Band 2", hint: "Medium · CF 1200–1300 · AtCoder 400–599", tier: "medium" },
+  3: {
+    label: "Band 3",
+    hint: "Medium · CF 1400–1600 · AtCoder 600–899 · LC Medium",
+    tier: "medium",
+  },
+  4: { label: "Band 4", hint: "Hard · CF 1700–2000 · AtCoder 900–1299 · LC Hard", tier: "hard" },
+  5: { label: "Band 5", hint: "Hard · CF 2100+ · AtCoder 1300+", tier: "hard" },
 };
+
+/** The tier a band's hint names; it picks the band's chart color (the difficulty-* tokens). */
+export type DifficultyTier = "easy" | "medium" | "hard";
