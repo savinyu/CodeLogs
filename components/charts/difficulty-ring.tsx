@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { cn } from "cn";
 import type { PlatformId } from "@/lib/adapters/types";
 import type { DifficultyTier } from "@/lib/dashboard/types";
@@ -10,24 +10,24 @@ export type RingTone = DifficultyTier | "unrated";
 
 export interface RingSlice {
   label: string;
-  /** Shown under the label in the hover card: the band's rating ranges. */
+  /** Shown under the ring for the active slice: the band's tier and rating ranges. */
   hint: string;
   tone: RingTone;
   counts: Partial<Record<PlatformId, number>>;
 }
 
-const STROKE: Record<RingTone, string> = {
-  easy: "stroke-band-easy",
-  medium: "stroke-band-medium",
-  hard: "stroke-band-hard",
-  unrated: "stroke-muted-foreground/40",
+const FILL: Record<RingTone, string> = {
+  easy: "fill-band-easy",
+  medium: "fill-band-medium",
+  hard: "fill-band-hard",
+  unrated: "fill-muted",
 };
 
 const SWATCH: Record<RingTone, string> = {
   easy: "bg-band-easy",
   medium: "bg-band-medium",
   hard: "bg-band-hard",
-  unrated: "bg-muted-foreground/40",
+  unrated: "bg-muted",
 };
 
 const TIER_NAME: Record<RingTone, string> = {
@@ -37,114 +37,111 @@ const TIER_NAME: Record<RingTone, string> = {
   unrated: "",
 };
 
-const PLATFORM_SWATCH: Record<PlatformId, string> = {
-  codeforces: "bg-platform-codeforces",
-  atcoder: "bg-platform-atcoder",
-  leetcode: "bg-platform-leetcode",
-};
+// v1's tag ring (Recharts Pie): radii as a share of the box, degrees between slices.
+const OUTER = 47.5;
+const INNER = 31;
+const PAD = 1.5;
 
-const SIZE = 200;
-const STROKE_W = 26;
-const R = (SIZE - STROKE_W) / 2;
-const C = SIZE / 2;
-/** Space between slices, in pathLength units (the ring is 100). */
-const GAP = 1.2;
+const f = (n: number) => n.toFixed(3);
+
+function point(r: number, deg: number): string {
+  const a = (deg * Math.PI) / 180;
+  return `${f(50 + r * Math.sin(a))} ${f(50 - r * Math.cos(a))}`;
+}
+
+/** An annulus sector clockwise from `a0` to `a1` degrees, 0 at the top. */
+function sector(a0: number, a1: number): string {
+  if (a1 - a0 >= 359.99) {
+    // A full ring: two half circles each way, cut out with evenodd.
+    return `M50 ${50 - OUTER}A${OUTER} ${OUTER} 0 1 1 50 ${50 + OUTER}A${OUTER} ${OUTER} 0 1 1 50 ${50 - OUTER}ZM50 ${50 - INNER}A${INNER} ${INNER} 0 1 0 50 ${50 + INNER}A${INNER} ${INNER} 0 1 0 50 ${50 - INNER}Z`;
+  }
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M${point(OUTER, a0)}A${OUTER} ${OUTER} 0 ${large} 1 ${point(OUTER, a1)}L${point(INNER, a1)}A${INNER} ${INNER} 0 ${large} 0 ${point(INNER, a0)}Z`;
+}
 
 /**
- * Solves by difficulty band as a donut, one slice per band in its tier color. The center shows the
- * total; hovering a slice (or its key row) shows that band's count there, and a card with its
- * rating ranges and per-platform counts follows the pointer.
+ * Solves by difficulty band as a ring (v1's tag ring), one slice per band in its tier color, with
+ * the total (or the hovered or tapped band) in the middle. Hovering or tapping a slice or its key
+ * row shows it; a tap pins it so it stays shown on touch screens.
  */
 export function DifficultyRing({ slices, label }: { slices: RingSlice[]; label: string }) {
-  const wrap = useRef<HTMLDivElement>(null);
-  const [hover, setHover] = useState<{ i: number; x?: number; y?: number; flip?: boolean } | null>(
-    null,
-  );
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [pinned, setPinned] = useState<number | null>(null);
   const totals = slices.map((s) => PLATFORM_ORDER.reduce((n, p) => n + (s.counts[p] ?? 0), 0));
   const total = totals.reduce((a, b) => a + b, 0);
-  const shown = slices.filter((_, i) => (totals[i] ?? 0) > 0).length;
-  const gap = shown > 1 ? GAP : 0;
+  const pad = slices.length > 1 ? PAD : 0;
+  const activeIndex = hovered ?? pinned;
+  const active = activeIndex === null ? undefined : slices[activeIndex];
+  const activeTotal = activeIndex === null ? 0 : (totals[activeIndex] ?? 0);
+  const pin = (i: number) => setPinned((p) => (p === i ? null : i));
 
-  function track(i: number, e: React.PointerEvent) {
-    const box = wrap.current?.getBoundingClientRect();
-    if (!box) return setHover({ i });
-    const x = e.clientX - box.left;
-    setHover({ i, x, y: e.clientY - box.top, flip: x > box.width / 2 });
-  }
-
-  // Each slice starts where the ones before it end, as a share of the ring's 100 units.
-  const lens = totals.map((n) => (total > 0 ? (n / total) * 100 : 0));
-  const arcs = lens.map((len, i) => ({
-    i,
-    len,
-    start: lens.slice(0, i).reduce((a, b) => a + b, 0),
-  }));
-
-  const active = hover ? slices[hover.i] : undefined;
-  const activeTotal = hover ? (totals[hover.i] ?? 0) : total;
-  const series = PLATFORM_ORDER.filter((p) => slices.some((s) => (s.counts[p] ?? 0) > 0));
+  // Each slice starts where the ones before it end, in degrees from the top.
+  const spans = totals.map((n) => (total > 0 ? (n / total) * 360 : 0));
+  const starts = spans.map((_, i) => spans.slice(0, i).reduce((a, b) => a + b, 0));
 
   return (
-    <div
-      ref={wrap}
-      className="relative flex flex-wrap items-center justify-center gap-x-8 gap-y-4 py-2"
-    >
-      <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
-        <svg
-          width={SIZE}
-          height={SIZE}
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
-          role="img"
-          aria-label={label}
-          onPointerLeave={() => setHover(null)}
-        >
-          <circle cx={C} cy={C} r={R} fill="none" strokeWidth={STROKE_W} className="stroke-muted" />
-          {arcs.map(({ i, start: s, len }) => {
-            const slice = slices[i];
-            if (!slice || len <= 0) return null;
-            const visible = Math.max(len - gap, 0.4);
-            return (
-              <circle
-                key={`${slice.label}-${i}`}
-                cx={C}
-                cy={C}
-                r={R}
-                fill="none"
-                strokeWidth={STROKE_W}
-                pathLength={100}
-                strokeDasharray={`${visible} ${100 - visible}`}
-                strokeDashoffset={-(s + gap / 2)}
-                transform={`rotate(-90 ${C} ${C})`}
-                className={cn(
-                  STROKE[slice.tone],
-                  "cursor-default transition-opacity",
-                  hover && hover.i !== i && "opacity-35",
+    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+      <div className="w-full max-w-60 space-y-2">
+        <div className="relative aspect-square w-full">
+          <svg viewBox="0 0 100 100" role="img" aria-label={label} className="block size-full">
+            {slices.map((s, i) => {
+              const span = spans[i] ?? 0;
+              if (span <= 0) return null;
+              const a0 = (starts[i] ?? 0) + pad / 2;
+              const a1 = a0 + Math.max(span - pad, 0.5);
+              return (
+                <path
+                  key={`${s.label}-${i}`}
+                  d={sector(a0, a1)}
+                  fillRule="evenodd"
+                  fillOpacity={activeIndex === null || activeIndex === i ? 1 : 0.35}
+                  className={cn(FILL[s.tone], "cursor-pointer")}
+                  onPointerEnter={() => setHovered(i)}
+                  onPointerLeave={() => setHovered(null)}
+                  onClick={() => pin(i)}
+                />
+              );
+            })}
+          </svg>
+          <div className="pointer-events-none absolute inset-[24%] flex flex-col items-center justify-center text-center">
+            <span className="text-2xl font-semibold tabular-nums">
+              {active ? activeTotal : total}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {active ? active.label : "solves"}
+            </span>
+          </div>
+        </div>
+        <div className="min-h-10 text-center text-xs text-muted-foreground">
+          {active ? (
+            <>
+              <p>
+                {total > 0 ? `${Math.round((activeTotal / total) * 100)}% of solves` : null}
+                {PLATFORM_ORDER.filter((p) => (active.counts[p] ?? 0) > 0).map(
+                  (p) => ` · ${PLATFORM_META[p].name} ${active.counts[p]}`,
                 )}
-                onPointerMove={(e) => track(i, e)}
-                onPointerDown={(e) => track(i, e)}
-              />
-            );
-          })}
-        </svg>
-        <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
-          <span className="font-display text-3xl leading-none font-bold tabular-nums">
-            {activeTotal}
-          </span>
-          <span className="mt-1 text-sm text-muted-foreground">
-            {active ? active.label : "solved"}
-          </span>
+              </p>
+              <p>{active.hint}</p>
+            </>
+          ) : (
+            <p>Hover or tap a slice</p>
+          )}
         </div>
       </div>
-      <ul className="m-0 grid list-none gap-1 p-0 text-sm" onPointerLeave={() => setHover(null)}>
-        {slices.map((s, i) =>
-          (totals[i] ?? 0) > 0 ? (
-            <li
-              key={`${s.label}-${i}`}
+      <ul className="m-0 grid list-none gap-0.5 p-0 text-sm">
+        {slices.map((s, i) => (
+          <li key={`${s.label}-${i}`}>
+            <button
+              type="button"
               className={cn(
-                "flex items-center gap-2 rounded-row px-2 py-1 transition-opacity",
-                hover && hover.i !== i && "opacity-50",
+                "flex w-full items-center gap-2 rounded-row px-2 py-1 text-left transition-opacity",
+                activeIndex !== null && activeIndex !== i && "opacity-50",
               )}
-              onPointerEnter={() => setHover({ i })}
+              onPointerEnter={() => setHovered(i)}
+              onPointerLeave={() => setHovered(null)}
+              onFocus={() => setHovered(i)}
+              onBlur={() => setHovered(null)}
+              onClick={() => pin(i)}
             >
               <span
                 className={cn("size-2.5 shrink-0 rounded-[2px]", SWATCH[s.tone])}
@@ -152,37 +149,13 @@ export function DifficultyRing({ slices, label }: { slices: RingSlice[]; label: 
               />
               <span className="font-medium">{s.label}</span>
               <span className="text-muted-foreground">{TIER_NAME[s.tone]}</span>
-            </li>
-          ) : null,
-        )}
+            </button>
+          </li>
+        ))}
       </ul>
-      {hover && active && hover.x !== undefined && hover.y !== undefined ? (
-        <div
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute top-0 left-0 z-10 grid max-w-64 min-w-36 gap-1.5 rounded-row bg-popover px-3 py-2 text-xs text-popover-foreground shadow-pop",
-            hover.flip && "-translate-x-full",
-          )}
-          style={{ left: hover.x + (hover.flip ? -12 : 12), top: Math.max(0, hover.y - 24) }}
-        >
-          <div className="grid gap-0.5 font-semibold">
-            <span>{active.label}</span>
-            <span className="font-normal text-muted-foreground">{active.hint}</span>
-          </div>
-          {series.map((p) => (
-            <div key={p} className="flex items-center gap-2">
-              <span className={cn("size-2.5 shrink-0 rounded-[2px]", PLATFORM_SWATCH[p])} />
-              <span className="flex-1 text-muted-foreground">{PLATFORM_META[p].name}</span>
-              <span className="font-mono font-medium tabular-nums">{active.counts[p] ?? 0}</span>
-            </div>
-          ))}
-        </div>
-      ) : null}
       <ul className="sr-only">
         {slices.map((s, i) => (
-          <li key={`${s.label}-${i}`}>
-            {`${s.label} (${s.hint}): ${totals[i] ?? 0} total; ${series.map((p) => `${PLATFORM_META[p].name} ${s.counts[p] ?? 0}`).join(", ")}`}
-          </li>
+          <li key={`${s.label}-${i}`}>{`${s.label} (${s.hint}): ${totals[i] ?? 0}`}</li>
         ))}
       </ul>
     </div>
