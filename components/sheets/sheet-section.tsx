@@ -41,14 +41,14 @@ export function SheetSection({
               />
             </div>
             <span className="col-start-3 flex items-center justify-end gap-2 min-[900px]:col-start-4 text-[0.906rem] text-muted-foreground tabular-nums">
-              {solved} / {total}
+              {total > 0 ? `${solved} / ${total}` : "Not tracked"}
               {done ? <Chip tone="good">Done</Chip> : null}
             </span>
           </>
         }
       >
         <div className="grid gap-1 pl-8 max-[560px]:pl-0">
-          {rows.length === 0 ? (
+          {total === 0 ? null : rows.length === 0 ? (
             <p className="py-2 text-[0.906rem] text-muted-foreground">All solved.</p>
           ) : (
             rows.map((p) => <TickRow key={p.slug} problem={p} ticked={p.status === "ticked"} />)

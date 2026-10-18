@@ -2,6 +2,7 @@
 
 import type { MacroSlug } from "@/lib/topics/taxonomy";
 import { NEETCODE_PROBLEMS } from "./neetcode-data";
+import { STRIVER_SECTIONS } from "./striver-data";
 import type {
   NeetcodeProblem,
   SectionProgress,
@@ -14,7 +15,11 @@ import type {
 
 export type * from "./types";
 
-const NEETCODE_SOURCE = { label: "NeetCode", url: "https://neetcode.io/practice" };
+const NEETCODE_SOURCE = {
+  label: "NeetCode",
+  url: "https://neetcode.io/practice",
+  license: "MIT license",
+};
 
 /** The macro topic each NeetCode pattern trains. */
 export const NEETCODE_SECTION_TOPIC: Record<string, MacroSlug> = {
@@ -37,6 +42,38 @@ export const NEETCODE_SECTION_TOPIC: Record<string, MacroSlug> = {
   "Math & Geometry": "math",
   "Bit Manipulation": "math",
 };
+
+/** The macro topic each Striver's 180 section trains. */
+export const STRIVER_SECTION_TOPIC: Record<string, MacroSlug> = {
+  Arrays: "data-structures",
+  Hashing: "data-structures",
+  "Binary Search": "search",
+  "Sliding Window and Two Pointers": "search",
+  "Recursion and Backtracking": "recursion",
+  "Linked List": "data-structures",
+  "Stack and Queues": "data-structures",
+  "Greedy Algorithms": "greedy-sorting",
+  Heaps: "data-structures",
+  "Binary Trees": "trees",
+  "Binary Search Trees": "trees",
+  Graphs: "graphs",
+  "Dynamic Programming": "dp",
+  Tries: "strings",
+  Strings: "strings",
+  "Bit Manipulation": "math",
+  Mathematics: "math",
+};
+
+function striverSections(): SheetSection[] {
+  return STRIVER_SECTIONS.map((s) => {
+    const topic = STRIVER_SECTION_TOPIC[s.name];
+    if (!topic) throw new Error(`No topic for Striver section "${s.name}"`);
+    return { name: s.name, topic, problems: [...s.problems], offPlatform: [...s.offPlatform] };
+  });
+}
+
+const striver = striverSections();
+const count = (pick: (s: SheetSection) => number) => striver.reduce((n, s) => n + pick(s), 0);
 
 function sectionsOf(problems: readonly NeetcodeProblem[]): SheetSection[] {
   const bySection = new Map<string, SheetSection>();
@@ -74,6 +111,17 @@ export const SHEETS: readonly Sheet[] = [
     note: "18 sections, all LeetCode.",
     source: NEETCODE_SOURCE,
     sections: sectionsOf(NEETCODE_PROBLEMS),
+  },
+  {
+    id: "striver-180",
+    name: "Striver's 180",
+    description: "takeUforward's pattern-wise sheet, from arrays to dynamic programming.",
+    note: `${count((s) => s.problems.length)} LeetCode problems tracked; ${count((s) => s.offPlatform?.length ?? 0)} on takeUforward listed only.`,
+    source: {
+      label: "takeUforward",
+      url: "https://takeuforward.org/prep-hub/strivers-180-master-dsa-patterns",
+    },
+    sections: striver,
   },
 ];
 
@@ -151,7 +199,8 @@ export function sectionsTraining(
 ): { sheetId: SheetId; sheetName: string; section: SectionProgress }[] {
   return progress.flatMap((p) =>
     p.sections
-      .filter((s) => s.topic === topic)
+      // A section with no LeetCode problem has nothing to track (Striver's Mathematics).
+      .filter((s) => s.topic === topic && s.total > 0)
       .map((section) => ({ sheetId: p.id, sheetName: p.name, section })),
   );
 }

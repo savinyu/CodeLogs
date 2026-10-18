@@ -11,7 +11,7 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 
 **Why this one is different:** existing trackers (Codolio, CoderSTAT, CoderHub, Dsabuddy) mostly show totals and ratings. CodeLogs maps every platform's tags onto **one topic list**, scores your weak areas, and recommends **unsolved** problems at your level.
 
-**Codolio, the closest competitor (owner's notes, 14 Oct 2026):** a handle plus a verification step, like ours, gets you solved counts from LeetCode, Code Studio (Code360), GFG, InterviewBit, CodeChef, Codeforces, HackerRank and AtCoder. It also shows contest history, LeetCode badges and difficulty tags. CodeLogs already has difficulty tags. Contests and LC badges for our 3 platforms are planned as M6, now under Later (§7). Social links on the profile are M7, built first. Adding Codolio's other platforms would change a §4 decision, so it's open question #7.
+**Codolio, the closest competitor (owner's notes, 14 Oct 2026):** a handle plus a verification step, like ours, gets you solved counts from LeetCode, Code Studio (Code360), GFG, InterviewBit, CodeChef, Codeforces, HackerRank and AtCoder. It also shows contest history, LeetCode badges and difficulty tags. CodeLogs already has difficulty tags. Contests and LC badges for our 3 platforms are planned as M6, now under Later (§7). Social links on the profile are M7, built first. Adding Codolio's other platforms was open question #7; the owner settled the route on 18 Oct 2026 (§4, More platforms).
 
 ## 2. Product name ideas (decide later)
 | Name | Vibe |
@@ -47,7 +47,9 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 - **Topic visibility (decided 13 Oct 2026):** the topic coverage chart is public on `/u/[username]`. Weak-topic scores and "Solve next" are shown only to the owner.
 - **Activity timeline (decided 13 Oct 2026):** the heatmap has a period filter: "Last 12 months" (default) plus one option per year with activity, newest first (`?year=2025`, combines with `?platform=`). A year shows Jan–Dec up to today, with that year's active days, total and longest streak. The current streak shows only when the period includes today. The filter affects the Activity card only.
 - **LeetCode backfill:** confirmed by the owner on 12 Oct 2026. Logged in, `leetcode.com/api/problems/all/` marks solved problems `"status": "ac"`, so the user-triggered JSON import (M5) is viable.
-- **Later:** Chrome extension for full LeetCode history. HackerRank, CodeChef and GFG come after that, and only through the extension, never by server-side scraping.
+- **Later:** Chrome extension for full LeetCode history (built, M8).
+- **More platforms (was open #7, decided by the owner 18 Oct 2026):** two layers per platform. First the server fetches **solved counts only**, on demand like LeetCode, from public data; then the extension can send the full solved list from the user's own browser. Each platform gets a terms and robots.txt check before its server part is built (research in `scripts/spike/FINDINGS.md`).
+- **Sheets stay off the public profile** (owner, 18 Oct 2026).
 
 **Still open (I'll ask when we reach them)**
 | # | Question | My default |
@@ -55,7 +57,6 @@ A web app where you link your coding-platform handles. It pulls in the problems 
 | 1 | Chart library | shadcn/ui charts (Recharts inside client components) + a custom SVG heatmap |
 | 5 | Public profiles: opt-in or on by default | Opt-in |
 | 6 | Final product name | CodeLogs for now |
-| 7 | More platforms, as Codolio has (CodeChef, GFG, HackerRank, InterviewBit, Code360). Codolio most likely reads their internal JSON endpoints or scrapes HTML from its server. That conflicts with §4 "never by server-side scraping" and with §5 (CodeChef and GFG terms forbid bots; HackerRank's `/rest` is disallowed by robots.txt) | Keep the §4 decision (extension only, M10). If the owner wants counts sooner: a per-platform check of terms and robots.txt, then **solved counts only**, fetched on demand like LeetCode, for the platforms that pass |
 | 8 | `robots.txt` consistency (found 14 Oct 2026): LeetCode's robots.txt disallows `/graphql`, which our LC adapter already uses (§4 accepted on-demand, user-triggered fetches), and AtCoder's disallows `/users/*/history/`, the only source of AtCoder contest history. §5 cites robots.txt as the reason HackerRank was excluded | LeetCode stays as decided. AtCoder contest history is left out of M6 |
 | 9 | Profile bands (idea, 15 Oct 2026, M11): bands by solved count, each with its own public profile background, like CF's rank colors. Thresholds, the background style and whether bands are shown on logged-out profiles are open | Bands count verified solves only, so unverified handles can't move a profile up a band. Thresholds to be proposed once the owner picks the style |
 
@@ -253,7 +254,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - 🧭 `api_tokens` (hash only, prefix for display, last used; max 5 per user), Bearer auth, `GET /api/extension/me` + `POST /api/extension/leetcode` (`{ userName, solves: [{ slug, solvedAt | null }] }`), shared `lib/leetcode-ingest.ts` with the JSON import (same handle check, same `history_complete` rule; extension solves count like imports)
   - 🤖 Settings "Browser extension" card (create once-visible tokens, list, revoke); 🤖 `extension/`: reads `leetcode.com/api/problems/all/` (+ optionally `api/submissions/` for dates) in the user's browser and posts slugs + dates. Never sends cookies or code
 - M9: Sheet tracking (Blind 75 / NeetCode 150 / Striver). Built 15 Oct 2026 for Blind 75 and NeetCode 150 (branch `m9-sheets`, see §12). Striver is left out: takeuforward publishes no openly licensed problem list, and its sheets mix LeetCode with GFG / Coding Ninjas links (owner to decide)
-- M10: CodeChef and GFG via the extension (or the route chosen in §4 open #7), plus revision reminders
+- M10: more platforms by the §4 route (server counts first, then the extension for full lists), plus revision reminders
 - M11: Profile bands (idea, added 15 Oct 2026; not started, see §4 open #9). A band comes from the number of verified solves across platforms, and each band sets the background of `/u/[username]` and its OG image:
   - 🧭 Band rule in pure code (`lib/profile-band.ts`, tested): thresholds as one table, computed from the same verified totals the public page already shows. No new table unless the owner wants a band history
   - 🧭 Backgrounds use theme tokens (`--band-*`, light and dark), never hex (CLAUDE.md). Each band needs a legible name and text colour
@@ -282,7 +283,7 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
 | Inngest free-tier limit (~50k step runs/month) | Incremental cursors keep steps per sync small; catalog sync runs once a day |
 | Neon free-tier limits | Incremental writes, trimmed raw payloads, catalog written once a day rather than per user |
 | Scope creep | Ship M5 before starting M6+ |
-| Chasing Codolio's platform count | Compete on topics and "solve next" (§1). Add platforms only through the §4 open #7 decision |
+| Chasing Codolio's platform count | Compete on topics and "solve next" (§1). Add platforms only by the §4 "More platforms" route, each after a terms and robots.txt check |
 
 ## 11. External review log
 ### Gemini critique (12 Oct 2026): cross-checked
@@ -373,14 +374,14 @@ Legend: 🧭 = Captain (Opus 5.5) does it: architecture, interfaces, schema, rev
   - [x] Settings "Browser extension" card (Sonnet); `extension/` MV3, plain JS, no build (Sonnet)
   - [x] Verified live against the dev server with a temp user (then deleted): 401 without / with a bad or revoked token, 409 for another LeetCode login, 400 for bad JSON; undated upload → 4 solves, history complete; repeat → 0 written; dated upload → 4 dates filled; repeat → 0
   - [x] Settings checked with a temp signed-in user in headless Chrome (CDP): create → token shown once, list, revoke; no overflow at 360 px from the new card
-  - [ ] 👤 Owner: load `extension/` unpacked, create a token in Settings, sync while logged in to leetcode.com. The dates endpoint (`/api/submissions/`) is unofficial and untested by us (synthetic fixture)
+  - [x] 👤 Owner: loaded `extension/` unpacked and synced while logged in to leetcode.com; it works (18 Oct 2026)
   - Known limits: the extension is load-unpacked only (no Web Store listing) and its host permission covers `http://localhost:3000` plus any https origin you approve. Found while testing: the signed-in site header is 8 px wider than a 360 px screen (the avatar), on every page; not fixed here
 - [ ] M9 sheets (branch `m9-sheets`, stacked on `m8-extension`)
   - [x] Data: NeetCode's public problem list (`neetcode-gh/leetcode`, MIT; license kept in `lib/sheets/NEETCODE_LICENSE`), generated into `lib/sheets/neetcode-data.ts` by `pnpm sheets:neetcode` (dev only; never fetched at runtime). 150 problems in 18 sections, 75 flagged Blind 75; all 150 slugs exist in our LC catalog and its 7 premium flags match ours
   - [x] `lib/sheets/` (pure, tested): sheet definitions, progress per sheet / section / difficulty; `getLeetcodeSolvedSlugs` counts every LC solve source
   - [x] UI (Sonnet): `/sheets?sheet=` page (owner only), a Sheets card on the dashboard (all / LeetCode filter), "Sheets" in the user menu (not the header: it must fit in 360 px). Honest note while LC history isn't complete
   - [x] Verified: typecheck, lint, format, 336 tests; headless Chrome with a temp signed-in user synced to LC `CptDailyBird` (then deleted): `/sheets` shows 7 / 150 (Blind 75: 4 / 75) with the 20-recent-solves note, dashboard card, nothing in `main` wider than 360 px
-  - [ ] 👤 Owner: check `/sheets`; decide whether sheet progress belongs on the public profile, and whether to add Striver (needs a source)
+  - [x] 👤 Owner: sheet progress stays off the public profile; Striver's 180 added in v2 (PLAN-v2.md §1, 18 Oct 2026)
 - [ ] M7 social links (branch `m7-socials`; M6 contests + badges moved to Later on 15 Oct 2026)
   - [x] `social_links` table (migration `0004`, applied to Neon); GitHub comes from the login and isn't stored
   - [x] `lib/social-links-shared.ts`: X and Instagram handles (bare, `@handle` or a pasted profile URL), `https://` websites (a bare domain gets `https://`), plain emails; 9 tests

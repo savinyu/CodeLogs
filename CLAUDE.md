@@ -62,7 +62,7 @@ lib/github-username.ts  sets users.username from GitHub (Better Auth account hoo
 lib/platforms.ts        per-platform display metadata and handle patterns
 lib/api-tokens*.ts      extension tokens (hash-only storage, Bearer auth); lib/leetcode-ingest.ts writes a full LC list (import + extension)
 extension/              Chrome MV3 extension (plain JS, no build); app/api/extension/* is its API
-lib/sheets/             Blind 75 / NeetCode 150 (generated neetcode-data.ts: `pnpm sheets:neetcode`), progress with manual ticks, follows (pure), queries.ts
+lib/sheets/             Blind 75 / NeetCode 150 / Striver's 180 (generated neetcode-data.ts and striver-data.ts: `pnpm sheets:neetcode`, `pnpm sheets:striver`), progress with manual ticks, follows (pure), queries.ts
 lib/today/              Today's set and week strip (pure), daily marks query
 lib/friends/            points, week, usernames (pure), friends and board queries
 lib/user-settings.ts    publicProfile, globalBoard, dailyGoal · lib/streak.ts for the header streak

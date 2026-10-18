@@ -10,6 +10,7 @@ import {
 import { followedSheets } from "@/lib/sheets/follow";
 import { MACRO_SLUGS } from "@/lib/topics/taxonomy";
 import { NEETCODE_PROBLEMS } from "@/lib/sheets/neetcode-data";
+import { STRIVER_SECTIONS } from "@/lib/sheets/striver-data";
 
 const sheet = (id: string) => SHEETS.find((s) => s.id === id)!;
 const slugs = (id: string) => sheet(id).sections.flatMap((s) => s.problems.map((p) => p.slug));
@@ -43,6 +44,51 @@ describe("sheet data", () => {
   });
 });
 
+describe("Striver's 180 data", () => {
+  const striver = sheet("striver-180");
+
+  it("lists each LeetCode problem once, with valid slugs and URLs", () => {
+    const all = slugs("striver-180");
+    expect(all.length).toBeGreaterThanOrEqual(140);
+    expect(new Set(all).size).toBe(all.length);
+    for (const section of striver.sections) {
+      for (const p of section.problems) {
+        expect(p.slug).toMatch(/^[a-z0-9-]+$/);
+        expect(p.url).toBe(`https://leetcode.com/problems/${p.slug}/`);
+        expect(["Easy", "Medium", "Hard"]).toContain(p.difficulty);
+      }
+    }
+  });
+
+  it("keeps the sheet's sections, each with a topic, and lists takeUforward problems", () => {
+    expect(striver.sections.map((s) => s.name).slice(0, 3)).toEqual([
+      "Arrays",
+      "Hashing",
+      "Binary Search",
+    ]);
+    expect(striver.sections).toHaveLength(STRIVER_SECTIONS.length);
+    for (const section of striver.sections) expect(MACRO_SLUGS).toContain(section.topic);
+    const off = striver.sections.flatMap((s) => s.offPlatform ?? []);
+    expect(off.length).toBeGreaterThan(0);
+    for (const o of off) {
+      expect(o.site).toBe("takeUforward");
+      expect(o.url).toMatch(/^https:\/\/takeuforward\.org\/practice\/dsa\/[^/?#]+$/);
+    }
+  });
+
+  it("counts off-platform problems apart and skips untracked sections for training", () => {
+    const progress = sheetProgress(striver, new Set(["not-on-any-sheet", "majority-element"]));
+    expect(progress.solved).toBe(1);
+    expect(progress.offPlatform).toBeGreaterThan(0);
+    const maths = progress.sections.find((s) => s.name === "Mathematics")!;
+    expect(maths.total).toBe(0);
+    expect(maths.offPlatform.length).toBeGreaterThan(0);
+    const training = sectionsTraining([progress], "math").map((t) => t.section.name);
+    expect(training).toContain("Bit Manipulation");
+    expect(training).not.toContain("Mathematics");
+  });
+});
+
 describe("sheetProgress", () => {
   it("counts solved problems per sheet, section and difficulty", () => {
     const solved = new Set(["two-sum", "valid-anagram", "lru-cache", "not-on-any-sheet"]);
@@ -64,6 +110,7 @@ describe("sheetProgress", () => {
     expect(all.map((p) => [p.id, p.solved, p.total])).toEqual([
       ["blind-75", 0, 75],
       ["neetcode-150", 0, 150],
+      ["striver-180", 0, 144],
     ]);
   });
 });
@@ -98,8 +145,9 @@ describe("ticks, topics and follows", () => {
     expect(sheetNamesBySlug(["blind-75"]).get("lru-cache")).toBeUndefined();
   });
 
-  it("follows NeetCode 150 by default, and honours explicit choices", () => {
-    expect(followedSheets(new Map())).toEqual(["neetcode-150"]);
+  it("follows nothing by default, and honours explicit choices", () => {
+    expect(followedSheets(new Map())).toEqual([]);
+    expect(followedSheets(new Map([["striver-180", true]]))).toEqual(["striver-180"]);
     expect(
       followedSheets(
         new Map([
