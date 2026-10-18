@@ -17,7 +17,7 @@ const FEATURES = [
   {
     chip: "Topics",
     title: "Topic map",
-    text: "One shared topic list across all three platforms, with coverage shown at your level.",
+    text: "One shared topic list across Codeforces, AtCoder and LeetCode, with coverage shown at your level.",
   },
   {
     chip: "Social",
@@ -65,8 +65,9 @@ export default function Home({ searchParams }: PageProps<"/">) {
           Every solve, one place.
         </h1>
         <p className="max-w-[56ch] text-lg text-muted-foreground">
-          CodeLogs tracks Codeforces, AtCoder and LeetCode together, finds the topics you are behind
-          on, and hands you today&apos;s problems.
+          CodeLogs tracks Codeforces, AtCoder, LeetCode, CodeChef, Code360, HackerRank, InterviewBit
+          and GeeksforGeeks together, finds the topics you are behind on, and hands you today&apos;s
+          problems.
         </p>
         <Suspense>
           <SignInError searchParams={searchParams} />

@@ -26,7 +26,7 @@ export default function ProgressPage({ searchParams }: PageProps<"/progress">) {
     <Page>
       <PageHead
         title="Progress"
-        description="Everything you have solved, across all three platforms."
+        description="Everything you have solved, across all your platforms."
       />
       <Suspense fallback={<ProgressSkeleton />}>
         <ProgressContent searchParams={searchParams} />

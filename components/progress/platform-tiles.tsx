@@ -1,8 +1,9 @@
 import { Chip } from "@/components/kit/chip";
 import { PlatformDot } from "@/components/kit/platform-dot";
 import { StatTile, StatTiles } from "@/components/kit/stat-tile";
+import type { PlatformId } from "@/lib/adapters/types";
 import type { AccountSummary, PlatformFilter, PlatformTotal } from "@/lib/dashboard/types";
-import { PLATFORM_META } from "@/lib/platforms";
+import { isExtensionPlatform, PLATFORM_META } from "@/lib/platforms";
 
 const STATUS_LABEL: Record<AccountSummary["status"], string> = {
   ok: "Synced",
@@ -11,6 +12,27 @@ const STATUS_LABEL: Record<AccountSummary["status"], string> = {
   syncing: "Syncing",
   pending: "Pending",
 };
+
+/** Extension platforms stay "Pending" until the extension's first upload. */
+function statusLabel(
+  platform: PlatformId,
+  status: AccountSummary["status"],
+  short = false,
+): string {
+  if (isExtensionPlatform(platform) && status === "pending") {
+    return short ? "Waiting" : "Waiting for the extension";
+  }
+  return STATUS_LABEL[status];
+}
+
+function statusTone(platform: PlatformId, status: AccountSummary["status"]) {
+  if (status === "ok") return "good";
+  // Counts-only and partial lists are normal for extension platforms.
+  if (isExtensionPlatform(platform) && (status === "partial" || status === "pending")) {
+    return "neutral";
+  }
+  return "primary";
+}
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -29,7 +51,7 @@ export function PlatformTiles({
   const label = only ? `${PLATFORM_META[only.platform].name} solved` : "Total solved";
   const sub = only
     ? only.source === "reported"
-      ? "count reported by LeetCode"
+      ? `count reported by ${PLATFORM_META[only.platform].name}`
       : "tracked from your submissions"
     : `across ${totals.length} ${totals.length === 1 ? "platform" : "platforms"}`;
 
@@ -47,8 +69,11 @@ export function PlatformTiles({
                 <PlatformDot platform={t.platform} />
                 {meta.name}
                 {account ? (
-                  <Chip tone={account.status === "ok" ? "good" : "primary"}>
-                    {STATUS_LABEL[account.status]}
+                  <Chip
+                    tone={statusTone(t.platform, account.status)}
+                    title={statusLabel(t.platform, account.status)}
+                  >
+                    {statusLabel(t.platform, account.status, true)}
                   </Chip>
                 ) : null}
               </>
@@ -56,7 +81,11 @@ export function PlatformTiles({
             value={fmt(t.solved)}
             sub={
               <>
-                {t.source === "reported" ? "count (reported by LeetCode)" : "solved"}
+                {t.source === "reported"
+                  ? isExtensionPlatform(t.platform)
+                    ? "reported count"
+                    : `count (reported by ${meta.name})`
+                  : "solved"}
                 {account ? (
                   <>
                     {" · "}

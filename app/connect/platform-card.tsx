@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlatformId } from "@/lib/adapters/types";
-import { isSyncedPlatform } from "@/lib/platforms";
+import { isExtensionPlatform, isSyncedPlatform } from "@/lib/platforms";
 import { connectPlatform, disconnectPlatform, type ActionState } from "./actions";
 import { LeetcodeImport } from "./leetcode-import";
 import { SyncButton } from "./sync-button";
@@ -102,6 +102,7 @@ function ConnectedView({
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState<ActionState, FormData>(disconnectPlatform, null);
   const lastToasted = useRef<ActionState>(null);
+  const viaExtension = isExtensionPlatform(platform);
 
   useEffect(() => {
     if (state?.ok && lastToasted.current !== state) {
@@ -120,16 +121,31 @@ function ConnectedView({
       >
         {account.handle}
       </a>
-      <Chip tone={STATUS_TONE[account.status]}>{STATUS_LABEL[account.status]}</Chip>
-      <Chip tone={account.verified ? "good" : "neutral"}>
-        {account.verified ? "Verified" : "Unverified"}
-      </Chip>
+      {viaExtension ? (
+        // The extension's first upload verifies the handle (a login match) and ends "pending".
+        account.status === "pending" && !account.verified ? (
+          <Chip>Waiting for the extension</Chip>
+        ) : (
+          <Chip tone={account.verified ? "good" : "neutral"}>
+            {account.verified ? "Verified" : "Unverified"}
+          </Chip>
+        )
+      ) : (
+        <>
+          <Chip tone={STATUS_TONE[account.status]}>{STATUS_LABEL[account.status]}</Chip>
+          <Chip tone={account.verified ? "good" : "neutral"}>
+            {account.verified ? "Verified" : "Unverified"}
+          </Chip>
+        </>
+      )}
       <div className="ml-auto flex items-start gap-2">
-        <SyncButton
-          platform={platform}
-          label="Sync now"
-          disabled={account.status === "syncing" || pending}
-        />
+        {viaExtension ? null : (
+          <SyncButton
+            platform={platform}
+            label="Sync now"
+            disabled={account.status === "syncing" || pending}
+          />
+        )}
         <form action={action} className="flex items-center gap-2">
           <input type="hidden" name="platform" value={platform} />
           {confirming ? (
@@ -174,6 +190,9 @@ function ConnectedView({
         {account.lastSyncedAt
           ? `Last synced ${formatRelative(account.lastSyncedAt)}`
           : "Never synced"}
+        {viaExtension && !account.lastSyncedAt
+          ? ". Click Sync for this platform in the extension."
+          : ""}
       </p>
       <p className="basis-full text-sm text-muted-foreground">
         Removing a handle also deletes its synced solves.
@@ -228,6 +247,11 @@ function ConnectForm({
           {pending ? "Connecting..." : "Connect"}
         </Button>
       </div>
+      {isExtensionPlatform(platform) && !error ? (
+        <p className="text-sm text-muted-foreground">
+          Syncing {name} in the browser extension connects it too.
+        </p>
+      ) : null}
       {error && (
         <Note className="bg-primary-soft text-primary-ink">
           <p id={`${inputId}-error`} role="alert">
