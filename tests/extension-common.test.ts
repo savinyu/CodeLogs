@@ -204,6 +204,9 @@ describe("result lines", () => {
     expect(describePlatformResult({ handle: "me", verified: false, listed: 1, imported: 0 })).toBe(
       "Synced 1 problem (0 new). Not verified as @me.",
     );
+    expect(describePlatformResult({ handle: "me", verified: true, listed: 0, total: 0 })).toBe(
+      "Synced. No solved problems there yet. Verified as @me.",
+    );
   });
   it("describes a LeetCode sync like before", () => {
     expect(

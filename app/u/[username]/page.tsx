@@ -87,7 +87,9 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
   }
 
   const total = data.totals.reduce((n, t) => n + t.solved, 0);
-  const platformNames = data.totals.map((t) => PLATFORM_META[t.platform].name);
+  const platformNames = data.totals
+    .filter((t) => t.solved > 0)
+    .map((t) => PLATFORM_META[t.platform].name);
   const lcContests = data.contests.find((c) => c.platform === "leetcode");
   // Tile size is problems solved, so topics with none would be empty slivers.
   const solvedTopics = topicViews(data.topics).filter((t) => Math.round(t.solved) > 0);

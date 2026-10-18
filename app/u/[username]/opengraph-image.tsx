@@ -76,31 +76,33 @@ export default async function Image({ params }: { params: Promise<{ username: st
               {`${total.toLocaleString("en-US")} problems solved`}
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 12 }}>
-              {data.totals.map((t) => (
-                <div
-                  key={t.platform}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "10px 20px",
-                    borderRadius: 999,
-                    background: COLOR.card,
-                  }}
-                >
+              {data.totals
+                .filter((t) => t.solved > 0)
+                .map((t) => (
                   <div
+                    key={t.platform}
                     style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: 9,
-                      background: PLATFORM_HEX[t.platform],
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 20px",
+                      borderRadius: 999,
+                      background: COLOR.card,
                     }}
-                  />
-                  <div style={{ display: "flex", fontSize: 28, fontWeight: 600 }}>
-                    {`${PLATFORM_META[t.platform].name} ${t.solved}`}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 9,
+                        background: PLATFORM_HEX[t.platform],
+                      }}
+                    />
+                    <div style={{ display: "flex", fontSize: 28, fontWeight: 600 }}>
+                      {`${PLATFORM_META[t.platform].name} ${t.solved}`}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>

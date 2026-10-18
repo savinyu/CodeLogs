@@ -14,6 +14,7 @@ export function describePlatformResult(out) {
   let text;
   if (listed > 0) text = `Synced ${plural(listed, "problem")} (${out.imported ?? 0} new).`;
   else if (total > 0) text = `Synced your solved count (${total}).`;
+  else if (out.total === 0) text = "Synced. No solved problems there yet.";
   else text = "Synced.";
   if (out.handle) {
     if (out.verified) text += ` Verified as @${out.handle}.`;

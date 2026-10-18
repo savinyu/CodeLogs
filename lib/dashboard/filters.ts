@@ -1,6 +1,6 @@
 // Pure helpers for the dashboard's URL filters (?platform=, ?year=).
 
-import type { ActivityDay, PlatformFilter } from "./types";
+import type { AccountSummary, ActivityDay, PlatformFilter, PlatformTotal } from "./types";
 
 /** "last12" = rolling 12 months ending at asOf; a number = calendar year (UTC). */
 export type ActivityPeriod = "last12" | number;
@@ -31,4 +31,22 @@ export function dashboardHref(
   if (q.period !== "last12") params.set("year", String(q.period));
   const qs = params.toString();
   return qs ? `${pathname}?${qs}` : pathname;
+}
+
+/**
+ * The platform tiles worth showing: a confirmed zero (synced, nothing solved) is hidden, while a
+ * zero that is still pending or failing stays so its status chip is seen. A single-platform
+ * filter always shows its tile.
+ */
+export function shownTotals(
+  totals: PlatformTotal[],
+  accounts: AccountSummary[],
+  filter: PlatformFilter,
+): PlatformTotal[] {
+  if (filter !== "all") return totals;
+  return totals.filter((t) => {
+    if (t.solved > 0) return true;
+    const status = accounts.find((a) => a.platform === t.platform)?.status;
+    return status !== "ok" && status !== "partial";
+  });
 }

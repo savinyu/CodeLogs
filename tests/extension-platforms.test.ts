@@ -393,6 +393,22 @@ describe("HackerRank", () => {
     expect(upload.activity).toEqual([]);
   });
 
+  it("uploads a real zero for an account with no submissions", async () => {
+    const page = fakePage({
+      identity: ["some_hacker"],
+      routes: [
+        { match: "/badges", data: { models: [] } },
+        { match: "submission_histories", data: {} },
+        { match: "offset=0", data: { models: [], total: 0 } },
+      ],
+    });
+    const upload = await hackerrank.read(page.context(hackerrank));
+    expect(upload.loggedInAs).toBe("some_hacker");
+    expect(upload.counts?.total).toBe(0);
+    expect(upload.solves).toEqual([]);
+    expect(upload.listComplete).toBe(true);
+  });
+
   it("needs a login and refuses an unauthorized list", async () => {
     await expect(
       hackerrank.read(fakePage({ identity: [null], routes: [] }).context(hackerrank)),

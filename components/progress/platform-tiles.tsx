@@ -2,6 +2,7 @@ import { Chip } from "@/components/kit/chip";
 import { PlatformDot } from "@/components/kit/platform-dot";
 import { StatTile, StatTiles } from "@/components/kit/stat-tile";
 import type { PlatformId } from "@/lib/adapters/types";
+import { shownTotals } from "@/lib/dashboard/filters";
 import type { AccountSummary, PlatformFilter, PlatformTotal } from "@/lib/dashboard/types";
 import { isExtensionPlatform, PLATFORM_META } from "@/lib/platforms";
 
@@ -47,18 +48,19 @@ export function PlatformTiles({
   filter: PlatformFilter;
 }) {
   const sum = totals.reduce((n, t) => n + t.solved, 0);
+  const shown = shownTotals(totals, accounts, filter);
   const only = filter === "all" ? null : totals[0];
   const label = only ? `${PLATFORM_META[only.platform].name} solved` : "Total solved";
   const sub = only
     ? only.source === "reported"
       ? `count reported by ${PLATFORM_META[only.platform].name}`
       : "tracked from your submissions"
-    : `across ${totals.length} ${totals.length === 1 ? "platform" : "platforms"}`;
+    : `across ${shown.length} ${shown.length === 1 ? "platform" : "platforms"}`;
 
   return (
     <StatTiles>
       <StatTile tone="primary" label={label} value={fmt(sum)} sub={sub} />
-      {totals.map((t) => {
+      {shown.map((t) => {
         const meta = PLATFORM_META[t.platform];
         const account = accounts.find((a) => a.platform === t.platform);
         return (

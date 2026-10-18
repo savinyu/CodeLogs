@@ -142,8 +142,9 @@ async function read(ctx) {
   }));
   // A complete list is the exact count of challenges solved; the badges overlap across domains.
   const total = complete ? solves.length : (badgesTotal ?? solves.length);
-  if (total === 0 && solves.length === 0 && activity.length === 0) {
-    throw new ReaderError(`No solved challenges found on your ${NAME} account.`);
+  // A complete empty list is a real zero: it's uploaded so the handle is verified.
+  if (!complete && total === 0 && activity.length === 0) {
+    throw new ReaderError(`Could not read any solved challenges from ${NAME}.`);
   }
   return buildPlatformUpload({
     platform: "hackerrank",

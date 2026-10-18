@@ -189,6 +189,7 @@ Public data was verified on 18 Oct 2026; the logged-in endpoints are in `scripts
 - **Totals and tiles** use the platform's own count (`platform_stats` kind `ext_counts`: total, the counts by label, and an Easy/Medium/Hard split), shown as "reported" like LeetCode's.
 - **Solve rows** come from the solved list where there is one (GFG now; others once the logged-in lists are confirmed), as stub `problems` rows with the platform's difficulty label banded by `lib/sync/difficulty.ts`. They feed Recent solves, Difficulty and Solves per month.
 - **Activity** comes from the platform's daily submission counts where it has them (HackerRank, InterviewBit), otherwise from the solve dates.
+- **A real zero** (the platform answered, nothing solved) is a successful sync that verifies the handle (owner, 19 Oct 2026). Progress hides a platform tile that is a confirmed zero (synced, 0 solved) but keeps pending or failing ones for their status chip; the public profile and OG image list only platforms with solves.
 - **Boards** count dated solves of verified handles, as for every platform, so a counts-only platform adds no weekly points.
 - **Not yet:** topics and recommendations (GFG's list has no tags; InterviewBit's topic counts could feed scoring later), contests (CodeChef's rating history is on its profile page), and GFG problems in Striver's sheet.
 
