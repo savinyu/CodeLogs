@@ -23,8 +23,6 @@ export interface StackedColumn {
   /** Shown under the label in the hover card, such as "Nov 2025" or a band's rating ranges. */
   hint?: string;
   counts: Partial<Record<PlatformId, number>>;
-  /** A fill class that draws the column in one color instead of stacked by platform. */
-  fill?: string;
 }
 
 // One viewBox for every chart, so two charts side by side come out the same height.
@@ -48,17 +46,8 @@ const f = (n: number) => n.toFixed(1);
 /**
  * Stacked columns by platform, as an SVG. Hovering anywhere in a column shows a card with each
  * platform's count (like v1's Recharts tooltip). `label` is the chart's accessible name.
- * `totalsOnHover` hides the total above each column until that column is hovered.
  */
-export function StackedColumns({
-  rows,
-  label,
-  totalsOnHover = false,
-}: {
-  rows: StackedColumn[];
-  label: string;
-  totalsOnHover?: boolean;
-}) {
+export function StackedColumns({ rows, label }: { rows: StackedColumn[]; label: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ i: number; x: number; y: number; flip: boolean } | null>(
     null,
@@ -126,39 +115,30 @@ export function StackedColumns({
           const cx = PL + i * bw + bw / 2;
           const x0 = cx - barW / 2;
           const x1 = cx + barW / 2;
-          // A one-color column is a single segment holding the whole total.
-          const segments: { key: string; n: number; className: string }[] = row.fill
-            ? [{ key: "all", n: totals[i] ?? 0, className: row.fill }]
-            : PLATFORM_ORDER.filter((p) => (row.counts[p] ?? 0) > 0).map((p) => ({
-                key: p,
-                n: row.counts[p] ?? 0,
-                className: FILL[p],
-              }));
+          const platforms = PLATFORM_ORDER.filter((p) => (row.counts[p] ?? 0) > 0);
           let y0 = H - PB;
           return (
             <g key={`${row.label}-${i}`}>
-              {segments.map((s, j) => {
-                if (s.n === 0) return null;
-                const h = (s.n / top) * ph;
+              {platforms.map((p, j) => {
+                const n = row.counts[p] ?? 0;
+                const h = (n / top) * ph;
                 y0 -= h;
                 const yb = y0 + h;
                 // Round only the top of the stack.
-                const r = j === segments.length - 1 ? Math.min(4, h) : 0;
+                const r = j === platforms.length - 1 ? Math.min(4, h) : 0;
                 const d = `M${f(x0)} ${f(yb)}V${f(y0 + r)}Q${f(x0)} ${f(y0)} ${f(x0 + r)} ${f(y0)}H${f(x1 - r)}Q${f(x1)} ${f(y0)} ${f(x1)} ${f(y0 + r)}V${f(yb)}Z`;
-                return <path key={s.key} d={d} className={s.className} />;
+                return <path key={p} d={d} className={FILL[p]} />;
               })}
-              {!totalsOnHover || hover?.i === i ? (
-                <text
-                  x={cx}
-                  y={y0 - 6}
-                  fontSize={11}
-                  fontWeight={600}
-                  textAnchor="middle"
-                  className="fill-foreground"
-                >
-                  {totals[i]}
-                </text>
-              ) : null}
+              <text
+                x={cx}
+                y={y0 - 6}
+                fontSize={11}
+                fontWeight={600}
+                textAnchor="middle"
+                className="fill-foreground"
+              >
+                {totals[i]}
+              </text>
               <text
                 x={cx}
                 y={H - 8}

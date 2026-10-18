@@ -68,6 +68,9 @@
   --color-difficulty-easy: var(--difficulty-easy);
   --color-difficulty-medium: var(--difficulty-medium);
   --color-difficulty-hard: var(--difficulty-hard);
+  --color-band-easy: var(--band-easy);
+  --color-band-medium: var(--band-medium);
+  --color-band-hard: var(--band-hard);
   --color-streak: var(--streak);
   --shadow-pop: var(--shadow-pop);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -142,6 +145,10 @@
   --difficulty-easy: #1d7a4b;
   --difficulty-medium: #b45309;
   --difficulty-hard: #c01f4a;
+  /* LeetCode's own Easy / Medium / Hard, for chart fills only (too light for text); both themes. */
+  --band-easy: #00b8a3;
+  --band-medium: #ffc01e;
+  --band-hard: #ff375f;
   --streak: #c01f4a;
   --shadow-pop: 0 1px 2px rgb(60 20 35 / 0.06), 0 8px 24px rgb(60 20 35 / 0.07);
   --radius: 0.75rem;
