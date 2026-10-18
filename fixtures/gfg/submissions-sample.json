@@ -1,0 +1,58 @@
+{
+  "status": "success",
+  "message": "",
+  "result": {
+    "Easy": {
+      "703783": {
+        "slug": "armstrong-numbers2727",
+        "pname": "Armstrong Numbers",
+        "lang": "java",
+        "user_subtime": "2025-03-18 00:30:33"
+      },
+      "703954": {
+        "slug": "prime-number2314",
+        "pname": "Prime Number",
+        "lang": "java",
+        "user_subtime": "2025-03-18 00:14:18"
+      }
+    },
+    "Basic": {
+      "704025": {
+        "slug": "sum-of-first-n-terms5843",
+        "pname": "Sum of Natural Number Cubes",
+        "lang": "java",
+        "user_subtime": "2025-02-25 01:13:09"
+      }
+    },
+    "Medium": {
+      "703825": {
+        "slug": "count-digits-in-given-number-n-which-divide-n3331",
+        "pname": "Digits in N that Divide it",
+        "lang": "java",
+        "user_subtime": "2025-02-23 23:40:28"
+      },
+      "705001": {
+        "slug": "find-nth-root-of-m5843",
+        "pname": "Nth Root of M",
+        "lang": "java",
+        "user_subtime": "2025-02-04 00:05:52"
+      }
+    },
+    "Hard": {
+      "700382": {
+        "slug": "avl-tree-insertion",
+        "pname": "AVL Tree Insertion",
+        "lang": "java",
+        "user_subtime": "2023-11-23 23:16:16"
+      }
+    },
+    "School": {
+      "900001": {
+        "slug": "sum-of-two-numbers",
+        "pname": "Sum of two numbers",
+        "lang": "python3",
+        "user_subtime": "2023-02-01 10:15:00"
+      }
+    }
+  }
+}

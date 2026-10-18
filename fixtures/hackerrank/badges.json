@@ -1,0 +1,29 @@
+{
+  "status": true,
+  "models": [
+    {
+      "badge_name": "Problem Solving",
+      "badge_type": "problem-solving",
+      "solved": 202,
+      "total_challenges": 563
+    },
+    {
+      "badge_name": "C++",
+      "badge_type": "cpp",
+      "solved": 3,
+      "total_challenges": 44
+    },
+    {
+      "badge_name": "Java",
+      "badge_type": "java",
+      "solved": 9,
+      "total_challenges": 64
+    },
+    {
+      "badge_name": "Python",
+      "badge_type": "python",
+      "solved": 115,
+      "total_challenges": 115
+    }
+  ]
+}
