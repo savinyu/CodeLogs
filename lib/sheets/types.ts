@@ -17,7 +17,7 @@ export interface NeetcodeProblem {
   premium: boolean;
 }
 
-export type SheetId = "blind-75" | "neetcode-150";
+export type SheetId = "blind-75" | "neetcode-150" | "striver-180";
 
 /** A LeetCode problem on a sheet. Only these can be matched to solves. */
 export interface SheetProblem {
@@ -36,6 +36,13 @@ export interface OffPlatformProblem {
   site: string;
 }
 
+/** One section of the generated Striver data (lib/sheets/striver-data.ts); the topic is added in index.ts. */
+export interface StriverSection {
+  name: string;
+  problems: SheetProblem[];
+  offPlatform: OffPlatformProblem[];
+}
+
 export interface SheetSection {
   name: string;
   /** The macro topic the section trains (Topics drawer, Today, the "Weak topics" filter). */
@@ -44,13 +51,20 @@ export interface SheetSection {
   offPlatform?: OffPlatformProblem[];
 }
 
+/** Where a sheet's list comes from; `license` only when the list is openly licensed. */
+export interface SheetSource {
+  label: string;
+  url: string;
+  license?: string;
+}
+
 export interface Sheet {
   id: SheetId;
   name: string;
   description: string;
   /** One line for the sheet's card. */
   note: string;
-  source: { label: string; url: string };
+  source: SheetSource;
   /** In the sheet's order; each problem appears once. */
   sections: SheetSection[];
 }
@@ -74,7 +88,7 @@ export interface SheetProgress {
   name: string;
   description: string;
   note: string;
-  source: { label: string; url: string };
+  source: SheetSource;
   /** Synced + ticked, LeetCode problems only. */
   solved: number;
   /** Of `solved`, how many come from manual ticks. */

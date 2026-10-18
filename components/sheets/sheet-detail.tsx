@@ -113,7 +113,7 @@ export function SheetDetail({
         >
           {sheet.source.label}
         </a>
-        {" (MIT license)."}
+        {sheet.source.license ? ` (${sheet.source.license}).` : "."}
       </p>
     </Panel>
   );
