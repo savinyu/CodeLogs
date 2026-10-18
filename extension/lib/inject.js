@@ -39,11 +39,13 @@ export async function fetchInPage(req) {
  * Fetches JSON and returns only the string or number at `path`.
  * @param {string} url
  * @param {string[]} path
+ * @param {string} [method]
  * @returns {Promise<string | null>}
  */
-export async function readJsonField(url, path) {
+export async function readJsonField(url, path, method = "GET") {
   try {
     const res = await fetch(url, {
+      method,
       credentials: "include",
       headers: { Accept: "application/json" },
     });

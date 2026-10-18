@@ -118,6 +118,19 @@ describe("injected functions", () => {
     expect(await readJsonField("/x", ["data"])).toBeNull();
   });
 
+  it("readJsonField sends the given method", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ user_name: "gfg.user" }),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await readJsonField("/profile/", ["user_name"], "POST")).toBe("gfg.user");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/profile/",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
   it("readJsonField is null for logged-out and failing responses", async () => {
     vi.stubGlobal(
       "fetch",

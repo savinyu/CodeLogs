@@ -1,6 +1,7 @@
 // @ts-check
-// GeeksforGeeks. Identity is the `gfguserName` cookie (a handle, not a secret) or the profile link
-// in the header. The data comes from the two endpoints the site's own profile page calls:
+// GeeksforGeeks. Identity is `user_name` from the profile check the site makes on every page
+// (POST utilapi.geeksforgeeks.org/api/user/profile/), then the `gfguserName` cookie or the profile
+// link in the header. The data comes from the two endpoints the site's own profile page calls:
 //   POST practiceapi.geeksforgeeks.org/api/v1/user/problems/submissions/  (full solved list)
 //   GET  authapi.geeksforgeeks.org/api-get/user-profile-info/             (total_problems_solved)
 import {
@@ -138,6 +139,10 @@ export const gfg = {
   permissions: ["https://www.geeksforgeeks.org/*"],
   /** @type {import("../job.js").PageCall[]} */
   identitySteps: [
+    {
+      fn: "readJsonField",
+      args: ["https://utilapi.geeksforgeeks.org/api/user/profile/", ["user_name"], "POST"],
+    },
     { fn: "readCookie", args: ["gfguserName"] },
     { fn: "readLinkHandle", args: ["^/(?:profile|user)/([^/?#]+)"] },
   ],
