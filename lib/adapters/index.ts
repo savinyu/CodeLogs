@@ -3,15 +3,15 @@
 import { atcoderAdapter, atcoderCatalog } from "./atcoder";
 import { codeforcesAdapter, codeforcesCatalog } from "./codeforces";
 import { leetcodeAdapter, leetcodeCatalog } from "./leetcode";
-import type { CatalogAdapter, PlatformAdapter, PlatformId } from "./types";
+import type { CatalogAdapter, PlatformAdapter, SyncedPlatformId } from "./types";
 
-export const ADAPTERS: Record<PlatformId, PlatformAdapter> = {
+export const ADAPTERS: Record<SyncedPlatformId, PlatformAdapter> = {
   codeforces: codeforcesAdapter,
   atcoder: atcoderAdapter,
   leetcode: leetcodeAdapter,
 };
 
-export const CATALOGS: Record<PlatformId, CatalogAdapter> = {
+export const CATALOGS: Record<SyncedPlatformId, CatalogAdapter> = {
   codeforces: codeforcesCatalog,
   atcoder: atcoderCatalog,
   leetcode: leetcodeCatalog,

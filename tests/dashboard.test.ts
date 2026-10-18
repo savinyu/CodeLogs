@@ -78,7 +78,8 @@ describe("helpers", () => {
 
   it("parses the platform filter, defaulting to all", () => {
     expect(parsePlatformFilter("codeforces")).toBe("codeforces");
-    expect(parsePlatformFilter("hackerrank")).toBe("all");
+    expect(parsePlatformFilter("hackerrank")).toBe("hackerrank");
+    expect(parsePlatformFilter("topcoder")).toBe("all");
     expect(parsePlatformFilter(undefined)).toBe("all");
     expect(parsePlatformFilter(["codeforces"])).toBe("all");
   });

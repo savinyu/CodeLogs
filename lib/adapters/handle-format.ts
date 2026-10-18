@@ -12,6 +12,17 @@ const PROFILE_URL_PATTERNS: Record<PlatformId, RegExp[]> = {
     /^(?:https?:\/\/)?(?:www\.)?leetcode\.com\/u\/([^/?#\s]+)/i,
     /^(?:https?:\/\/)?(?:www\.)?leetcode\.com\/(?!u\/)([^/?#\s]+)/i,
   ],
+  codechef: [/^(?:https?:\/\/)?(?:www\.)?codechef\.com\/users\/([^/?#\s]+)/i],
+  code360: [
+    /^(?:https?:\/\/)?(?:www\.)?naukri\.com\/code360\/profile\/([^/?#\s]+)/i,
+    /^(?:https?:\/\/)?(?:www\.)?codingninjas\.com\/(?:studio|codestudio)\/profile\/([^/?#\s]+)/i,
+  ],
+  hackerrank: [/^(?:https?:\/\/)?(?:www\.)?hackerrank\.com\/(?:profile\/)?([^/?#\s]+)/i],
+  interviewbit: [/^(?:https?:\/\/)?(?:www\.)?interviewbit\.com\/profile\/([^/?#\s]+)/i],
+  gfg: [
+    /^(?:https?:\/\/)?(?:www\.)?geeksforgeeks\.org\/(?:profile|user)\/([^/?#\s]+)/i,
+    /^(?:https?:\/\/)?auth\.geeksforgeeks\.org\/user\/([^/?#\s]+)/i,
+  ],
 };
 
 function extractHandle(platform: PlatformId, raw: string): string {
@@ -57,5 +68,14 @@ function describeRules(platform: PlatformId): string {
       return "Use 3-16 characters: letters, digits or underscores.";
     case "leetcode":
       return "Use 1-30 characters: letters, digits, underscores or hyphens.";
+    case "codechef":
+      return "Use 2-40 characters: letters, digits, underscores or dots.";
+    case "code360":
+      return "Paste your Code360 profile URL, or the id at its end.";
+    case "hackerrank":
+      return "Use 1-40 characters: letters, digits, underscores, dots or hyphens.";
+    case "interviewbit":
+    case "gfg":
+      return "Use 1-60 characters: letters, digits, underscores, dots or hyphens.";
   }
 }

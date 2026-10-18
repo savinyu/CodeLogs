@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlatformId } from "@/lib/adapters/types";
+import { isSyncedPlatform } from "@/lib/platforms";
 import { connectPlatform, disconnectPlatform, type ActionState } from "./actions";
 import { LeetcodeImport } from "./leetcode-import";
 import { SyncButton } from "./sync-button";
@@ -163,7 +164,7 @@ function ConnectedView({
           <p role="alert">{account.lastError}</p>
         </Note>
       )}
-      {!account.verified && (
+      {!account.verified && isSyncedPlatform(platform) && (
         <VerifyPanel platform={platform} name={name} verifyToken={account.verifyToken} />
       )}
       {platform === "leetcode" && (

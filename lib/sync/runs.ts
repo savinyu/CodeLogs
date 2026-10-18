@@ -7,8 +7,20 @@ import { and, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { CATALOG_TAG, invalidateUser } from "@/lib/cache";
 import { db } from "@/lib/db/client";
-import { catalogSyncs, platformAccounts, platformStats, solves, syncRuns } from "@/lib/db/schema";
-import type { HistoryCompleteness, PlatformId, SyncCursor } from "@/lib/adapters/types";
+import {
+  catalogSyncs,
+  platformAccounts,
+  platformStats,
+  SYNCED_PLATFORMS,
+  solves,
+  syncRuns,
+} from "@/lib/db/schema";
+import type {
+  HistoryCompleteness,
+  PlatformId,
+  SyncCursor,
+  SyncedPlatformId,
+} from "@/lib/adapters/types";
 import { parseCursor } from "./cursor";
 
 /** A user can't queue the same account again within this window. */
@@ -18,7 +30,7 @@ export const SYNC_STALE_MS = 30 * 60_000;
 
 export interface ClaimedAccount {
   accountId: string;
-  platform: PlatformId;
+  platform: SyncedPlatformId;
 }
 
 /**
@@ -28,7 +40,7 @@ export interface ClaimedAccount {
  */
 export async function claimAccountsForSync(
   userId: string,
-  opts: { platforms?: PlatformId[]; ignoreCooldown?: boolean } = {},
+  opts: { platforms?: SyncedPlatformId[]; ignoreCooldown?: boolean } = {},
 ): Promise<ClaimedAccount[]> {
   const cooldownCutoff = sql`now() - make_interval(secs => ${SYNC_COOLDOWN_MS / 1000})`;
   const staleCutoff = sql`now() - make_interval(secs => ${SYNC_STALE_MS / 1000})`;
@@ -41,14 +53,15 @@ export async function claimAccountsForSync(
     .where(
       and(
         eq(platformAccounts.userId, userId),
-        opts.platforms ? inArray(platformAccounts.platform, opts.platforms) : undefined,
+        // Extension platforms are never server-synced, so they are never claimed.
+        inArray(platformAccounts.platform, opts.platforms ?? [...SYNCED_PLATFORMS]),
         opts.ignoreCooldown ? undefined : requestedBefore(cooldownCutoff),
         or(sql`${platformAccounts.status} <> 'syncing'`, requestedBefore(staleCutoff)),
       ),
     )
     .returning({ accountId: platformAccounts.id, platform: platformAccounts.platform });
   if (claimed.length > 0) invalidateUser(userId);
-  return claimed;
+  return claimed as ClaimedAccount[];
 }
 
 /** Undo a claim when the sync event couldn't be sent. */

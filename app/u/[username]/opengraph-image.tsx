@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import type { PlatformId } from "@/lib/adapters/types";
 import { getDashboardData, getPublicProfile } from "@/lib/dashboard/queries";
 import { PLATFORM_META } from "@/lib/platforms";
 
@@ -17,7 +18,16 @@ const COLOR = {
   primaryForeground: "#ffffff",
   muted: "#6c5c62",
 };
-const PLATFORM_HEX = { codeforces: "#2563eb", atcoder: "#0d8a7e", leetcode: "#d97706" } as const;
+const PLATFORM_HEX: Record<PlatformId, string> = {
+  codeforces: "#2563eb",
+  atcoder: "#0d8a7e",
+  leetcode: "#d97706",
+  codechef: "#8a5a35",
+  code360: "#a21caf",
+  hackerrank: "#475467",
+  interviewbit: "#4338ca",
+  gfg: "#2f8d46",
+};
 
 export default async function Image({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;

@@ -10,12 +10,22 @@ const FILL: Record<PlatformId, string> = {
   codeforces: "fill-platform-codeforces",
   atcoder: "fill-platform-atcoder",
   leetcode: "fill-platform-leetcode",
+  codechef: "fill-platform-codechef",
+  code360: "fill-platform-code360",
+  hackerrank: "fill-platform-hackerrank",
+  interviewbit: "fill-platform-interviewbit",
+  gfg: "fill-platform-gfg",
 };
 
 const SWATCH: Record<PlatformId, string> = {
   codeforces: "bg-platform-codeforces",
   atcoder: "bg-platform-atcoder",
   leetcode: "bg-platform-leetcode",
+  codechef: "bg-platform-codechef",
+  code360: "bg-platform-code360",
+  hackerrank: "bg-platform-hackerrank",
+  interviewbit: "bg-platform-interviewbit",
+  gfg: "bg-platform-gfg",
 };
 
 export interface StackedColumn {

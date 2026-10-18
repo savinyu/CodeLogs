@@ -6,14 +6,15 @@ import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import { ADAPTERS } from "@/lib/adapters/index";
 import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
-import { PLATFORMS, platformAccounts } from "@/lib/db/schema";
+import { platformAccounts, SYNCED_PLATFORMS } from "@/lib/db/schema";
 import { PLATFORM_META } from "@/lib/platforms";
 import { getCurrentUser } from "@/lib/session";
 import { fieldContainsToken, makeVerifyToken, VERIFY_FIELD } from "@/lib/verification";
 
 export type VerifyState = { ok: true } | { ok: false; error: string } | null;
 
-const schema = z.object({ platform: z.enum(PLATFORMS) });
+// Bio-code verification is for server-synced platforms; extension platforms verify on upload.
+const schema = z.object({ platform: z.enum(SYNCED_PLATFORMS) });
 
 function truncate(value: string, max = 60): string {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;

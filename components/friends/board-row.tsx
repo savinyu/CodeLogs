@@ -10,6 +10,11 @@ const SEGMENT: Record<PlatformId, string> = {
   codeforces: "bg-platform-codeforces",
   atcoder: "bg-platform-atcoder",
   leetcode: "bg-platform-leetcode",
+  codechef: "bg-platform-codechef",
+  code360: "bg-platform-code360",
+  hackerrank: "bg-platform-hackerrank",
+  interviewbit: "bg-platform-interviewbit",
+  gfg: "bg-platform-gfg",
 };
 
 function plural(n: number, one: string, many: string) {
