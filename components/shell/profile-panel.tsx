@@ -65,7 +65,7 @@ export function ProfilePanel({
   settings,
   host,
 }: {
-  user: { name: string; username: string | null; image: string | null };
+  user: { name: string; username: string | null; email: string; image: string | null };
   settings: { publicProfile: boolean; globalBoard: boolean };
   host: string;
 }) {
@@ -113,7 +113,7 @@ export function ProfilePanel({
       >
         <div>
           <h2 className="font-display text-[1.375rem] font-semibold">Welcome, {user.name}</h2>
-          <p className="text-[0.9rem] text-muted-foreground">Signed in with GitHub</p>
+          <p className="text-[0.9rem] break-all text-muted-foreground">Signed in as {user.email}</p>
         </div>
         <SwitchRow
           label="Public profile"

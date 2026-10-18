@@ -57,6 +57,13 @@
       "when": 1792206045475,
       "tag": "0007_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792302904959,
+      "tag": "0008_github_login",
+      "breakpoints": true
     }
   ]
 }

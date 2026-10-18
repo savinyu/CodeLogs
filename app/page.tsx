@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { SignInButton } from "@/components/auth/sign-in-button";
+import { SignInButtons } from "@/components/auth/sign-in-buttons";
 import { Chip } from "@/components/kit/chip";
 import { Page } from "@/components/kit/page";
 import { Panel } from "@/components/kit/panel";
@@ -35,10 +35,29 @@ async function HeroCta() {
       </Link>
     );
   }
-  return <SignInButton size="lg" />;
+  return <SignInButtons size="lg" />;
 }
 
-export default function Home() {
+const ERROR_TEXT: Record<string, string> = {
+  account_not_linked:
+    "An account with this email already exists. Sign in with the provider you used before.",
+};
+
+async function SignInError({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+  const { error } = await searchParams;
+  if (!error) return null;
+  const code = Array.isArray(error) ? error[0] : error;
+  return (
+    <p
+      role="alert"
+      className="max-w-[56ch] rounded-2xl bg-destructive/5 px-4 py-3 text-sm text-destructive ring-1 ring-destructive/30"
+    >
+      {(code && ERROR_TEXT[code]) || "Sign-in didn’t complete. Please try again."}
+    </p>
+  );
+}
+
+export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <Page>
       <section className="mt-10 mb-12 grid justify-items-start gap-5 min-[760px]:mt-16">
@@ -49,6 +68,9 @@ export default function Home() {
           CodeLogs tracks Codeforces, AtCoder and LeetCode together, finds the topics you are behind
           on, and hands you today&apos;s problems.
         </p>
+        <Suspense>
+          <SignInError searchParams={searchParams} />
+        </Suspense>
         <Suspense fallback={<Skeleton className="h-12 w-44 rounded-full" />}>
           <HeroCta />
         </Suspense>

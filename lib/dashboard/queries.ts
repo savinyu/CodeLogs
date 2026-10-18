@@ -222,13 +222,21 @@ export interface PublicProfile {
   userId: string;
   name: string;
   username: string;
+  /** The linked GitHub login, shown as the verified GitHub link. */
+  githubLogin: string | null;
   image: string | null;
 }
 
 /** A user whose profile is public, by username (case-insensitive); null otherwise. */
 export async function getPublicProfile(username: string): Promise<PublicProfile | null> {
   const [row] = await db
-    .select({ userId: users.id, name: users.name, username: users.username, image: users.image })
+    .select({
+      userId: users.id,
+      name: users.name,
+      username: users.username,
+      githubLogin: users.githubLogin,
+      image: users.image,
+    })
     .from(users)
     .where(and(eq(users.username, username.toLowerCase()), eq(users.publicProfile, true)))
     .limit(1);

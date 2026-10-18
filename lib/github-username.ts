@@ -1,4 +1,4 @@
-// Sets users.username from the GitHub login, for /u/<username>.
+// Stores the GitHub login (users.githubLogin) and sets users.username from it, for /u/<username>.
 // Better Auth drops `input: false` fields returned by mapProfileToUser when it creates an OAuth
 // user, and making the field writable would let users pick any name through /update-user. So the
 // login is looked up here, after the GitHub account row exists. No server-only import, so
@@ -6,8 +6,10 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
+import { claimUsername } from "@/lib/assign-username";
 import type { DB } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
+import { usernameBase } from "@/lib/usernames";
 
 const githubUserSchema = z.object({ login: z.string().min(1) });
 
@@ -32,7 +34,10 @@ export async function fetchGithubLogin(
   return parsed.success ? parsed.data.login.toLowerCase() : null;
 }
 
-/** Fills in a missing username; never overwrites one. Returns the username it set, if any. */
+/**
+ * Records the GitHub login and fills in a missing username; never overwrites either. If the login
+ * is already someone's username, the user gets `login-2` etc. Returns the username it set, if any.
+ */
 export async function assignGithubUsername(
   db: DB,
   userId: string,
@@ -41,10 +46,10 @@ export async function assignGithubUsername(
 ): Promise<string | null> {
   const login = await fetchGithubLogin(accountId, accessToken);
   if (!login) return null;
-  const updated = await db
+  await db
     .update(users)
-    .set({ username: login })
-    .where(and(eq(users.id, userId), isNull(users.username)))
-    .returning({ username: users.username });
-  return updated[0]?.username ?? null;
+    .set({ githubLogin: login })
+    .where(and(eq(users.id, userId), isNull(users.githubLogin)));
+  const base = usernameBase(login);
+  return base ? claimUsername(db, userId, base) : null;
 }

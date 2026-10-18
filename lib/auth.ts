@@ -5,7 +5,11 @@ import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db/client";
 import * as schema from "@/lib/db/schema";
 import { env } from "@/lib/env";
+import { assignEmailUsername } from "@/lib/assign-username";
+import { googleConfig } from "@/lib/auth-providers";
 import { assignGithubUsername } from "@/lib/github-username";
+
+const google = googleConfig();
 
 export const auth = betterAuth({
   secret: env().BETTER_AUTH_SECRET,
@@ -19,11 +23,16 @@ export const auth = betterAuth({
       clientId: env().GITHUB_CLIENT_ID,
       clientSecret: env().GITHUB_CLIENT_SECRET,
     },
+    ...(google && { google: { ...google, prompt: "select_account" as const } }),
   },
+  // A second provider with the same verified email signs in to the same user (Better Auth's
+  // implicit linking, on by default). Google and GitHub both report whether the email is verified.
   user: {
     additionalFields: {
-      // Not user-editable. Set from the GitHub login by the account hook below.
+      // Not user-editable. Set by the account hook below: the GitHub login, or one made from the
+      // Google email. githubLogin is the linked GitHub login, if any.
       username: { type: "string", required: false, input: false },
+      githubLogin: { type: "string", required: false, input: false },
       publicProfile: { type: "boolean", required: false, defaultValue: false, input: false },
     },
   },
@@ -31,12 +40,20 @@ export const auth = betterAuth({
     account: {
       create: {
         after: async (account) => {
-          if (account.providerId !== "github") return;
           try {
-            await assignGithubUsername(db, account.userId, account.accountId, account.accessToken);
+            if (account.providerId === "github") {
+              await assignGithubUsername(
+                db,
+                account.userId,
+                account.accountId,
+                account.accessToken,
+              );
+            } else if (account.providerId === "google") {
+              await assignEmailUsername(db, account.userId);
+            }
           } catch (err) {
             // Never fail a sign-in over this; the user just has no public URL yet.
-            console.error("Could not set the GitHub username", err);
+            console.error(`Could not set the username (${account.providerId})`, err);
           }
         },
       },

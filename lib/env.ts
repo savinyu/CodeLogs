@@ -1,9 +1,18 @@
 import { z } from "zod";
 
+/** An empty value (`KEY=` in .env.local) counts as unset. */
+const optionalString = z
+  .string()
+  .optional()
+  .transform((v) => v || undefined);
+
 const schema = z.object({
   DATABASE_URL: z.string().url(),
   GITHUB_CLIENT_ID: z.string().min(1),
   GITHUB_CLIENT_SECRET: z.string().min(1),
+  // Optional: Google sign-in is offered only when both are set.
+  GOOGLE_CLIENT_ID: optionalString,
+  GOOGLE_CLIENT_SECRET: optionalString,
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
   // Read by the Inngest SDK straight from process.env. Dev: INNGEST_DEV=1 (local dev server).

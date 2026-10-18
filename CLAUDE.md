@@ -15,7 +15,7 @@ A cross-platform tracker for DSA and competitive programming progress. It pulls 
 - **Next.js 16.4** (App Router, **Cache Components on**, Turbopack), React 19.3, TypeScript (strict, `noUncheckedIndexedAccess`)
 - **Tailwind 4** + **shadcn/ui** (`base-nova` style on **Base UI**, not Radix; use the `render` prop, there's no `asChild`). `cn` comes from the `cn` package.
 - **Postgres on Neon** through **Drizzle ORM** (`drizzle-orm/neon-http`: no interactive transactions; use `db.batch([...])` for atomic writes)
-- **Better Auth** with GitHub login (Drizzle adapter, `usePlural`). It replaced Auth.js on 12 Oct 2026 because Auth.js v5 never left beta.
+- **Better Auth** with GitHub and (optional, env-gated) Google login (Drizzle adapter, `usePlural`). `users.username` is the GitHub login or made from the Google email; `users.githubLogin` is the verified GitHub link. It replaced Auth.js on 12 Oct 2026 because Auth.js v5 never left beta.
 - **Inngest** for background sync (from M2): one `step.run` per page fetch, `step.sleep` for rate limits
 - **Vitest** for tests, ESLint (next config + prettier) and Prettier (`printWidth` 100; Markdown is ignored)
 - **pnpm** only. Build scripts must be allow-listed in `pnpm-workspace.yaml` (`allowBuilds`). pnpm 12 also rejects any package version **published less than 24 h ago** on a fresh install, so CI fails even when the local install worked. When adding a dependency, pin a version at least a day old (check `npm view <pkg> time`).
