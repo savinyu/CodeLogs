@@ -31,10 +31,15 @@ export async function proxy(request: NextRequest) {
   // render as Server Components, which can't set cookies. Refresh it here once it lapses, so
   // page renders read the session without a database lookup. The new cookie goes to this
   // request's render as well as to the browser.
+  // A brand-new user's cache is written before the account hook sets their username (lib/auth.ts),
+  // so a cached user without one is refreshed from the database too. That costs a lookup per
+  // request only for the rare user whose username couldn't be set at all.
   const cached = await getCookieCache(request, { secret: env().BETTER_AUTH_SECRET });
-  if (cached) return NextResponse.next();
+  const cachedUsername = (cached?.user as { username?: string | null } | undefined)?.username;
+  if (cached && cachedUsername) return NextResponse.next();
   const { headers: authHeaders } = await auth.api.getSession({
     headers: request.headers,
+    query: { disableCookieCache: Boolean(cached) },
     returnHeaders: true,
   });
   const setCookies = authHeaders.getSetCookie();
