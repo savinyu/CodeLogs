@@ -1,7 +1,7 @@
 /**
  * Social links on a profile: parsing and URLs. Pure, so client forms and tests can use it.
  * Known networks store a handle and we build the URL, so a link under the Instagram icon
- * always goes to Instagram. GitHub isn't stored: it's the login, shown from users.username.
+ * always goes to Instagram. GitHub isn't stored: it's the linked login, shown from users.githubLogin.
  */
 
 export const SOCIAL_KINDS = ["x", "instagram", "website", "email"] as const;

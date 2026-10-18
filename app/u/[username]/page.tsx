@@ -68,7 +68,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
       username={profile.username}
       image={profile.image}
       firstActiveDay={data.activity[0]?.day ?? null}
-      github={profile.username}
+      github={profile.githubLogin}
       links={links}
       handles={data.accounts.map((a) => ({ platform: a.platform, handle: a.handle }))}
       friendship={friendship}

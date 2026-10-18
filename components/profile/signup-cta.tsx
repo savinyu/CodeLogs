@@ -1,4 +1,4 @@
-import { SignInButton } from "@/components/auth/sign-in-button";
+import { SignInButtons } from "@/components/auth/sign-in-buttons";
 
 /** Call to action for signed-out visitors (Coach's .cta). */
 export function SignupCta() {
@@ -10,7 +10,7 @@ export function SignupCta() {
         </h2>
         <p>Link Codeforces, AtCoder and LeetCode in a minute. No passwords.</p>
       </div>
-      <SignInButton />
+      <SignInButtons />
     </div>
   );
 }

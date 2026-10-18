@@ -45,7 +45,7 @@ export function ProfileHero({
   image: string | null;
   /** First day with activity (YYYY-MM-DD), or null. */
   firstActiveDay: string | null;
-  /** The GitHub login, shown first and marked as verified. */
+  /** The linked GitHub login (null if none), shown first and marked as verified. */
   github: string | null;
   links: SocialLinks;
   handles: { platform: PlatformId; handle: string }[];
@@ -100,7 +100,7 @@ export function ProfileHero({
                     </span>
                     <span className="[overflow-wrap:anywhere]">{socialLinkLabel(kind, value)}</span>
                     {kind === "github" ? (
-                      <Chip tone="good" title="GitHub is the login, so it is verified">
+                      <Chip tone="good" title="Linked through sign-in, so it is verified">
                         <CheckIcon className="size-3" aria-hidden />
                         Login
                       </Chip>

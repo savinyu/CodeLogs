@@ -62,8 +62,8 @@ async function SocialLinksPanel() {
     <Panel id="social-links" aria-labelledby="social-links-title">
       <PanelHeader title="Social links" titleId="social-links-title">
         Shown as icons on your public profile. Leave a field empty to remove it.
-        {user.username &&
-          ` GitHub (@${user.username}) comes from your sign-in and is always shown.`}
+        {user.githubLogin &&
+          ` GitHub (@${user.githubLogin}) comes from your sign-in and is always shown.`}
       </PanelHeader>
       <SocialLinksForm links={links} />
     </Panel>
@@ -80,7 +80,7 @@ async function DeletePanel() {
       >
         This permanently deletes your CodeLogs account, your connected handles, your synced solves
         and stats, and your public profile. It cannot be undone. It does not touch your accounts on
-        Codeforces, AtCoder, LeetCode or GitHub.
+        Codeforces, AtCoder, LeetCode, GitHub or Google.
       </PanelHeader>
       <DeleteAccountForm username={user.username} />
     </Panel>

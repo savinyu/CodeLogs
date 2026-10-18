@@ -41,8 +41,10 @@ export const users = pgTable(
     image: text("image"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    /** GitHub login at sign-up; used for /u/<username>. */
+    /** Set once at sign-up, for /u/<username>: the GitHub login, or one made from a Google email. */
     username: text("username").unique(),
+    /** The linked GitHub login, shown on the profile as the verified GitHub link. */
+    githubLogin: text("github_login"),
     publicProfile: boolean("public_profile").notNull().default(false),
     /** Today page goal: activity per UTC day, 1–20 (v2). */
     dailyGoal: smallint("daily_goal").notNull().default(3),

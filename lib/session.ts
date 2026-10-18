@@ -8,7 +8,10 @@ import { auth } from "@/lib/auth";
 export type CurrentUser = {
   id: string;
   name: string;
+  email: string;
   username: string | null;
+  /** The linked GitHub login, if any. */
+  githubLogin: string | null;
   image: string | null;
 };
 
@@ -23,8 +26,15 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   cacheLife("user");
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  const { id, name, image } = session.user;
-  return { id, name, image: image ?? null, username: session.user.username ?? null };
+  const { id, name, email, image } = session.user;
+  return {
+    id,
+    name,
+    email,
+    image: image ?? null,
+    username: session.user.username ?? null,
+    githubLogin: session.user.githubLogin ?? null,
+  };
 }
 
 /** Like getCurrentUser, but redirects signed-out visitors to the landing page. */
