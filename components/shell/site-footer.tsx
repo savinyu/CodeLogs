@@ -1,8 +1,13 @@
 import { HeartIcon } from "lucide-react";
 import { CopyUpi } from "@/components/shell/copy-upi";
+import { UpiQr } from "@/components/shell/upi-qr";
+import { UpiQrPopover } from "@/components/shell/upi-qr-popover";
 import { UPI_ID, upiPayUrl } from "@/lib/support";
 
-/** The page foot: a quiet tip line with the UPI ID (copy on any device, open the UPI app on phones). */
+/**
+ * The page foot: a quiet tip line. Laptops get a QR to scan with a phone, phones get a link that
+ * opens the UPI app, and the ID itself copies on any device.
+ */
 export function SiteFooter() {
   return (
     <footer className="mx-auto w-full max-w-[70rem] px-4 pb-8">
@@ -11,6 +16,9 @@ export function SiteFooter() {
           <HeartIcon aria-hidden="true" className="size-4 text-primary" />
           CodeLogs is free. If it helps you, tip via UPI:
         </span>
+        <UpiQrPopover>
+          <UpiQr value={upiPayUrl()} className="size-44" />
+        </UpiQrPopover>
         <CopyUpi id={UPI_ID} />
         <a
           href={upiPayUrl()}
