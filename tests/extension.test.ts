@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  basePermission,
   buildUpload,
   CODELOGS_ORIGIN,
   collectAcceptedDates,
@@ -102,13 +103,21 @@ describe("isAllowedBase", () => {
   });
 });
 
+describe("basePermission", () => {
+  it("asks for the hosted origin, or every localhost port", () => {
+    expect(basePermission(CODELOGS_ORIGIN)).toBe(`${CODELOGS_ORIGIN}/*`);
+    expect(basePermission("http://localhost:3000")).toBe("http://localhost/*");
+  });
+});
+
 describe("manifest", () => {
   const manifest = JSON.parse(
     readFileSync(fileURLToPath(new URL("../extension/manifest.json", import.meta.url)), "utf8"),
   ) as { host_permissions: string[]; optional_host_permissions: string[] };
 
   it("grants the hosted CodeLogs and no wildcard hosts", () => {
-    expect(manifest.host_permissions).toContain(`${CODELOGS_ORIGIN}/*`);
+    expect(manifest.host_permissions).toContain(basePermission(CODELOGS_ORIGIN));
+    expect(manifest.optional_host_permissions).toContain(basePermission("http://localhost:3000"));
     for (const p of [...manifest.host_permissions, ...manifest.optional_host_permissions]) {
       expect(p).not.toMatch(/^\w+:\/\/\*|<all_urls>/);
     }

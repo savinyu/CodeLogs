@@ -3,11 +3,11 @@ import { extensionLeetcodeSchema, MAX_EXTENSION_BODY_BYTES } from "@/lib/api-tok
 import { ingestLeetcodeSolves } from "@/lib/leetcode-ingest";
 
 // The browser extension uploads the user's full LeetCode solved list (with dates when it could
-// read them). Authenticated by a personal token from Settings, never by cookies.
+// read them). Authenticated by the token the extension got when it connected, never by cookies.
 export async function POST(request: Request) {
   const user = await authenticateBearer(request.headers.get("authorization"));
   if (!user) {
-    return error(401, "Invalid or revoked token. Create a new one in CodeLogs Settings.");
+    return error(401, "Invalid or revoked token. Connect the extension again from its popup.");
   }
 
   const text = await request.text();

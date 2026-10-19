@@ -20,10 +20,10 @@ import { PLATFORM_ORDER } from "@/lib/platforms";
 import manifest from "../extension/manifest.json";
 
 describe("extension manifest", () => {
-  it("is MV3 CodeLogs 0.3.1 with scripting, alarms and the platform hosts optional", () => {
+  it("is MV3 CodeLogs 0.3.2 with scripting, alarms and the platform hosts optional", () => {
     expect(manifest.manifest_version).toBe(3);
     expect(manifest.name).toBe("CodeLogs");
-    expect(manifest.version).toBe("0.3.1");
+    expect(manifest.version).toBe("0.3.2");
     expect(manifest.permissions).toEqual(
       expect.arrayContaining(["storage", "scripting", "alarms"]),
     );

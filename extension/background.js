@@ -17,7 +17,7 @@ import {
   startConnect,
 } from "./lib/connect.js";
 import { describeLeetcodeResult, describePlatformResult } from "./lib/describe.js";
-import { normalizeBaseUrl } from "./lib/leetcode.js";
+import { basePermission, normalizeBaseUrl } from "./lib/leetcode.js";
 import { runLeetcodeJob } from "./lib/leetcode-job.js";
 import { runPlatformJob } from "./lib/platform-job.js";
 import { SYNC_PLATFORMS, isSyncPlatform } from "./lib/registry.js";
@@ -176,6 +176,16 @@ async function runJob(work) {
         state: "error",
         platform: null,
         message: "Connect to CodeLogs first.",
+        finishedAt: Date.now(),
+      });
+      return;
+    }
+    // Withheld by the user's site-access setting: every call to CodeLogs would fail CORS.
+    if (!(await chrome.permissions.contains({ origins: [basePermission(conn.base)] }))) {
+      await setStatus({
+        state: "error",
+        platform: null,
+        message: "CodeLogs needs access to its own site. Click Sync and allow it.",
         finishedAt: Date.now(),
       });
       return;

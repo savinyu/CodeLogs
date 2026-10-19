@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CodeLogs",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Keeps your solved problems from LeetCode, CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks in sync with CodeLogs.",
   "icons": {
     "16": "icons/icon-16.png",

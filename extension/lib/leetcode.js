@@ -138,3 +138,14 @@ export const CODELOGS_ORIGIN = "https://codelogs.techsavy.space";
 export function isAllowedBase(base) {
   return base === CODELOGS_ORIGIN || base.startsWith("http://localhost");
 }
+
+/**
+ * The host permission that lets the extension call this CodeLogs origin. It is granted at install
+ * for the hosted CodeLogs, but Chrome withholds it when the user limits the extension's site
+ * access, and the API sends no CORS headers, so it has to be asked for again like LeetCode.
+ * `http://localhost/*` covers every port.
+ * @param {string} base  normalized origin
+ */
+export function basePermission(base) {
+  return base.startsWith("http://localhost") ? "http://localhost/*" : `${base}/*`;
+}
