@@ -146,7 +146,7 @@
   --difficulty-medium: #b45309;
   --difficulty-hard: #c01f4a;
   /* LeetCode's own Easy / Medium / Hard, for chart fills only (too light for text); both themes. */
-  --band-easy: #00b8a3;
+  --band-easy: #6fdba0;
   --band-medium: #ffc01e;
   --band-hard: #ff375f;
   --streak: #c01f4a;
