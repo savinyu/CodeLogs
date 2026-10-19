@@ -137,18 +137,15 @@ export function StackedColumns({ rows, label }: { rows: StackedColumn[]; label: 
                 // Round only the top of the stack.
                 const r = j === platforms.length - 1 ? Math.min(4, h) : 0;
                 const d = `M${f(x0)} ${f(yb)}V${f(y0 + r)}Q${f(x0)} ${f(y0)} ${f(x0 + r)} ${f(y0)}H${f(x1 - r)}Q${f(x1)} ${f(y0)} ${f(x1)} ${f(y0 + r)}V${f(yb)}Z`;
-                return <path key={p} d={d} className={FILL[p]} />;
+                return (
+                  <path
+                    key={p}
+                    d={d}
+                    fillOpacity={hover === null || hover.i === i ? 1 : 0.35}
+                    className={FILL[p]}
+                  />
+                );
               })}
-              <text
-                x={cx}
-                y={y0 - 6}
-                fontSize={11}
-                fontWeight={600}
-                textAnchor="middle"
-                className="fill-foreground"
-              >
-                {totals[i]}
-              </text>
               <text
                 x={cx}
                 y={H - 8}

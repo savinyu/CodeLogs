@@ -73,6 +73,9 @@
   --color-difficulty-easy: var(--difficulty-easy);
   --color-difficulty-medium: var(--difficulty-medium);
   --color-difficulty-hard: var(--difficulty-hard);
+  --color-band-easy: var(--band-easy);
+  --color-band-medium: var(--band-medium);
+  --color-band-hard: var(--band-hard);
   --color-streak: var(--streak);
   --shadow-pop: var(--shadow-pop);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -150,8 +153,12 @@
   --pub-4-fg: #ffffff;
   /* LeetCode-style difficulty text: green, amber, red. */
   --difficulty-easy: #1d7a4b;
-  --difficulty-medium: #b45309;
-  --difficulty-hard: #c01f4a;
+  --difficulty-medium: #d97706;
+  --difficulty-hard: #ff375f;
+  /* LeetCode's own Easy / Medium / Hard, for chart fills only (too light for text); both themes. */
+  --band-easy: #00b8a3;
+  --band-medium: #d97706;
+  --band-hard: #ff375f;
   --streak: #c01f4a;
   --shadow-pop: 0 1px 2px rgb(60 20 35 / 0.06), 0 8px 24px rgb(60 20 35 / 0.07);
   --radius: 0.75rem;
@@ -216,7 +223,9 @@
   --pub-4-fg: #0b2216;
   --difficulty-easy: #6fdba0;
   --difficulty-medium: #fbbf24;
-  --difficulty-hard: #ff6f8e;
+  --difficulty-hard: #ff375f;
+  --band-easy: #6fdba0;
+  --band-medium: #ffc01e;
   --streak: #ff6f8e;
   --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
 }

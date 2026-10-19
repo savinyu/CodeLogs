@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { DifficultyRing } from "@/components/charts/difficulty-ring";
 import { PlatformLegend, StackedColumns } from "@/components/charts/stacked-columns";
 import { ConnectPrompt } from "@/components/kit/connect-prompt";
 import { Page } from "@/components/kit/page";
@@ -74,10 +75,11 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
         }));
 
   const difficultyRows = data.difficulty
-    .filter((r) => r.band !== null || r.total > 0)
+    .filter((r) => r.total > 0)
     .map((r) => ({
       label: r.band === null ? "Unrated" : DIFFICULTY_BANDS[r.band].label,
       hint: r.band === null ? "No difficulty available" : DIFFICULTY_BANDS[r.band].hint,
+      tone: r.band === null ? ("unrated" as const) : DIFFICULTY_BANDS[r.band].tier,
       counts: r.counts,
     }));
   const recentHint = filter === "all" ? "" : ` · ${PLATFORM_META[filter].name}`;
@@ -118,17 +120,20 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
           <PanelHeader
             title="Difficulty"
             titleId="difficulty-title"
+            info={
+              <>
+                Bands group your solves by difficulty so the platforms line up. Band 1 is the
+                easiest and Band 5 the hardest. Hover a slice to see each band&apos;s rating range
+                per platform. Unrated solves have no difficulty available.
+              </>
+            }
             action={
-              <span
-                className="text-sm text-muted-foreground"
-                title="Band 1 is the easiest and Band 5 the hardest. Hover a bar for its rating range per platform."
-              >
-                Band 1 easiest · hover for ranges
+              <span className="text-sm text-muted-foreground">
+                Rough equivalents across platforms
               </span>
             }
           />
-          <StackedColumns rows={difficultyRows} label="Solves by difficulty band, by platform" />
-          <PlatformLegend platforms={shown} />
+          <DifficultyRing slices={difficultyRows} label="Solves by difficulty band" />
         </Panel>
       </div>
       <Panel aria-labelledby="recent-title">
