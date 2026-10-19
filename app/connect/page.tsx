@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { cn } from "cn";
+import Link from "next/link";
 import { ExternalLinkIcon } from "lucide-react";
 import { listPlatformAccounts } from "@/lib/accounts";
 import { listApiTokens } from "@/lib/api-tokens";
@@ -124,7 +125,11 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
         The extension reads your own logged-in browser and sends CodeLogs only handles, problem
         titles, difficulty, dates and counts. It syncs your full LeetCode history (the public API
         only shows your 20 most recent solves) and CodeChef, Code360, HackerRank, InterviewBit and
-        GeeksforGeeks. Your cookies and passwords never leave your browser.
+        GeeksforGeeks. Your cookies and passwords never leave your browser. See the{" "}
+        <Link href="/privacy" className="text-foreground underline underline-offset-2">
+          privacy policy
+        </Link>
+        .
       </PanelHeader>
       <ol className="mb-4 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
         {EXTENSION_STORE_URL ? (
