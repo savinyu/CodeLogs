@@ -35,9 +35,9 @@ export default function PrivacyPage() {
       <div className="grid gap-3.5">
         <Section title="Who we are">
           <p className="text-muted-foreground">
-            CodeLogs (codelogs.techsavy.space) is a free, non-commercial project that tracks your
-            competitive programming and DSA practice. It is not affiliated with Codeforces, AtCoder,
-            LeetCode, CodeChef, Coding Ninjas (Code360), HackerRank, InterviewBit or GeeksforGeeks.
+            CodeLogs is a free, non-commercial project that tracks your competitive programming and
+            DSA practice. It is not affiliated with Codeforces, AtCoder, LeetCode, CodeChef, Coding
+            Ninjas (Code360), HackerRank, InterviewBit or GeeksforGeeks.
           </p>
         </Section>
 
