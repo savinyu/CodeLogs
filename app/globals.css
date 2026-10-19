@@ -144,7 +144,7 @@
   /* LeetCode-style difficulty text: green, amber, red. */
   --difficulty-easy: #1d7a4b;
   --difficulty-medium: #b45309;
-  --difficulty-hard: #c01f4a;
+  --difficulty-hard: #ff375f;
   /* LeetCode's own Easy / Medium / Hard, for chart fills only (too light for text); both themes. */
   --band-easy: #6fdba0;
   --band-medium: #ffc01e;
