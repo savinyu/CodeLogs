@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "CodeLogs",
-  "version": "0.2.0",
-  "description": "Syncs your solved problems from LeetCode, CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks to CodeLogs.",
+  "version": "0.3.0",
+  "description": "Keeps your solved problems from LeetCode, CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks in sync with CodeLogs.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage", "scripting"],
+  "permissions": ["storage", "scripting", "alarms"],
   "host_permissions": ["https://leetcode.com/*", "http://localhost:3000/*"],
   "optional_host_permissions": [
     "https://www.codechef.com/*",

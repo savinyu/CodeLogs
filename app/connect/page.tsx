@@ -3,7 +3,6 @@ import { cn } from "cn";
 import { ExternalLinkIcon } from "lucide-react";
 import { listPlatformAccounts } from "@/lib/accounts";
 import { listApiTokens } from "@/lib/api-tokens";
-import { MAX_TOKENS_PER_USER } from "@/lib/api-tokens-shared";
 import { EXTENSION_STORE_URL } from "@/lib/extension";
 import { PLATFORM_META, PLATFORM_ORDER, isSyncedPlatform } from "@/lib/platforms";
 import { requireUser } from "@/lib/session";
@@ -40,7 +39,7 @@ export default function ConnectPage() {
           With the browser extension
         </h2>
         <p className="mt-1.5 mb-5 max-w-[68ch] text-muted-foreground">
-          The extension reads these platforms in your own logged-in browser when you click Sync.
+          The extension reads these platforms in your own logged-in browser and keeps them in sync.
           CodeLogs never fetches them itself.
         </p>
         <Suspense
@@ -103,7 +102,7 @@ async function PlatformCards() {
   );
 }
 
-/** The extension panel (install and tokens) heads the five extension-only platforms. */
+/** The extension panel (install and connected browsers) heads the five extension-only platforms. */
 async function ExtensionSection() {
   const user = await requireUser();
   const [tokens, accounts] = await Promise.all([
@@ -148,10 +147,14 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
             (chrome://extensions → Developer mode → Load unpacked).
           </li>
         )}
-        <li>Create a token below, paste it into the extension and click Save.</li>
         <li>
-          While logged in to a platform, click its Sync button in the extension. A platform you
-          haven&apos;t added below is connected by its first sync.
+          Open the extension and click <strong>Connect to CodeLogs</strong>. It links to this
+          account: no token to copy.
+        </li>
+        <li>
+          That&apos;s it. It syncs right away, then by itself: whenever you visit one of these sites
+          (at most every 6 hours) and LeetCode once a day. You can turn automatic sync off in the
+          extension, and Sync any platform by hand.
         </li>
       </ol>
       {EXTENSION_STORE_URL ? (
@@ -165,7 +168,7 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
           <ExternalLinkIcon aria-hidden />
         </a>
       ) : null}
-      <ExtensionTokens tokens={tokens} maxTokens={MAX_TOKENS_PER_USER} />
+      <ExtensionTokens tokens={tokens} />
     </Panel>
   );
 }

@@ -170,6 +170,8 @@ export const code360 = {
   name: NAME,
   origin: "https://www.naukri.com",
   homeUrl: "https://www.naukri.com/code360/",
+  // naukri.com is mostly a job site: only Code360 pages count as a visit for automatic sync.
+  visitPrefix: "https://www.naukri.com/code360/",
   permissions: ["https://www.naukri.com/*"],
   /** @type {import("../job.js").PageCall[]} */
   identitySteps: [

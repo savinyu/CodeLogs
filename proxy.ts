@@ -70,5 +70,6 @@ export const config = {
     "/contests/:path*",
     "/connect/:path*",
     "/settings/:path*",
+    "/extension/:path*",
   ],
 };

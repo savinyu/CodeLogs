@@ -103,9 +103,29 @@ function pageRunner(tabId) {
 }
 
 /**
- * @param {{ platformId: string, base: string, token: string, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ * Runs `fn` in a tab the user already has open on the platform (automatic sync on a visit). It
+ * never opens a tab of its own, and a logged-out tab stays a NotLoggedInError.
+ * @template T
+ * @param {{ name: string, origin: string }} reader
+ * @param {number} tabId
+ * @param {(tabId: number) => Promise<T>} fn
+ * @returns {Promise<T>}
  */
-export async function runPlatformJob({ platformId, base, token, setStatus }) {
+async function withVisitedTab(reader, tabId, fn) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.url || new URL(tab.url).origin !== reader.origin) {
+    throw new ReaderError(`The ${reader.name} tab was closed or left the site.`);
+  }
+  await sleep(TAB_SETTLE_MS); // let the page set its globals
+  return fn(tabId);
+}
+
+/**
+ * Without `tabId` it uses an open tab or a background one (a sync the user asked for); with it,
+ * only that tab (an automatic sync while the user is on the site).
+ * @param {{ platformId: string, base: string, token: string, tabId?: number, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ */
+export async function runPlatformJob({ platformId, base, token, tabId, setStatus }) {
   const reader = /** @type {Record<string, (typeof READERS)[keyof typeof READERS]>} */ (READERS)[
     platformId
   ];
@@ -117,17 +137,22 @@ export async function runPlatformJob({ platformId, base, token, setStatus }) {
     );
   }
 
-  await setStatus({ step: "connect", message: "Checking your CodeLogs token..." });
+  await setStatus({ step: "connect", message: "Checking your CodeLogs connection..." });
   await checkMe(base, token);
 
   await setStatus({ step: "read", message: `Opening ${reader.name}...` });
-  const upload = await withPlatformTab(reader, async (tabId) => {
+  /** @param {number} id */
+  const readIn = async (id) => {
     const ctx = createContext(reader, {
-      runInPage: pageRunner(tabId),
+      runInPage: pageRunner(id),
       onProgress: (message) => void setStatus({ step: "read", message }),
     });
     return reader.read(ctx);
-  });
+  };
+  const upload =
+    tabId === undefined
+      ? await withPlatformTab(reader, readIn)
+      : await withVisitedTab(reader, tabId, readIn);
 
   // Whatever a reader produced is cleaned once more before it leaves the browser.
   const body = buildPlatformUpload(upload);

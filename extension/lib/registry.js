@@ -11,14 +11,24 @@ export const READERS = { codechef, code360, hackerrank, interviewbit, gfg };
 
 /** @typedef {"leetcode" | keyof typeof READERS} SyncPlatformId */
 
-/** @type {Array<{ id: SyncPlatformId, name: string, kind: "leetcode" | "page", permissions: string[] }>} */
+/**
+ * `visitPrefix`: a page load under it is a visit to the platform (automatic sync).
+ * @type {Array<{ id: SyncPlatformId, name: string, kind: "leetcode" | "page", permissions: string[], visitPrefix: string }>}
+ */
 export const SYNC_PLATFORMS = [
-  { id: "leetcode", name: "LeetCode", kind: "leetcode", permissions: ["https://leetcode.com/*"] },
+  {
+    id: "leetcode",
+    name: "LeetCode",
+    kind: "leetcode",
+    permissions: ["https://leetcode.com/*"],
+    visitPrefix: "https://leetcode.com/",
+  },
   ...[codechef, code360, hackerrank, interviewbit, gfg].map((r) => ({
     id: /** @type {keyof typeof READERS} */ (r.id),
     name: r.name,
     kind: /** @type {"page"} */ ("page"),
     permissions: r.permissions,
+    visitPrefix: /** @type {{ visitPrefix?: string }} */ (r).visitPrefix ?? `${r.origin}/`,
   })),
 ];
 

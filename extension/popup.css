@@ -120,6 +120,11 @@
 html {
   background: var(--background);
 }
+/* Opened in a tab on install (popup.html?tab): the same card column, centred. */
+body.in-tab {
+  max-height: none;
+  margin: 40px auto;
+}
 body {
   width: 360px;
   max-height: 600px;
@@ -229,8 +234,26 @@ body {
 .conn-body {
   margin-top: 14px;
 }
-.conn-body[hidden] {
+.conn-body[hidden],
+.conn-body [hidden] {
   display: none;
+}
+.lead {
+  margin: 0 0 8px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.advanced {
+  margin-top: 14px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.advanced summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.advanced[open] summary {
+  margin-bottom: 8px;
 }
 
 /* Form */
@@ -244,8 +267,7 @@ label.field {
 label.field:first-child {
   margin-top: 0;
 }
-input[type="url"],
-input[type="password"] {
+input[type="url"] {
   width: 100%;
   height: 40px;
   padding: 0 14px;
@@ -256,8 +278,7 @@ input[type="password"] {
   font: inherit;
   outline: none;
 }
-input[type="url"]:focus-visible,
-input[type="password"]:focus-visible {
+input[type="url"]:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 40%, transparent);
 }
 .actions {
@@ -415,6 +436,17 @@ input[type="password"]:focus-visible {
   color: var(--primary-ink);
   font-size: 12.5px;
   font-weight: 600;
+}
+.last {
+  margin-top: 4px;
+  color: var(--good);
+  font-size: 12.5px;
+}
+.last.quiet {
+  color: var(--muted-foreground);
+}
+.last.error {
+  color: var(--destructive);
 }
 .check {
   display: flex;

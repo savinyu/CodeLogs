@@ -2,6 +2,9 @@
 // Calls to the CodeLogs server (not the platforms). Plain fetch; no `chrome`.
 import { ReaderError } from "./common.js";
 
+/** CodeLogs rejected the token (revoked on Connect): this browser has to connect again. */
+export class TokenRevokedError extends ReaderError {}
+
 /**
  * @param {string} base
  * @param {string} token
@@ -17,9 +20,7 @@ export async function checkMe(base, token) {
     throw new ReaderError("Could not reach CodeLogs.");
   }
   if (res.status === 401) {
-    throw new ReaderError(
-      "Token invalid or revoked. Create a new one on the CodeLogs Connect page.",
-    );
+    throw new TokenRevokedError("This browser was disconnected from CodeLogs. Connect again.");
   }
   if (!res.ok) throw new ReaderError(`CodeLogs returned HTTP ${res.status}.`);
   return await res.json();
@@ -44,6 +45,9 @@ export async function postUpload(base, token, path, body) {
     });
   } catch {
     throw new ReaderError("Could not reach CodeLogs.");
+  }
+  if (res.status === 401) {
+    throw new TokenRevokedError("This browser was disconnected from CodeLogs. Connect again.");
   }
   /** @type {any} */
   const out = await res.json().catch(() => ({}));

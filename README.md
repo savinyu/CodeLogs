@@ -13,7 +13,7 @@ CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subto
 ## Features
 
 - **Connect handles** for Codeforces, AtCoder and LeetCode. Handles are checked against the platform when you add them.
-- **Five more platforms through the extension:** CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks. The server never fetches them; the extension reads them in your own logged-in browser when you click Sync, and a handle is verified when the browser is logged in as it.
+- **Five more platforms through the extension:** CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks. The server never fetches them; the extension reads them in your own logged-in browser (once on connect, then while you use those sites), and a handle is verified when the browser is logged in as it.
 - **Background sync** of solved problems, incremental after the first run, plus a daily refresh of every active account.
 - **Today:** up to five problems from your weakest topics (Codeforces problems rated +100–200 above your level, plus free LeetCode problems), a daily goal you set, Mark done, this week's activity, and the next problems in the sheet you follow.
 - **Progress:** totals per platform, an activity heatmap (last 12 months or any year you were active), solves per month, a difficulty chart on a shared 5-band scale, and recent solves with Easy / Medium / Hard tags.
@@ -21,7 +21,7 @@ CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subto
 - **Friends:** mutual friend requests and weekly boards (friends, and an opt-in global one), ranked by difficulty-weighted points from verified handles.
 - **Public profile:** opt-in, read-only, with an Open Graph preview image. Only handles you've **verified** (by pasting a short code into your platform profile) appear on it.
 - **Full LeetCode history:** upload the JSON that `leetcode.com/api/problems/all/` gives you while logged in. Only the list of solved problem slugs is sent; your cookies never leave the browser.
-- **Browser extension** (`extension/`, Chrome MV3): does the same from your logged-in browser in one click, and can add solve dates from your submission list; it also syncs the five extension platforms. It authenticates with a personal token from Connect and sends only handles, problem ids, titles, difficulty, dates and counts; never cookies, passwords or code.
+- **Browser extension** (`extension/`, Chrome MV3): does the same from your logged-in browser in one click, and can add solve dates from your submission list; it also syncs the five extension platforms. It connects with one click (sign in to CodeLogs; no token to copy), keeps itself in sync while you use the sites and LeetCode daily, and sends only handles, problem ids, titles, difficulty, dates and counts; never cookies, passwords or code.
 - **Contests and badges:** a rating-over-time chart per platform (Codeforces, LeetCode) with contests entered, current and max rating, best rank, LeetCode's global rank and Knight / Guardian badge, and the full contest history. Your LeetCode badges show with their icons.
 - **Sheets:** follow Blind 75 and NeetCode 150 (problem list from [NeetCode](https://github.com/neetcode-gh/leetcode), MIT). Synced solves tick problems off, and you can tick one by hand ("Solved it") until your full LeetCode history is imported. Every section maps to a topic.
 - **Social links:** add X, Instagram, a website and an email in Settings. They show next to your GitHub on your public profile.
@@ -68,7 +68,7 @@ Other things to know:
 - **Difficulty bands are our own** cross-platform approximation (e.g. Band 3 ≈ CF 1400–1600 ≈ AtCoder 600–899 ≈ LeetCode Medium), not an official conversion.
 - **No AtCoder contest history:** the only source, `atcoder.jp/users/<you>/history`, is disallowed by AtCoder's robots.txt.
 - **Imported LeetCode solves have no dates**, so they count toward totals and topics but not the heatmap.
-- CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks are **extension only**: their terms or robots.txt rule out server-side access, so CodeLogs only takes what the extension reads in your own browser when you ask. It never asks for platform passwords or cookies.
+- CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks are **extension only**: their terms or robots.txt rule out server-side access, so CodeLogs only takes what the extension reads in your own browser, as you use it. It never asks for platform passwords or cookies.
 
 ## Running locally
 

@@ -1,10 +1,10 @@
 // @ts-check
 import { normalizeBaseUrl } from "./lib/leetcode.js";
 import { SYNC_PLATFORMS } from "./lib/registry.js";
-import { describeLeetcodeResult, describePlatformResult } from "./lib/describe.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
 /** @typedef {{ username: string, leetcodeHandle?: string | null, handles?: Record<string, HandleInfo> }} Me */
+/** @typedef {import("./lib/schedule.js").RunRecord} RunRecord */
 
 const STALE_MS = 90_000;
 
@@ -63,9 +63,14 @@ function applyTheme() {
 
 /** @type {Me | null} */
 let me = null;
+/** @type {{ base: string, token: string } | null} */
+let conn = null;
 /** @type {any} */
 let status = null;
+/** @type {Record<string, RunRecord>} */
+let runs = {};
 let includeDates = true;
+let autoSync = true;
 let connOpen = true;
 /** @type {number | null} */
 let refreshedFor = null;
@@ -111,7 +116,21 @@ function renderConnection() {
   const body = el("connBody");
   body.hidden = !connOpen;
   el("connHead").setAttribute("aria-expanded", String(connOpen));
-  el("connSummary").textContent = me ? `Connected as @${me.username}` : "Not connected";
+  el("connectView").hidden = conn !== null;
+  el("connectedView").hidden = conn === null;
+  input("autoSync").checked = autoSync;
+  el("connSummary").textContent = !conn
+    ? "Not connected"
+    : me
+      ? `Connected as @${me.username}`
+      : "Connected";
+}
+
+/** The last run's outcome under a row: green when it worked, quiet when logged out, red otherwise. */
+function lastRunLine(/** @type {RunRecord} */ run, /** @type {string} */ name) {
+  if (run.ok) return h("div", "last", run.text);
+  if (run.loggedOut) return h("div", "last quiet", `Not logged in to ${name} in this browser.`);
+  return h("div", "last error", run.text);
 }
 
 function renderRows() {
@@ -121,6 +140,7 @@ function renderRows() {
   for (const p of SYNC_PLATFORMS) {
     const info = handleFor(p.id);
     const mine = running && status.platform === p.id;
+    const run = runs[p.id];
 
     const row = h("li", "row");
     row.dataset.platform = p.id;
@@ -140,6 +160,7 @@ function renderRows() {
     }
     body.append(meta);
     if (mine) body.append(h("div", "step", status.message));
+    else if (run) body.append(lastRunLine(run, p.name));
     if (p.id === "leetcode") {
       const label = h("label", "check");
       const box = document.createElement("input");
@@ -156,37 +177,24 @@ function renderRows() {
 
     const btn = /** @type {HTMLButtonElement} */ (h("button", "btn sm", mine ? "Syncing" : "Sync"));
     btn.type = "button";
-    btn.disabled = running;
+    btn.disabled = running || !conn;
     btn.addEventListener("click", () => void startSync(p));
     row.append(btn);
     list.append(row);
   }
 }
 
+/** Messages that aren't about one platform: a revoked token, a failed connect, a dead job. */
 function renderResult() {
   const node = el("result");
   node.replaceChildren();
   node.classList.remove("error");
-  if (!status || status.state === "idle" || status.state === "running") {
-    if (status?.state === "running" && !isRunning()) {
-      node.textContent = "The last sync was interrupted. Try again.";
-      node.classList.add("error");
-    }
-    return;
-  }
-  const platform = SYNC_PLATFORMS.find((p) => p.id === status.platform);
-  if (platform) node.append(h("span", "who", platform.name));
-  if (status.state === "error") {
+  if (status?.state === "running" && !isRunning()) {
+    node.textContent = "The last sync was interrupted. Try again.";
     node.classList.add("error");
-    node.append(document.createTextNode(status.message));
-  } else {
-    node.append(
-      document.createTextNode(
-        status.platform === "leetcode"
-          ? describeLeetcodeResult(status.result ?? {})
-          : describePlatformResult(status.result ?? {}),
-      ),
-    );
+  } else if (status?.state === "error" && status.platform === null && status.message) {
+    node.textContent = status.message;
+    node.classList.add("error");
   }
 }
 
@@ -198,64 +206,63 @@ function render() {
 
 // ---- Connection ----
 
-async function save() {
+async function connect() {
   const base = normalizeBaseUrl(input("baseUrl").value);
   if (!base) {
-    connOpen = true;
-    render();
     show(el("conn"), "Use an https:// URL (or http://localhost).", "error");
-    return null;
+    return;
   }
-  // Must run directly inside the click handler (user gesture). localhost is already granted.
-  if (!base.startsWith("http://localhost")) {
-    const granted = await chrome.permissions.request({ origins: [`${base}/*`] });
-    if (!granted) {
-      show(el("conn"), "Permission to contact that CodeLogs site was denied.", "error");
-      return null;
-    }
+  // Inside the click (a user gesture), one prompt asks for the CodeLogs site (unless it's
+  // localhost, which is always allowed) and the five platforms read in their own tabs.
+  const local = base.startsWith("http://localhost");
+  const origins = [
+    ...(local ? [] : [`${base}/*`]),
+    ...SYNC_PLATFORMS.filter((p) => p.kind === "page").flatMap((p) => p.permissions),
+  ];
+  const granted = await chrome.permissions.request({ origins });
+  // Declining the platforms still connects; each one asks again on its first Sync.
+  if (!granted && !local) {
+    show(el("conn"), "CodeLogs needs permission to contact that site.", "error");
+    return;
   }
-  const token = input("token").value.trim();
-  await chrome.storage.local.set({ baseUrl: base, token });
-  input("baseUrl").value = base;
-  show(el("conn"), "Saved.");
-  return { base, token };
+  await chrome.storage.local.set({ baseUrl: base });
+  await chrome.runtime.sendMessage({ type: "connect", base });
+  show(el("conn"), "Finish in the CodeLogs tab. Sign in there if it asks.");
+}
+
+async function disconnect() {
+  await chrome.storage.local.remove(["token", "meCache", "runs"]);
+  show(
+    el("conn"),
+    "Disconnected. Revoke it under Connected browsers on the CodeLogs Connect page.",
+  );
 }
 
 /**
- * Loads /api/extension/me and shows it. `silent` keeps quiet when nothing is set up yet.
- * @param {{ base: string, token: string }} conn
- * @param {boolean} silent
+ * Loads /api/extension/me and shows it. The service worker forgets a revoked token itself, but
+ * a 401 here clears it too.
+ * @param {{ base: string, token: string }} c
  */
-async function refreshMe(conn, silent) {
-  if (!silent) show(el("conn"), "Checking...");
+async function refreshMe(c) {
   try {
-    const res = await fetch(`${conn.base}/api/extension/me`, {
-      headers: { Authorization: `Bearer ${conn.token}` },
+    const res = await fetch(`${c.base}/api/extension/me`, {
+      headers: { Authorization: `Bearer ${c.token}` },
     });
     if (res.status === 401) {
-      me = null;
-      connOpen = true;
-      render();
-      return show(el("conn"), "Token invalid or revoked.", "error");
+      await chrome.storage.local.remove(["token", "meCache"]);
+      return show(
+        el("conn"),
+        "This browser was disconnected from CodeLogs. Connect again.",
+        "error",
+      );
     }
-    if (!res.ok) return show(el("conn"), `CodeLogs returned HTTP ${res.status}.`, "error");
+    if (!res.ok) return;
     me = await res.json();
     await chrome.storage.local.set({ meCache: me });
-    if (!silent) {
-      show(el("conn"), "Connected.", "ok");
-      connOpen = false;
-    }
     render();
   } catch {
-    if (!silent) show(el("conn"), "Could not reach CodeLogs at that URL.", "error");
+    // offline or CodeLogs down: keep the cached view
   }
-}
-
-async function check() {
-  const saved = await save();
-  if (!saved) return;
-  if (!saved.token) return show(el("conn"), "Enter your token first.", "error");
-  await refreshMe(saved, false);
 }
 
 // ---- Sync ----
@@ -263,23 +270,23 @@ async function check() {
 /** @param {(typeof SYNC_PLATFORMS)[number]} p */
 async function startSync(p) {
   show(el("conn"), "");
-  // Host access for a platform is asked here, inside the click, the first time it is synced.
+  // Host access for a platform is asked here, inside the click, if it wasn't granted at Connect.
   if (p.kind === "page") {
     const granted = await chrome.permissions.request({ origins: p.permissions });
     if (!granted) {
-      status = {
-        state: "error",
-        platform: p.id,
-        message: `Allow access to ${p.name} to sync it. CodeLogs only reads your solved problems there.`,
+      runs = {
+        ...runs,
+        [p.id]: {
+          at: Date.now(),
+          okAt: runs[p.id]?.okAt ?? null,
+          ok: false,
+          loggedOut: false,
+          auto: false,
+          text: `Allow access to ${p.name} to sync it. CodeLogs only reads your solved problems there.`,
+        },
       };
       return render();
     }
-  }
-  const s = await chrome.storage.local.get(["baseUrl", "token"]);
-  if (!normalizeBaseUrl(String(s.baseUrl ?? "")) || !s.token) {
-    connOpen = true;
-    render();
-    return show(el("conn"), "Save your CodeLogs URL and token first.", "error");
   }
   await chrome.runtime.sendMessage({ type: "sync", platform: p.id, includeDates });
 }
@@ -288,20 +295,37 @@ async function startSync(p) {
 function onStatus(st) {
   status = st;
   render();
-  // A finished sync changes the handle row (verified, last synced): reload it from the server.
-  if (st?.state === "done" && st.finishedAt && st.finishedAt !== refreshedFor) {
+  // A finished sync changes the handle rows (verified, last synced): reload them from the server.
+  if (st?.state === "done" && st.finishedAt && st.finishedAt !== refreshedFor && conn) {
     refreshedFor = st.finishedAt;
-    chrome.storage.local.get(["baseUrl", "token"]).then((s) => {
-      const base = normalizeBaseUrl(String(s.baseUrl ?? ""));
-      if (base && s.token) void refreshMe({ base, token: String(s.token) }, true);
-    });
+    void refreshMe(conn);
   }
+}
+
+/** Reads the connection from storage; refreshes `me` when it changed. */
+async function loadConnection() {
+  const s = await chrome.storage.local.get(["baseUrl", "token", "meCache", "runs", "autoSync"]);
+  const base = normalizeBaseUrl(String(s.baseUrl ?? ""));
+  const next = base && typeof s.token === "string" && s.token ? { base, token: s.token } : null;
+  const changed = next?.token !== conn?.token;
+  conn = next;
+  runs = s.runs ?? {};
+  autoSync = s.autoSync !== false;
+  me = conn && s.meCache && typeof s.meCache.username === "string" ? s.meCache : null;
+  if (typeof s.baseUrl === "string") input("baseUrl").value = s.baseUrl;
+  if (changed) connOpen = conn === null;
+  render();
+  if (changed && conn) await refreshMe(conn);
 }
 
 // ---- Wiring ----
 
-el("save").addEventListener("click", save);
-el("check").addEventListener("click", check);
+el("connect").addEventListener("click", connect);
+el("disconnect").addEventListener("click", disconnect);
+input("autoSync").addEventListener("change", () => {
+  autoSync = input("autoSync").checked;
+  chrome.storage.local.set({ autoSync });
+});
 el("connHead").addEventListener("click", () => {
   connOpen = !connOpen;
   renderConnection();
@@ -315,28 +339,17 @@ el("theme").addEventListener("click", () => {
 chrome.storage.session.onChanged.addListener((changes) => {
   if (changes.status) onStatus(changes.status.newValue);
 });
+chrome.storage.local.onChanged.addListener((changes) => {
+  if (changes.token || changes.runs || changes.baseUrl) void loadConnection();
+});
 
 (async () => {
-  const s = await chrome.storage.local.get([
-    "baseUrl",
-    "token",
-    "includeDates",
-    "theme",
-    "meCache",
-  ]);
+  if (new URLSearchParams(location.search).has("tab")) document.body.classList.add("in-tab");
+  const s = await chrome.storage.local.get(["includeDates", "theme"]);
   if (s.theme === "light" || s.theme === "dark") theme = s.theme;
   applyTheme();
-  if (typeof s.baseUrl === "string") input("baseUrl").value = s.baseUrl;
-  if (typeof s.token === "string") input("token").value = s.token;
   if (typeof s.includeDates === "boolean") includeDates = s.includeDates;
-  if (s.meCache && typeof s.meCache.username === "string") {
-    me = s.meCache;
-    connOpen = false;
-  }
   status = (await chrome.storage.session.get("status")).status ?? null;
   if (status?.state === "done") refreshedFor = status.finishedAt ?? null;
-  render();
-
-  const base = normalizeBaseUrl(String(s.baseUrl ?? ""));
-  if (base && s.token) await refreshMe({ base, token: String(s.token) }, true);
+  await loadConnection();
 })();

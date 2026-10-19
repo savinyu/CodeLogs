@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
 function unauthorized() {
   return Response.json(
-    { error: "Invalid or revoked token. Create a new one in CodeLogs Settings." },
+    { error: "Invalid or revoked token. Connect the extension again from its popup." },
     { status: 401, headers: noStore },
   );
 }

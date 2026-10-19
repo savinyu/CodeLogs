@@ -3,6 +3,7 @@ import {
   extensionLeetcodeSchema,
   generateToken,
   hashToken,
+  isExtensionConnectRequest,
   parseBearer,
   parseTokenName,
   TOKEN_PATTERN,
@@ -68,5 +69,27 @@ describe("extension upload schema", () => {
     ],
   ])("rejects %s", (_name, body) => {
     expect(extensionLeetcodeSchema.safeParse(body).success).toBe(false);
+  });
+});
+
+describe("isExtensionConnectRequest", () => {
+  const url = "https://codelogs.example/api/extension/connect";
+  const good = { "x-codelogs-extension": "connect", origin: "https://codelogs.example" };
+  const check = (h: Record<string, string>) => isExtensionConnectRequest(new Headers(h), url);
+
+  it("accepts the extension header from our own origin", () => {
+    expect(check(good)).toBe(true);
+  });
+  it("rejects a missing header", () => {
+    expect(check({ origin: good.origin })).toBe(false);
+  });
+  it("rejects a wrong header value", () => {
+    expect(check({ ...good, "x-codelogs-extension": "other" })).toBe(false);
+  });
+  it("rejects a missing origin", () => {
+    expect(check({ "x-codelogs-extension": "connect" })).toBe(false);
+  });
+  it("rejects a cross-site origin", () => {
+    expect(check({ ...good, origin: "https://evil.example" })).toBe(false);
   });
 });

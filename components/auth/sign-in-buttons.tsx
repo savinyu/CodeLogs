@@ -7,11 +7,13 @@ export function SignInButtons({
   size,
   stacked,
   className,
+  callbackURL,
 }: {
   size?: React.ComponentProps<typeof SignInButton>["size"];
   /** Full-width buttons in a column (for popovers). */
   stacked?: boolean;
   className?: string;
+  callbackURL?: string;
 }) {
   return (
     <div className={cn("flex gap-2.5", stacked ? "flex-col" : "flex-wrap", className)}>
@@ -20,6 +22,7 @@ export function SignInButtons({
           key={provider}
           provider={provider}
           size={size}
+          callbackURL={callbackURL}
           className={stacked ? "w-full" : undefined}
         />
       ))}
