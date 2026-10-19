@@ -1,7 +1,7 @@
 // @ts-check
 // Pure helpers shared by the service worker and the tests. No `chrome`, no `fetch`.
 
-/** @typedef {{ ok: true, userName: string, slugs: string[], numSolved: number | null } | { ok: false, error: string }} ParsedProblems */
+/** @typedef {{ ok: true, userName: string, slugs: string[], numSolved: number | null } | { ok: false, error: string, loggedOut?: true }} ParsedProblems */
 /** @typedef {{ slug: string, solvedAt: number | null }} Solve */
 
 const SLUG_RE = /^[a-z0-9-]{1,120}$/;
@@ -22,7 +22,11 @@ export function parseProblemsAll(json) {
   }
   const userName = typeof json.user_name === "string" ? json.user_name.trim() : "";
   if (userName === "") {
-    return { ok: false, error: "You are not logged in on leetcode.com. Log in and try again." };
+    return {
+      ok: false,
+      error: "You are not logged in on leetcode.com. Log in and try again.",
+      loggedOut: true,
+    };
   }
   /** @type {Set<string>} */
   const slugs = new Set();
@@ -69,6 +73,22 @@ export function collectAcceptedDates(pages, into = new Map()) {
     }
   }
   return into;
+}
+
+/**
+ * The oldest submission time on one /api/submissions/ page, in epoch seconds (null if none).
+ * @param {unknown} page
+ * @returns {number | null}
+ */
+export function oldestSubmissionTime(page) {
+  if (!isRecord(page) || !Array.isArray(page.submissions_dump)) return null;
+  /** @type {number | null} */
+  let oldest = null;
+  for (const sub of page.submissions_dump) {
+    const ts = isRecord(sub) ? toEpochSeconds(sub.timestamp) : null;
+    if (ts !== null && (oldest === null || ts < oldest)) oldest = ts;
+  }
+  return oldest;
 }
 
 /**

@@ -1,16 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { Note } from "@/components/kit/note";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { ApiTokenSummary } from "@/lib/api-tokens";
-import {
-  createExtensionToken,
-  revokeExtensionToken,
-  type CreateTokenState,
-} from "./extension-actions";
+import { revokeExtensionToken } from "./extension-actions";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -21,98 +14,18 @@ function formatDate(iso: string): string {
   });
 }
 
-export function ExtensionTokens({
-  tokens,
-  maxTokens,
-}: {
-  tokens: ApiTokenSummary[];
-  maxTokens: number;
-}) {
-  const [state, action, pending] = useActionState<CreateTokenState, FormData>(
-    createExtensionToken,
-    null,
-  );
-  const atLimit = tokens.length >= maxTokens;
-
+export function ExtensionTokens({ tokens }: { tokens: ApiTokenSummary[] }) {
   return (
-    <div className="grid gap-4">
-      <form action={action} className="grid gap-1.5">
-        <Label htmlFor="extension-token-name">Token name (optional)</Label>
-        <div className="flex flex-wrap items-center gap-2">
-          <Input
-            id="extension-token-name"
-            name="name"
-            placeholder="Browser extension"
-            maxLength={60}
-            autoComplete="off"
-            className="h-11 min-w-0 flex-1 basis-48 rounded-full border-0 bg-raised px-4 dark:bg-raised"
-          />
-          <Button type="submit" disabled={pending || atLimit}>
-            {pending ? "Creating…" : "Create token"}
-          </Button>
-        </div>
-        {atLimit && (
-          <p className="text-sm text-muted-foreground">
-            You have {maxTokens} tokens, the maximum. Revoke one to create another.
-          </p>
-        )}
-      </form>
-
-      <div aria-live="polite">
-        {state?.ok === false && (
-          <Note className="bg-primary-soft text-primary-ink">
-            <p>{state.error}</p>
-          </Note>
-        )}
-        {state?.ok === true && <NewToken key={state.token} token={state.token} />}
-      </div>
-
+    <div className="grid gap-2">
+      <h3 className="text-sm font-medium">Connected browsers</h3>
       {tokens.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No tokens yet.</p>
+        <p className="text-sm text-muted-foreground">No browsers connected yet.</p>
       ) : (
         <ul className="grid gap-2">
           {tokens.map((t) => (
             <TokenRow key={t.id} token={t} />
           ))}
         </ul>
-      )}
-    </div>
-  );
-}
-
-function NewToken({ token }: { token: string }) {
-  const [copied, setCopied] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(token);
-      setCopied(true);
-      setFailed(false);
-    } catch {
-      setFailed(true);
-    }
-  }
-
-  return (
-    <div className="grid gap-2 rounded-item bg-raised p-4 ring-1 ring-primary/40">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input
-          readOnly
-          value={token}
-          aria-label="New API token"
-          onFocus={(e) => e.currentTarget.select()}
-          className="h-11 min-w-0 flex-1 basis-48 rounded-full border-0 bg-card px-4 font-mono text-xs dark:bg-card"
-        />
-        <Button type="button" variant="outline" onClick={copy}>
-          {copied ? "Copied" : "Copy"}
-        </Button>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        Copy it now: you won&apos;t be able to see it again.
-      </p>
-      {failed && (
-        <p className="text-sm text-primary-ink">Could not copy. Select the text and copy it.</p>
       )}
     </div>
   );

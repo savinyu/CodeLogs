@@ -2,8 +2,13 @@
 // LeetCode sync. Unlike the other platforms it runs its requests from the service worker (the
 // browser sends the leetcode.com cookies because the extension has host access to it).
 // Cookies stay in the browser: only problem slugs and timestamps go to CodeLogs.
-import { ReaderError, sleep } from "./common.js";
-import { parseProblemsAll, collectAcceptedDates, buildUpload } from "./leetcode.js";
+import { NotLoggedInError, ReaderError, sleep } from "./common.js";
+import {
+  parseProblemsAll,
+  collectAcceptedDates,
+  buildUpload,
+  oldestSubmissionTime,
+} from "./leetcode.js";
 import { checkMe, postUpload } from "./server.js";
 
 const SUBMISSION_DELAY_MS = 1500;
@@ -11,11 +16,14 @@ const BACKOFF_MS = [10_000, 20_000];
 const MAX_PAGES = 400;
 
 /**
- * Walks /api/submissions/. Returns null if dates are unavailable.
+ * Walks /api/submissions/, newest first. Returns null if dates are unavailable. With `since`
+ * (epoch seconds) it stops at the first page reaching back past it: CodeLogs keeps the dates it
+ * already has, so an automatic sync only needs the submissions since the last one.
+ * @param {number | null} since
  * @param {(n: number) => Promise<void>} onPage
  * @returns {Promise<Map<string, number> | null>}
  */
-async function fetchDates(onPage) {
+async function fetchDates(since, onPage) {
   const dates = new Map();
   let offset = 0;
   let lastKey = "";
@@ -47,6 +55,8 @@ async function fetchDates(onPage) {
     page++;
     await onPage(page);
     if (json.has_next !== true) return dates;
+    const oldest = oldestSubmissionTime(json);
+    if (since !== null && oldest !== null && oldest < since) return dates;
     lastKey = typeof json.last_key === "string" ? json.last_key : "";
     offset += 20;
     await sleep(SUBMISSION_DELAY_MS);
@@ -55,10 +65,11 @@ async function fetchDates(onPage) {
 }
 
 /**
- * @param {{ base: string, token: string, includeDates: boolean, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ * `datesSince` (epoch seconds) limits the date walk to recent submissions; null walks them all.
+ * @param {{ base: string, token: string, includeDates: boolean, datesSince?: number | null, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
  */
-export async function runLeetcodeJob({ base, token, includeDates, setStatus }) {
-  await setStatus({ step: "connect", message: "Checking your CodeLogs token..." });
+export async function runLeetcodeJob({ base, token, includeDates, datesSince = null, setStatus }) {
+  await setStatus({ step: "connect", message: "Checking your CodeLogs connection..." });
   await checkMe(base, token);
 
   await setStatus({ step: "solved", message: "Reading your solved list from LeetCode..." });
@@ -70,14 +81,16 @@ export async function runLeetcodeJob({ base, token, includeDates, setStatus }) {
   }
   if (!res.ok) throw new ReaderError(`leetcode.com returned HTTP ${res.status}.`);
   const parsed = parseProblemsAll(await res.json().catch(() => null));
-  if (!parsed.ok) throw new ReaderError(parsed.error);
+  if (!parsed.ok) {
+    throw parsed.loggedOut ? new NotLoggedInError(parsed.error) : new ReaderError(parsed.error);
+  }
 
   /** @type {Map<string, number>} */
   let dates = new Map();
   let datesNote = "";
   if (includeDates) {
     await setStatus({ step: "dates", message: "Reading submission dates (page 0)..." });
-    const got = await fetchDates((n) =>
+    const got = await fetchDates(datesSince, (n) =>
       setStatus({ message: `Reading submission dates (page ${n})...` }),
     );
     if (got) dates = got;

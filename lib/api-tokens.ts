@@ -1,10 +1,11 @@
 // API token storage. Every query is scoped by userId, except lookup by hash for authentication.
 
 import "server-only";
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { apiTokens, users } from "@/lib/db/schema";
 import {
+  EXTENSION_TOKEN_NAME,
   generateToken,
   hashToken,
   MAX_TOKENS_PER_USER,
@@ -59,6 +60,47 @@ export async function createApiToken(
   await db
     .insert(apiTokens)
     .values({ userId, name, tokenHash: hashToken(token), tokenPrefix: tokenPrefix(token) });
+  return { ok: true, token };
+}
+
+/**
+ * Creates the token the browser extension gets when it connects itself. At the cap, the least
+ * recently used "Browser extension" token is replaced (delete + insert in one batch).
+ */
+export async function connectExtensionToken(
+  userId: string,
+): Promise<{ ok: true; token: string } | { ok: false; error: string }> {
+  const [existing] = await db
+    .select({ n: count() })
+    .from(apiTokens)
+    .where(eq(apiTokens.userId, userId));
+  const token = generateToken();
+  const insert = db.insert(apiTokens).values({
+    userId,
+    name: EXTENSION_TOKEN_NAME,
+    tokenHash: hashToken(token),
+    tokenPrefix: tokenPrefix(token),
+  });
+  if ((existing?.n ?? 0) < MAX_TOKENS_PER_USER) {
+    await insert;
+    return { ok: true, token };
+  }
+  const [oldest] = await db
+    .select({ id: apiTokens.id })
+    .from(apiTokens)
+    .where(and(eq(apiTokens.userId, userId), eq(apiTokens.name, EXTENSION_TOKEN_NAME)))
+    .orderBy(sql`${apiTokens.lastUsedAt} asc nulls first`, asc(apiTokens.createdAt))
+    .limit(1);
+  if (!oldest) {
+    return {
+      ok: false,
+      error: `You have ${MAX_TOKENS_PER_USER} tokens. Revoke one on the CodeLogs Connect page, then connect again.`,
+    };
+  }
+  await db.batch([
+    db.delete(apiTokens).where(and(eq(apiTokens.userId, userId), eq(apiTokens.id, oldest.id))),
+    insert,
+  ]);
   return { ok: true, token };
 }
 

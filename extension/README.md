@@ -2,18 +2,46 @@
 
 Syncs your solved problems from **LeetCode, CodeChef, Code360, HackerRank, InterviewBit and
 GeeksforGeeks** to your CodeLogs account. These sites don't share your full history publicly, so the
-extension reads it from your own logged-in browser, only when you click **Sync**.
+extension reads it from your own logged-in browser: once when you connect, then by itself while you
+use those sites, and whenever you click **Sync**.
 
 ## Install
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick this `extension/` folder.
-3. In CodeLogs, go to **Connect** and create an extension token (it starts with `cl_`).
-4. Open the extension popup, enter your CodeLogs URL (default `http://localhost:3000`) and the token,
-   then click **Check connection**. For a non-localhost https URL Chrome asks for permission to
-   contact it. Once it works, the Connection card collapses to "Connected as @you".
-5. Be logged in to the platform in this browser, then click **Sync** on its row. The first time you
-   sync a platform, Chrome asks to let CodeLogs access that site.
+3. A welcome tab opens (the popup's own page). Click **Connect to CodeLogs**. Chrome asks once for
+   access to the five platform sites; declining still connects, and each one asks again on its
+   first Sync. A CodeLogs tab opens at `/extension/connect`: sign in there if it asks, and the
+   extension links itself. There is no token to copy. The CodeLogs URL (default
+   `http://localhost:3000`) is under **Advanced**; a non-localhost https URL is asked for in the same
+   prompt.
+4. It then syncs every platform once, opening a background tab for each of the five it has access to
+   (closed afterwards). Platforms you aren't logged in to are skipped quietly.
+
+## Connecting
+
+The connect tab's page carries `data-codelogs-connect="signed-out"` or `"ready"`. Once it says
+"ready", the extension runs a small script in that tab that calls `POST /api/extension/connect` as a
+same-origin request with the user's own CodeLogs session, plus an `X-CodeLogs-Extension: connect`
+header (the route also checks `Origin`, so another site can't trigger it). CodeLogs answers with a
+new token, named "Browser extension". The extension keeps it in `chrome.storage.local` and tells the
+page (`codelogs:extension-connect` event, and the same result in `sessionStorage`). Only the tab the
+extension opened is read, within 30 minutes. At the 5-token cap the least recently used "Browser
+extension" token is replaced. Connect lists them under **Connected browsers**, where each can be
+revoked; a revoked token disconnects the extension on its next request.
+
+## Automatic sync
+
+On by default; the **Sync automatically** switch in the popup turns it off.
+
+- **On a visit:** when a page on a platform finishes loading (Code360: only under `/code360/`) and
+  that platform's last sync is older than 6 hours, it syncs in **that tab**. It never opens a tab of
+  its own for this. A logged-out or failed visit waits 10 minutes before trying again.
+- **LeetCode daily:** an hourly alarm syncs LeetCode when its last sync is older than a day (no tab
+  needed). Automatic LeetCode syncs read submission dates only back to a day before the last
+  success; CodeLogs keeps the dates it already has.
+- One sync at a time; an automatic one is skipped while another runs. Each row in the popup shows
+  its last outcome.
 
 For CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks the first sync also connects the
 handle in CodeLogs if you haven't added it, and verifies it: the account you are logged in to is the
@@ -42,24 +70,27 @@ or id. The responses they look at contain emails and access tokens; those never 
 
 To CodeLogs only: the platform handle, problem ids, titles, URLs on the platform's own site,
 difficulty labels, tags where the site gives them, solve dates, counts and daily activity, with your
-CodeLogs token in an `Authorization` header. It **never sends cookies, passwords, tokens from the
+extension's CodeLogs token in an `Authorization` header. It **never sends cookies, passwords, tokens from the
 platforms, emails or your code**, and it doesn't request submission sources.
 
 ## Politeness
 
-Only on a click. One request at a time, at least 1.5 s apart. On HTTP 429 or 403 it waits 10 s, then
+On connect, on a click, or at most every 6 hours per platform while you visit it (LeetCode: also
+daily). One request at a time, at least 1.5 s apart. On HTTP 429 or 403 it waits 10 s, then
 20 s, then stops with a message. Page caps per platform: CodeChef 400, HackerRank 200, InterviewBit
 150, Code360 100, LeetCode submissions 400. Code360's login is checked again at the end, and
 the upload is dropped if the account changed.
 
 ## Permissions
 
-- `storage`: your CodeLogs URL, token and theme; sync status.
-- `scripting`: runs the read functions inside the platform's tab.
+- `storage`: your CodeLogs URL, token, settings and theme; sync status and each platform's last run.
+- `scripting`: runs the read functions inside the platform's tab, and the connect script in the
+  CodeLogs tab.
+- `alarms`: the hourly check for LeetCode's daily sync.
 - Host access to `leetcode.com` (always) and `localhost:3000`.
-- Optional host access, asked the first time you sync that platform (not at install):
-  `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`, `www.interviewbit.com`,
-  `www.geeksforgeeks.org`. A non-localhost CodeLogs URL is asked for when you save it.
+- Optional host access, asked when you click Connect (or on a platform's first Sync if declined),
+  never at install: `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`,
+  `www.interviewbit.com`, `www.geeksforgeeks.org`, and a non-localhost CodeLogs URL.
 
 ## Caveats
 

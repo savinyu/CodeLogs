@@ -43,19 +43,37 @@
         </svg>
       </button>
       <div id="connBody" class="conn-body">
-        <label class="field" for="baseUrl">CodeLogs URL</label>
-        <input id="baseUrl" type="url" value="http://localhost:3000" spellcheck="false" />
-        <label class="field" for="token">Token</label>
-        <input
-          id="token"
-          type="password"
-          placeholder="cl_..."
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <div class="actions">
-          <button id="check" type="button" class="btn">Check connection</button>
-          <button id="save" type="button" class="btn secondary">Save</button>
+        <div id="connectView">
+          <p class="lead">
+            Link this browser to your CodeLogs account. You sign in on CodeLogs: there's no token to
+            copy.
+          </p>
+          <p class="lead">
+            Once connected, CodeLogs syncs your solved problems by itself: right away, whenever you
+            visit one of these sites (at most every 6 hours) and LeetCode once a day. It sends only
+            handles, problem ids, titles, difficulty, dates and counts, never cookies, passwords or
+            code.
+          </p>
+          <div class="actions">
+            <button id="connect" type="button" class="btn">Connect to CodeLogs</button>
+          </div>
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <label class="field" for="baseUrl">CodeLogs URL</label>
+            <input id="baseUrl" type="url" value="http://localhost:3000" spellcheck="false" />
+          </details>
+        </div>
+        <div id="connectedView" hidden>
+          <label class="check">
+            <input id="autoSync" type="checkbox" checked />
+            Sync automatically
+          </label>
+          <p class="lead">
+            When you visit one of these sites (at most every 6 hours), and LeetCode once a day.
+          </p>
+          <div class="actions">
+            <button id="disconnect" type="button" class="btn secondary sm">Disconnect</button>
+          </div>
         </div>
         <p id="conn" class="note" role="status"></p>
       </div>

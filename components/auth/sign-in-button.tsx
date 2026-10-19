@@ -24,12 +24,15 @@ export function SignInButton({
   size,
   label,
   className,
+  callbackURL = "/today",
 }: {
   provider: SocialProvider;
   /** Defaults to "Continue with <provider>". */
   label?: string;
   size?: React.ComponentProps<typeof Button>["size"];
   className?: string;
+  /** Where to land after signing in. */
+  callbackURL?: string;
 }) {
   const [pending, setPending] = useState(false);
   const { name, Icon, variant } = PROVIDERS[provider];
@@ -40,7 +43,7 @@ export function SignInButton({
       // On success the browser navigates to the provider, so keep the pending state.
       const result = await signIn.social({
         provider,
-        callbackURL: "/today",
+        callbackURL,
         errorCallbackURL: "/",
       });
       if (result.error) throw new Error(result.error.message);
