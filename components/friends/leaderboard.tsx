@@ -37,6 +37,11 @@ export function Leaderboard({
       ? `You and ${friendCount} ${friendCount === 1 ? "friend" : "friends"}`
       : `${listed.toLocaleString("en-US")} public ${listed === 1 ? "profile" : "profiles"} · top 10${isListed ? " and you" : ""}`;
 
+  // Only platforms that earned points on this board.
+  const onBoard = PLATFORM_ORDER.filter((p) =>
+    [...rows, ...(meRow ? [meRow] : [])].some((r) => (r.platforms[p] ?? 0) > 0),
+  );
+
   return (
     <Panel size="lg" aria-labelledby="board-title">
       <PanelHeader
@@ -92,14 +97,16 @@ export function Leaderboard({
           </span>
         </Note>
       ) : null}
-      <ul className="mt-4 flex list-none flex-wrap gap-x-4 gap-y-1.5 p-0 text-sm text-muted-foreground">
-        {PLATFORM_ORDER.map((p) => (
-          <li key={p} className="flex items-center gap-1.5">
-            <PlatformDot platform={p} />
-            {PLATFORM_META[p].name}
-          </li>
-        ))}
-      </ul>
+      {onBoard.length > 0 ? (
+        <ul className="mt-4 flex list-none flex-wrap gap-x-4 gap-y-1.5 p-0 text-sm text-muted-foreground">
+          {onBoard.map((p) => (
+            <li key={p} className="flex items-center gap-1.5">
+              <PlatformDot platform={p} />
+              {PLATFORM_META[p].name}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </Panel>
   );
 }

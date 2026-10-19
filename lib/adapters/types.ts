@@ -1,9 +1,13 @@
 // Platform adapter contract. Adapters are pure: HTTP in, normalized data out.
 // They never import the DB, so fixture tests run without one. See PLAN.md §6.
 
-import type { PLATFORMS } from "@/lib/db/schema";
+import type { EXTENSION_PLATFORMS, PLATFORMS, SYNCED_PLATFORMS } from "@/lib/db/schema";
 
 export type PlatformId = (typeof PLATFORMS)[number];
+/** Platforms the server syncs through an adapter: Codeforces, AtCoder, LeetCode. */
+export type SyncedPlatformId = (typeof SYNCED_PLATFORMS)[number];
+/** Platforms only the browser extension reads (PLAN-v2.md §9). */
+export type ExtensionPlatformId = (typeof EXTENSION_PLATFORMS)[number];
 
 /** full = every accepted problem; recent_only = counts + last N solves (LeetCode); counts_only = totals only. */
 export type HistoryCompleteness = "full" | "recent_only" | "counts_only";
@@ -123,7 +127,7 @@ export interface PlatformCapabilities {
 }
 
 export interface PlatformAdapter {
-  platform: PlatformId;
+  platform: SyncedPlatformId;
   capabilities: PlatformCapabilities;
   /** Minimum gap between requests: CF 2000, AtCoder 1100, LC 1000. */
   minDelayMs: number;
@@ -146,7 +150,7 @@ export interface CatalogProblem {
 }
 
 export interface CatalogAdapter {
-  platform: PlatformId;
+  platform: SyncedPlatformId;
   /** Used only by the syncCatalogs cron. */
   fetchCatalog(): Promise<CatalogProblem[]>;
 }

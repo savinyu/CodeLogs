@@ -161,4 +161,50 @@ Legend as in PLAN.md: 🧭 captain (Opus), 🤖 Sonnet 5.5 subagent with a preci
 - [x] Google sign-in beside GitHub (owner request, 18 Oct 2026): optional `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, buttons only for configured providers; same verified email links to the same user (Better Auth implicit linking); Google users get a username from their email's local part (`-2`, `-3` on clashes, GitHub logins too); new `users.github_login` (migration `0008`, applied to Neon, backfilled) is what the profile shows as the verified GitHub link
 - [x] 👤 Owner: Google OAuth client and a real Google sign-in, in production too (18 Oct 2026)
 - [x] Striver's 180 sheet (§1), and sheets start unfollowed for new users (owner, 18 Oct 2026). A section with no LeetCode problem (Mathematics) shows "Not tracked" and isn't offered as training in Topics or Today
+- [x] V11 more platforms (§9), built 18 Oct 2026 on `v2-platforms`: contract and migration `0009` (applied to dev Neon), `POST /api/extension/platform` (checked end to end against the dev server: a 170-problem GFG upload connects and verifies the handle, a repeat adds nothing, a different logged-in user gets 409), Connect/Progress/totals for the five, and the extension 0.2.0 (one popup for LeetCode and the five, in the site's palette and fonts, light and dark). HackerRank's count is the distinct solved list when it's complete, since its badge `solved` numbers overlap across domains
+- [ ] 👤 Owner: apply migration `0009` to production Neon, then the PR into `v2` can merge
+- [ ] 👤 Owner: load the unpacked extension and Sync each of the five while logged in. The identity reads and the logged-in lists (CodeChef `/recent/user`, HackerRank submissions, InterviewBit `has_solved`, Code360 `view_solved_problems`) were built from research and synthetic fixtures, not a real session. 19 Oct 2026: InterviewBit verified in a real session (9 solves uploaded; `__INTERVIEWBIT__.user.username`, `has_solved`), HackerRank's identity verified (`/rest/contests/master/hackers/me` → `model.username`; the owner's account has no submissions, so the list is untested). A tab opened before logging in reads as logged out, so a `NotLoggedInError` in a reused tab is retried in a fresh one
 - [ ] 👤 Owner: click through `v2` (Today's Mark done, Sheets ticks and follows, Friends with a second account, Settings daily goal), then decide when `v2` replaces `main`
+
+## 9. More platforms: CodeChef, Code360, HackerRank, InterviewBit, GFG (V11, from 18 Oct 2026)
+### Decisions (owner, 18 Oct 2026)
+- **These five are the targets.** Platforms with open public APIs (DMOJ, Codewars, yukicoder, …; `scripts/spike/platforms/public-api-platforms.md`) are out of scope.
+- **Extension only.** The server never fetches these five, and there is no server "counts" layer for them. This replaces PLAN.md §4 "More platforms" for them. Why (`scripts/spike/platforms/codolio-platforms.md`): CodeChef's terms ban spidering and scraping; GFG's ban bots and scripts; InterviewBit's ban spiders and its robots.txt disallows `/profile`; HackerRank's robots.txt disallows `/rest/` and `/profile/`; Code360's terms couldn't be read.
+- **Other routes considered and dropped:** server fetches of the public JSON (above); CodeChef's official API (the developer portal is gone, and access is by email to api@codechef.com only; the owner may ask, not planned); manual count entry on Connect (owner: no); third-party aggregators (they scrape, so the same problem); a bookmarklet (the extension with worse UX).
+- **Verification is a login match.** A handle on these platforms becomes verified when the extension uploads while the browser is logged in to that platform as that handle. There's no bio code. The first upload also connects the handle if the user hasn't added it on Connect. Someone hand-crafting requests with their own CodeLogs token could forge it; accepted.
+- **How the extension reads:** only when the user clicks Sync, inside a tab of the platform's own site (an open one, or a background tab it opens and closes), using the same requests that site's frontend makes, with the user's own session. One request at a time, at least 1.5 s apart, with back-off on 429/403. It sends CodeLogs only handles, problem ids, titles, URLs, difficulty labels, dates and counts: never cookies, passwords or code. Host access for each platform is an optional permission, asked for the first time that platform is synced.
+
+### What each platform gives
+Public data was verified on 18 Oct 2026; the logged-in endpoints are in `scripts/spike/platforms/logged-in-endpoints.md`, and they need the owner's logged-in browser to confirm.
+
+| Platform | Count | Solved list | Dates | Difficulty | Calendar |
+|---|---|---|---|---|---|
+| GFG | `total_problems_solved` | yes (`problems/submissions/` POST) | yes | School/Basic/Easy/Medium/Hard | – |
+| CodeChef | profile page "Total Problems Solved" | names only publicly; logged-in list to confirm | no | – | to confirm |
+| HackerRank | badges' `solved`, summed | recent challenges only; logged-in list to confirm | partly | – | daily submissions |
+| InterviewBit | `total_problems_solved` | no | no | very_easy/easy/medium/hard | daily submissions |
+| Code360 | `total_count` | logged in only (`view_solved_problems`) | no | Easy/Moderate/Hard/Ninja | to confirm |
+
+### How the data counts
+- **Totals and tiles** use the platform's own count (`platform_stats` kind `ext_counts`: total, the counts by label, and an Easy/Medium/Hard split), shown as "reported" like LeetCode's.
+- **Solve rows** come from the solved list where there is one (GFG now; others once the logged-in lists are confirmed), as stub `problems` rows with the platform's difficulty label banded by `lib/sync/difficulty.ts`. They feed Recent solves, Difficulty and Solves per month.
+- **Activity** comes from the platform's daily submission counts where it has them (HackerRank, InterviewBit), otherwise from the solve dates.
+- **A real zero** (the platform answered, nothing solved) is a successful sync that verifies the handle (owner, 19 Oct 2026). Progress hides a platform tile that is a confirmed zero (synced, 0 solved) but keeps pending or failing ones for their status chip; the public profile and OG image list only platforms with solves.
+- **Boards** count dated solves of verified handles, as for every platform, so a counts-only platform adds no weekly points.
+- **Not yet:** topics and recommendations (GFG's list has no tags; InterviewBit's topic counts could feed scoring later), contests (CodeChef's rating history is on its profile page), and GFG problems in Striver's sheet.
+
+### Code
+- `lib/db/schema.ts`: `SYNCED_PLATFORMS` (CF, AtCoder, LC) and `EXTENSION_PLATFORMS` (the five), `PLATFORMS` = both; migration `0009_extension_platforms` appends the enum values. Types `SyncedPlatformId` / `ExtensionPlatformId`; `isSyncedPlatform()` in `lib/platforms.ts`. Adapters, sync claims, the stale-account cron, bio verification and "Sync now" are synced-only.
+- `lib/extension-upload.ts`: the upload contract (`extensionUploadSchema`), `ext_counts`, `difficultySplit`, allowed problem hosts.
+- `POST /api/extension/platform` (Bearer token) → `lib/extension-platform-ingest.ts`; `GET /api/extension/me` lists every connected handle.
+- `extension/`: one extension for LeetCode and the five, styled with the site's tokens and fonts, one reader per platform in `extension/lib/platforms/` (a self-contained fetch run in the platform's tab, plus a pure parser tested against fixtures).
+
+### V11 tasks (`v2-platforms`)
+- 🧭 Contract: enum and migration `0009` (applied to dev Neon), the synced/extension split, metadata, difficulty bands, colour tokens, upload contract
+- 🤖∥ Research: logged-in identity and solved-list endpoints for the five (from open-source extensions)
+- 🤖∥ Server ingest: `lib/extension-platform-ingest.ts`, the route, `me` with every handle, tests
+- 🤖∥ App: Connect cards for extension platforms (no Sync now or bio code; "Sync with the extension"), totals and tiles from `ext_counts`, every platform list and colour in Progress, Friends, the public profile and the OG image
+- 🤖 Extension: the restructure, the site theme, five readers with fixture tests, the popup listing each platform with its handle and a Sync button
+- 👤 Owner: log in to each platform and run Sync in the extension; the logged-in requests couldn't be tested without an account
+- 👤 Owner: apply migration `0009` to the production Neon database before the PR merges
+- **Done when:** an upload for each platform lands in the dashboard (totals, tiles, recent solves where there is a list), the extension matches the site in light and dark, and the checks pass.

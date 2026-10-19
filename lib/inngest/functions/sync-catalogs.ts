@@ -1,11 +1,11 @@
 import "server-only";
 import { cron } from "inngest";
-import type { PlatformId } from "@/lib/adapters/types";
+import type { SyncedPlatformId } from "@/lib/adapters/types";
 import { catalogSyncEvent, inngest } from "../client";
 
 /** Codeforces and AtCoder refresh daily; LeetCode only on Sundays (PLAN §4). */
-export function catalogPlatformsFor(date: Date): PlatformId[] {
-  const platforms: PlatformId[] = ["codeforces", "atcoder"];
+export function catalogPlatformsFor(date: Date): SyncedPlatformId[] {
+  const platforms: SyncedPlatformId[] = ["codeforces", "atcoder"];
   if (date.getUTCDay() === 0) platforms.push("leetcode");
   return platforms;
 }

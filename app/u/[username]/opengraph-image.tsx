@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import type { PlatformId } from "@/lib/adapters/types";
 import { getDashboardData, getPublicProfile } from "@/lib/dashboard/queries";
 import { PLATFORM_META } from "@/lib/platforms";
 
@@ -17,7 +18,16 @@ const COLOR = {
   primaryForeground: "#ffffff",
   muted: "#6c5c62",
 };
-const PLATFORM_HEX = { codeforces: "#2563eb", atcoder: "#0d8a7e", leetcode: "#d97706" } as const;
+const PLATFORM_HEX: Record<PlatformId, string> = {
+  codeforces: "#2563eb",
+  atcoder: "#0d8a7e",
+  leetcode: "#d97706",
+  codechef: "#8a5a35",
+  code360: "#a21caf",
+  hackerrank: "#475467",
+  interviewbit: "#4338ca",
+  gfg: "#2f8d46",
+};
 
 export default async function Image({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -66,31 +76,33 @@ export default async function Image({ params }: { params: Promise<{ username: st
               {`${total.toLocaleString("en-US")} problems solved`}
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 12 }}>
-              {data.totals.map((t) => (
-                <div
-                  key={t.platform}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "10px 20px",
-                    borderRadius: 999,
-                    background: COLOR.card,
-                  }}
-                >
+              {data.totals
+                .filter((t) => t.solved > 0)
+                .map((t) => (
                   <div
+                    key={t.platform}
                     style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: 9,
-                      background: PLATFORM_HEX[t.platform],
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 20px",
+                      borderRadius: 999,
+                      background: COLOR.card,
                     }}
-                  />
-                  <div style={{ display: "flex", fontSize: 28, fontWeight: 600 }}>
-                    {`${PLATFORM_META[t.platform].name} ${t.solved}`}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 9,
+                        background: PLATFORM_HEX[t.platform],
+                      }}
+                    />
+                    <div style={{ display: "flex", fontSize: 28, fontWeight: 600 }}>
+                      {`${PLATFORM_META[t.platform].name} ${t.solved}`}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>

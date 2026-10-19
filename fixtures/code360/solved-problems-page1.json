@@ -1,0 +1,27 @@
+{
+  "data": {
+    "total_pages": 2,
+    "problem_submissions": [
+      {
+        "link": "/code360/problems/two-sum_8230696",
+        "problem_name": "Two Sum",
+        "solved_at": "2024-03-05T10:20:30+05:30"
+      },
+      {
+        "link": "https://www.naukri.com/code360/problems/reverse-the-array_1262298",
+        "problem_name": "Reverse The Array",
+        "solved_at": "2 hours ago"
+      },
+      {
+        "link": "/code360/mcq/some-quiz_12",
+        "problem_name": "Some quiz",
+        "solved_at": "2024-03-04T10:00:00+05:30"
+      },
+      {
+        "link": "/code360/problems/two-sum_8230696",
+        "problem_name": "Two Sum",
+        "solved_at": "2024-03-01T08:00:00+05:30"
+      }
+    ]
+  }
+}

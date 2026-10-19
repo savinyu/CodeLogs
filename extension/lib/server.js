@@ -1,0 +1,53 @@
+// @ts-check
+// Calls to the CodeLogs server (not the platforms). Plain fetch; no `chrome`.
+import { ReaderError } from "./common.js";
+
+/**
+ * @param {string} base
+ * @param {string} token
+ * @returns {Promise<{ username: string, leetcodeHandle: string | null, handles?: Record<string, { handle: string, verified: boolean, lastSyncedAt: string | number | null }> }>}
+ */
+export async function checkMe(base, token) {
+  let res;
+  try {
+    res = await fetch(`${base}/api/extension/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    throw new ReaderError("Could not reach CodeLogs.");
+  }
+  if (res.status === 401) {
+    throw new ReaderError(
+      "Token invalid or revoked. Create a new one on the CodeLogs Connect page.",
+    );
+  }
+  if (!res.ok) throw new ReaderError(`CodeLogs returned HTTP ${res.status}.`);
+  return await res.json();
+}
+
+/**
+ * POSTs JSON with the token and returns the server's `{ ok: true, ... }` body.
+ * @param {string} base
+ * @param {string} token
+ * @param {string} path  "/api/extension/platform" or "/api/extension/leetcode"
+ * @param {unknown} body
+ * @returns {Promise<any>}
+ */
+export async function postUpload(base, token, path, body) {
+  /** @type {Response} */
+  let res;
+  try {
+    res = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new ReaderError("Could not reach CodeLogs.");
+  }
+  /** @type {any} */
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok || !out.ok)
+    throw new ReaderError(out.error || `CodeLogs returned HTTP ${res.status}.`);
+  return out;
+}

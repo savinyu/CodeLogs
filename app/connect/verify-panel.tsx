@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Note } from "@/components/kit/note";
 import { Button } from "@/components/ui/button";
-import type { PlatformId } from "@/lib/adapters/types";
+import type { SyncedPlatformId } from "@/lib/adapters/types";
 import { VERIFY_FIELD } from "@/lib/verification";
 import { checkVerification, startVerification, type VerifyState } from "./verify-actions";
 
@@ -13,7 +13,7 @@ export function VerifyPanel({
   name,
   verifyToken,
 }: {
-  platform: PlatformId;
+  platform: SyncedPlatformId;
   name: string;
   verifyToken: string | null;
 }) {

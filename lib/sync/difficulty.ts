@@ -6,6 +6,8 @@
 //   3 medium ≈ CF 1400–1600   · AtCoder 600–899  · LC Medium
 //   4 hard   ≈ CF 1700–2000   · AtCoder 900–1299 · LC Hard
 //   5 hard   ≈ CF 2100+       · AtCoder 1300+
+// Extension platforms label their problems; each label maps to a band (LABELS below), and
+// CodeChef's numeric difficulty rating uses its own cuts.
 // Changing a cut means a data migration for stored rows (see 0003_difficulty_bands.sql).
 // Pure, so tests and adapters can use it.
 
@@ -18,20 +20,48 @@ function band(value: number, cuts: readonly [number, number, number, number]): n
 
 const LEETCODE: Record<string, number> = { easy: 1, medium: 3, hard: 4 };
 
+/** Labels as each extension platform shows them, lower-cased, with spaces and dashes as "_". */
+const LABELS: Partial<Record<PlatformId, Record<string, number>>> = {
+  leetcode: LEETCODE,
+  // GFG's buckets: School, Basic, Easy, Medium, Hard.
+  gfg: { school: 1, basic: 1, easy: 1, medium: 3, hard: 4 },
+  // Code360: Easy, Moderate, Hard, Ninja.
+  code360: { easy: 1, moderate: 3, medium: 3, hard: 4, ninja: 5 },
+  // InterviewBit's difficulty_level: very_easy, easy, medium, hard.
+  interviewbit: { very_easy: 1, easy: 1, medium: 3, hard: 4 },
+  // HackerRank: Easy, Medium, Hard, Advanced, Expert.
+  hackerrank: { easy: 1, medium: 3, hard: 4, advanced: 5, expert: 5 },
+  // CodeChef's practice labels, when there's no numeric rating.
+  codechef: { beginner: 1, easy: 1, medium: 3, hard: 4, challenge: 5 },
+};
+
+function labelKey(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
 export function normalizeDifficulty(
   platform: PlatformId,
   raw: string | number | null | undefined,
 ): number | null {
   if (raw === null || raw === undefined || raw === "") return null;
 
-  if (platform === "leetcode") return LEETCODE[String(raw).toLowerCase()] ?? null;
-
   const value = typeof raw === "number" ? raw : Number(raw);
-  if (!Number.isFinite(value)) return null;
-  // AtCoder models can be negative (very easy problems); they land in band 1.
-  return platform === "codeforces"
-    ? band(value, [1200, 1400, 1700, 2100])
-    : band(value, [400, 600, 900, 1300]);
+  if (!Number.isFinite(value)) return LABELS[platform]?.[labelKey(String(raw))] ?? null;
+  switch (platform) {
+    case "codeforces":
+      return band(value, [1200, 1400, 1700, 2100]);
+    case "atcoder":
+      // AtCoder models can be negative (very easy problems); they land in band 1.
+      return band(value, [400, 600, 900, 1300]);
+    case "codechef":
+      // CodeChef's difficulty rating runs on its contest-rating scale (1★ < 1400 … 7★ 2500+).
+      return band(value, [1400, 1600, 1900, 2300]);
+    default:
+      return null;
+  }
 }
 
 export type DifficultyTier = "easy" | "medium" | "hard";

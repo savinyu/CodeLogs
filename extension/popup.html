@@ -6,32 +6,64 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <h1>CodeLogs: LeetCode history</h1>
-
-    <section>
-      <label for="baseUrl">CodeLogs URL</label>
-      <input id="baseUrl" type="url" value="http://localhost:3000" spellcheck="false" />
-      <label for="token">Token</label>
-      <input
-        id="token"
-        type="password"
-        placeholder="cl_..."
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <div class="row">
-        <button id="save" type="button">Save</button>
-        <button id="check" type="button" class="secondary">Check connection</button>
+    <header class="top">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path
+              d="M6 4 2 9l4 5M12 4l4 5-4 5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        CodeLogs
       </div>
-      <p id="conn" class="note" role="status"></p>
+      <button id="theme" class="icon-btn" type="button" aria-label="Theme: system"></button>
+    </header>
+
+    <section class="card" id="connection">
+      <button id="connHead" class="card-head" type="button" aria-expanded="true">
+        <span class="grow">
+          <h2 class="card-title">Connection</h2>
+          <p id="connSummary" class="card-sub">Not connected</p>
+        </span>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <path
+            d="m4 6 4 4 4-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+      <div id="connBody" class="conn-body">
+        <label class="field" for="baseUrl">CodeLogs URL</label>
+        <input id="baseUrl" type="url" value="http://localhost:3000" spellcheck="false" />
+        <label class="field" for="token">Token</label>
+        <input
+          id="token"
+          type="password"
+          placeholder="cl_..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="actions">
+          <button id="check" type="button" class="btn">Check connection</button>
+          <button id="save" type="button" class="btn secondary">Save</button>
+        </div>
+        <p id="conn" class="note" role="status"></p>
+      </div>
     </section>
 
-    <section>
-      <label class="inline"
-        ><input id="dates" type="checkbox" checked /> Include solve dates (slower)</label
-      >
-      <button id="sync" type="button" class="primary">Sync LeetCode history</button>
-      <p id="status" class="note" role="status"></p>
+    <section class="card">
+      <h2 class="card-title">Platforms</h2>
+      <ul id="platforms" class="list"></ul>
       <p id="result" class="result" role="status"></p>
     </section>
 

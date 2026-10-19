@@ -147,7 +147,21 @@ export const apiTokens = pgTable(
   (t) => [index("api_tokens_user_id_idx").on(t.userId)],
 );
 
-export const PLATFORMS = ["codeforces", "atcoder", "leetcode"] as const;
+/** Synced by the server through an adapter in lib/adapters. */
+export const SYNCED_PLATFORMS = ["codeforces", "atcoder", "leetcode"] as const;
+/**
+ * Read only by the browser extension, from the user's own logged-in browser, when they click
+ * Sync. The server never fetches them: their terms or robots.txt rule it out (PLAN-v2.md §9).
+ */
+export const EXTENSION_PLATFORMS = [
+  "codechef",
+  "code360",
+  "hackerrank",
+  "interviewbit",
+  "gfg",
+] as const;
+/** New values go at the end: Postgres enums only append. */
+export const PLATFORMS = [...SYNCED_PLATFORMS, ...EXTENSION_PLATFORMS] as const;
 export const platformEnum = pgEnum("platform", PLATFORMS);
 
 /** pending = added, never synced. partial = synced but the platform only exposes part of the history. */

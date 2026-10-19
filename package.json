@@ -25,6 +25,7 @@
     "sheets:neetcode": "tsx scripts/dev/sheets-neetcode.ts",
     "sheets:striver": "tsx scripts/dev/sheets-striver.ts",
     "dev:preview": "tsx scripts/dev/preview-user.ts",
+    "dev:seed-ext": "tsx scripts/dev/seed-extension-platforms.ts",
     "dev:shot": "tsx scripts/dev/shot.ts"
   },
   "dependencies": {

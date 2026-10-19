@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLATFORMS } from "@/lib/db/schema";
+import { SYNCED_PLATFORMS } from "@/lib/db/schema";
 import { fieldContainsToken, makeVerifyToken, VERIFY_FIELD } from "@/lib/verification";
 
 describe("makeVerifyToken", () => {
@@ -40,7 +40,7 @@ describe("fieldContainsToken", () => {
 
 describe("VERIFY_FIELD", () => {
   it("covers every platform", () => {
-    for (const p of PLATFORMS) {
+    for (const p of SYNCED_PLATFORMS) {
       const f = VERIFY_FIELD[p];
       expect(f.label).toBeTruthy();
       expect(f.settingsUrl).toMatch(/^https:\/\//);

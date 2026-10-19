@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { activityYears, dashboardHref, parseActivityPeriod } from "../lib/dashboard/filters";
-import type { ActivityDay } from "../lib/dashboard/types";
+import {
+  activityYears,
+  dashboardHref,
+  parseActivityPeriod,
+  shownTotals,
+} from "../lib/dashboard/filters";
+import type { AccountSummary, ActivityDay, PlatformTotal } from "../lib/dashboard/types";
 
 const day = (d: string, total = 1): ActivityDay => ({ day: d, total, counts: {} });
 
@@ -44,5 +49,50 @@ describe("dashboardHref", () => {
     expect(dashboardHref("/dashboard", { platform: "codeforces", period: 2025 })).toBe(
       "/dashboard?platform=codeforces&year=2025",
     );
+  });
+});
+
+describe("shownTotals", () => {
+  const total = (platform: PlatformTotal["platform"], solved: number): PlatformTotal => ({
+    platform,
+    solved,
+    source: "tracked",
+    listed: solved,
+  });
+  const account = (
+    platform: AccountSummary["platform"],
+    status: AccountSummary["status"],
+  ): AccountSummary => ({
+    platform,
+    handle: "me",
+    status,
+    verified: true,
+    historyComplete: true,
+    lastSyncedAt: null,
+  });
+  const totals = [
+    total("codeforces", 46),
+    total("atcoder", 0),
+    total("hackerrank", 0),
+    total("gfg", 0),
+    total("codechef", 0),
+  ];
+  const accounts = [
+    account("codeforces", "ok"),
+    account("atcoder", "ok"),
+    account("hackerrank", "partial"),
+    account("gfg", "pending"),
+    account("codechef", "error"),
+  ];
+
+  it("hides confirmed zeros and keeps zeros that still have a status to show", () => {
+    expect(shownTotals(totals, accounts, "all").map((t) => t.platform)).toEqual([
+      "codeforces",
+      "gfg",
+      "codechef",
+    ]);
+  });
+  it("always shows the filtered platform", () => {
+    expect(shownTotals([total("atcoder", 0)], accounts, "atcoder")).toHaveLength(1);
   });
 });
