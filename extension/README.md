@@ -10,17 +10,20 @@ use those sites, and whenever you click **Sync**.
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick this `extension/` folder.
 3. A welcome tab opens (the popup's own page). Click **Connect to CodeLogs**. Chrome asks once for
-   access to the five platform sites; declining still connects, and each one asks again on its
-   first Sync. A CodeLogs tab opens at `/extension/connect`: sign in there if it asks, and the
-   extension links itself. There is no token to copy. The CodeLogs URL (default
-   `https://codelogs.techsavy.space`) is under **Advanced**. The only other URL it accepts is
-   `http://localhost` on any port, for a dev server, which is asked for in the same prompt.
-
-To publish, run `pnpm extension:zip` at the repo root and upload `codelogs-extension.zip` (manifest at
-the top level, no dotfiles or README) to the Chrome Web Store. Bump `version` in the manifest first;
-the store rejects a version it already has.
+   access to the platform sites (and CodeLogs itself, if your site-access setting withheld it);
+   declining the platforms still connects, and each one asks again on its first Sync. A CodeLogs
+   tab opens at `/extension/connect`: sign in there if it asks, and the extension links itself.
+   There is no token to copy. The CodeLogs URL (default `https://codelogs.techsavy.space`) is under
+   **Advanced**. The only other URL it accepts is `http://localhost` on any port, for a dev server,
+   which is asked for in the same prompt.
 4. It then syncs every platform once, opening a background tab for each of the five it has access to
    (closed afterwards). Platforms you aren't logged in to are skipped quietly.
+
+## Publishing
+
+Bump `version` in the manifest first (the store rejects a version it already has), then run
+`pnpm extension:zip` at the repo root and upload `codelogs-extension.zip` (manifest at the top level,
+no dotfiles or README) in the Chrome Web Store developer dashboard.
 
 ## Connecting
 
@@ -92,8 +95,9 @@ the upload is dropped if the account changed.
   CodeLogs tab.
 - `alarms`: the hourly check for LeetCode's daily sync.
 - Host access to `leetcode.com` and `codelogs.techsavy.space` (always). If you limit the
-  extension's site access in Chrome (for example "On click"), Chrome withholds `leetcode.com`;
-  Connect and LeetCode's Sync ask for it again, and LeetCode syncs say so instead of failing.
+  extension's site access in Chrome (for example "On click"), Chrome withholds both; Connect and
+  Sync ask for them again, and a sync without them says so instead of failing. CodeLogs' API sends
+  no CORS headers, so without its host access neither connecting nor uploading works.
 - Optional host access, asked when you click Connect (or on a platform's first Sync if declined),
   never at install: `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`,
   `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the CodeLogs URL is a dev

@@ -1,5 +1,10 @@
 // @ts-check
-import { CODELOGS_ORIGIN, isAllowedBase, normalizeBaseUrl } from "./lib/leetcode.js";
+import {
+  CODELOGS_ORIGIN,
+  basePermission,
+  isAllowedBase,
+  normalizeBaseUrl,
+} from "./lib/leetcode.js";
 import { SYNC_PLATFORMS } from "./lib/registry.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
@@ -212,18 +217,21 @@ async function connect() {
     show(el("conn"), `Use ${CODELOGS_ORIGIN} (or http://localhost).`, "error");
     return;
   }
-  // Inside the click (a user gesture), one prompt asks for every platform, plus localhost for a dev
-  // server (the hosted CodeLogs is always allowed). LeetCode is an install-time host permission, but
-  // Chrome withholds it when the user limits the extension's site access; asking grants it again.
-  const local = base.startsWith("http://localhost");
-  const origins = [
-    ...(local ? ["http://localhost/*"] : []),
-    ...SYNC_PLATFORMS.flatMap((p) => p.permissions),
-  ];
-  const granted = await chrome.permissions.request({ origins });
-  // Declining the platforms still connects; each one asks again on its first Sync.
-  if (!granted && local) {
-    show(el("conn"), "CodeLogs needs permission to contact localhost.", "error");
+  // Inside the click (a user gesture), one prompt asks for CodeLogs and every platform. CodeLogs and
+  // LeetCode are install-time host permissions, but Chrome withholds them when the user limits the
+  // extension's site access; asking grants them again (no prompt when they're already granted).
+  const codelogs = basePermission(base);
+  await chrome.permissions.request({
+    origins: [codelogs, ...SYNC_PLATFORMS.flatMap((p) => p.permissions)],
+  });
+  // Declining the platforms still connects; each one asks again on its first Sync. Without
+  // CodeLogs itself the connect tab can't be read and every upload fails.
+  if (!(await chrome.permissions.contains({ origins: [codelogs] }))) {
+    show(
+      el("conn"),
+      `CodeLogs needs access to ${new URL(base).host} to connect. Click Connect and allow it.`,
+      "error",
+    );
     return;
   }
   await chrome.storage.local.set({ baseUrl: base });
@@ -272,8 +280,9 @@ async function refreshMe(c) {
 async function startSync(p) {
   show(el("conn"), "");
   // Host access for a platform is asked here, inside the click, if it wasn't granted at Connect
-  // (or, for LeetCode, was withheld by the user's site-access setting).
-  const granted = await chrome.permissions.request({ origins: p.permissions });
+  // (or, for LeetCode and CodeLogs, was withheld by the user's site-access setting).
+  const origins = conn ? [basePermission(conn.base), ...p.permissions] : p.permissions;
+  const granted = await chrome.permissions.request({ origins });
   if (!granted) {
     runs = {
       ...runs,

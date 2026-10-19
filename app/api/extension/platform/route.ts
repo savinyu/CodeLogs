@@ -3,11 +3,11 @@ import { ingestExtensionUpload } from "@/lib/extension-platform-ingest";
 import { extensionUploadSchema, MAX_PLATFORM_UPLOAD_BYTES } from "@/lib/extension-upload";
 
 // The browser extension uploads what it read from CodeChef, Code360, HackerRank, InterviewBit
-// or GFG while the user is logged in there. Authenticated by a personal token from Settings.
+// or GFG while the user is logged in there. Authenticated by the token the extension got when it connected.
 export async function POST(request: Request) {
   const user = await authenticateBearer(request.headers.get("authorization"));
   if (!user) {
-    return error(401, "Invalid or revoked token. Create a new one in CodeLogs Settings.");
+    return error(401, "Invalid or revoked token. Connect the extension again from its popup.");
   }
 
   const text = await request.text();
