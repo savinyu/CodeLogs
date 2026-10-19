@@ -14,6 +14,7 @@ import { checkMe, postUpload } from "./server.js";
 const SUBMISSION_DELAY_MS = 1500;
 const BACKOFF_MS = [10_000, 20_000];
 const MAX_PAGES = 400;
+const LEETCODE_ORIGINS = ["https://leetcode.com/*"];
 
 /**
  * Walks /api/submissions/, newest first. Returns null if dates are unavailable. With `since`
@@ -69,6 +70,13 @@ async function fetchDates(since, onPage) {
  * @param {{ base: string, token: string, includeDates: boolean, datesSince?: number | null, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
  */
 export async function runLeetcodeJob({ base, token, includeDates, datesSince = null, setStatus }) {
+  // Without host access (withheld by the user's site-access setting) the fetches below fail CORS.
+  if (!(await chrome.permissions.contains({ origins: LEETCODE_ORIGINS }))) {
+    throw new ReaderError(
+      "CodeLogs needs permission to read LeetCode. Click Sync again and allow access.",
+    );
+  }
+
   await setStatus({ step: "connect", message: "Checking your CodeLogs connection..." });
   await checkMe(base, token);
 

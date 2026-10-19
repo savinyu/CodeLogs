@@ -212,12 +212,13 @@ async function connect() {
     show(el("conn"), `Use ${CODELOGS_ORIGIN} (or http://localhost).`, "error");
     return;
   }
-  // Inside the click (a user gesture), one prompt asks for the five platforms read in their own
-  // tabs, plus localhost for a dev server (the hosted CodeLogs is always allowed).
+  // Inside the click (a user gesture), one prompt asks for every platform, plus localhost for a dev
+  // server (the hosted CodeLogs is always allowed). LeetCode is an install-time host permission, but
+  // Chrome withholds it when the user limits the extension's site access; asking grants it again.
   const local = base.startsWith("http://localhost");
   const origins = [
     ...(local ? ["http://localhost/*"] : []),
-    ...SYNC_PLATFORMS.filter((p) => p.kind === "page").flatMap((p) => p.permissions),
+    ...SYNC_PLATFORMS.flatMap((p) => p.permissions),
   ];
   const granted = await chrome.permissions.request({ origins });
   // Declining the platforms still connects; each one asks again on its first Sync.
@@ -270,23 +271,22 @@ async function refreshMe(c) {
 /** @param {(typeof SYNC_PLATFORMS)[number]} p */
 async function startSync(p) {
   show(el("conn"), "");
-  // Host access for a platform is asked here, inside the click, if it wasn't granted at Connect.
-  if (p.kind === "page") {
-    const granted = await chrome.permissions.request({ origins: p.permissions });
-    if (!granted) {
-      runs = {
-        ...runs,
-        [p.id]: {
-          at: Date.now(),
-          okAt: runs[p.id]?.okAt ?? null,
-          ok: false,
-          loggedOut: false,
-          auto: false,
-          text: `Allow access to ${p.name} to sync it. CodeLogs only reads your solved problems there.`,
-        },
-      };
-      return render();
-    }
+  // Host access for a platform is asked here, inside the click, if it wasn't granted at Connect
+  // (or, for LeetCode, was withheld by the user's site-access setting).
+  const granted = await chrome.permissions.request({ origins: p.permissions });
+  if (!granted) {
+    runs = {
+      ...runs,
+      [p.id]: {
+        at: Date.now(),
+        okAt: runs[p.id]?.okAt ?? null,
+        ok: false,
+        loggedOut: false,
+        auto: false,
+        text: `Allow access to ${p.name} to sync it. CodeLogs only reads your solved problems there.`,
+      },
+    };
+    return render();
   }
   await chrome.runtime.sendMessage({ type: "sync", platform: p.id, includeDates });
 }

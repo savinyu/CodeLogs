@@ -35,9 +35,9 @@ export default function PrivacyPage() {
       <div className="grid gap-3.5">
         <Section title="Who we are">
           <p className="text-muted-foreground">
-            CodeLogs (codelogs.techsavy.space) is a free, non-commercial project that tracks your
-            competitive programming and DSA practice. It is not affiliated with Codeforces, AtCoder,
-            LeetCode, CodeChef, Coding Ninjas (Code360), HackerRank, InterviewBit or GeeksforGeeks.
+            CodeLogs is a free, non-commercial project that tracks your competitive programming and
+            DSA practice. It is not affiliated with Codeforces, AtCoder, LeetCode, CodeChef, Coding
+            Ninjas (Code360), HackerRank, InterviewBit or GeeksforGeeks.
           </p>
         </Section>
 
@@ -93,7 +93,8 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground">
             It never sends passwords, cookies, login tokens from those sites, your email address,
             your code or your browsing history. It only reads the sites you grant it access to, and
-            access to each of the five sites other than LeetCode can be declined.
+            you can decline or withdraw access to any of them, LeetCode included, in its prompts or
+            in your browser&apos;s site-access settings for the extension.
           </p>
           <p className="text-muted-foreground">
             In your browser it keeps the CodeLogs token it receives when you connect, its settings,
