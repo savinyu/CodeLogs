@@ -18,6 +18,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:state": "tsx scripts/dev/db-state.ts",
+    "feedback": "tsx scripts/dev/feedback.ts",
     "spike:cf": "tsx scripts/spike/cf.ts",
     "spike:atcoder": "tsx scripts/spike/atcoder.ts",
     "spike:leetcode": "tsx scripts/spike/leetcode.ts",

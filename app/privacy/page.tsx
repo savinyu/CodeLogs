@@ -62,6 +62,11 @@ export default function PrivacyPage() {
               social links you add.
             </li>
             <li>Extension tokens, stored only as a hash, with the time each one was last used.</li>
+            <li>
+              Feedback you send: the message, the email you give for a reply (optional), your
+              account if you&apos;re signed in, and a one-way hash of your IP address, used only to
+              limit how often feedback can be sent.
+            </li>
           </List>
           <p className="text-muted-foreground">
             CodeLogs has no ads and no analytics or tracking scripts.
@@ -125,6 +130,10 @@ export default function PrivacyPage() {
         <Section title="Contact">
           <p className="text-muted-foreground">
             Questions or requests:{" "}
+            <Link href="/feedback" className="text-foreground underline underline-offset-2">
+              send feedback
+            </Link>{" "}
+            or{" "}
             <Link href={ISSUES_URL} className="text-foreground underline underline-offset-2">
               open an issue on GitHub
             </Link>
