@@ -26,7 +26,8 @@
     "sheets:striver": "tsx scripts/dev/sheets-striver.ts",
     "dev:preview": "tsx scripts/dev/preview-user.ts",
     "dev:seed-ext": "tsx scripts/dev/seed-extension-platforms.ts",
-    "dev:shot": "tsx scripts/dev/shot.ts"
+    "dev:shot": "tsx scripts/dev/shot.ts",
+    "extension:zip": "rm -f codelogs-extension.zip && cd extension && zip -r -X ../codelogs-extension.zip . -x '.*' '*/.*' README.md"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

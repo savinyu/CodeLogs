@@ -126,3 +126,15 @@ export function normalizeBaseUrl(input) {
   if (url.protocol === "http:" && url.hostname === "localhost") return url.origin;
   return null;
 }
+
+/** The hosted CodeLogs: the default URL, and the only https one the manifest grants access to. */
+export const CODELOGS_ORIGIN = "https://codelogs.techsavy.space";
+
+/**
+ * Whether the extension may connect to this normalized origin: the hosted CodeLogs, or a local
+ * dev server (any port, behind the optional `http://localhost/*` permission).
+ * @param {string} base
+ */
+export function isAllowedBase(base) {
+  return base === CODELOGS_ORIGIN || base.startsWith("http://localhost");
+}

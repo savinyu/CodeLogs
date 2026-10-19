@@ -35,5 +35,8 @@ npm-debug.log*
 # preview-user session cookies (scripts/dev/preview-user.ts)
 .preview/
 
+# Chrome Web Store upload (pnpm extension:zip)
+/*.zip
+
 # agent worktrees
 .claude/worktrees/

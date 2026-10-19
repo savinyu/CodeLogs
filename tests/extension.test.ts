@@ -1,7 +1,11 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   buildUpload,
+  CODELOGS_ORIGIN,
   collectAcceptedDates,
+  isAllowedBase,
   normalizeBaseUrl,
   parseProblemsAll,
 } from "../extension/lib/leetcode.js";
@@ -84,6 +88,29 @@ describe("normalizeBaseUrl", () => {
       "https://u:p@x.com",
     ]) {
       expect(normalizeBaseUrl(bad)).toBeNull();
+    }
+  });
+});
+
+describe("isAllowedBase", () => {
+  it("allows the hosted CodeLogs and localhost on any port, nothing else", () => {
+    expect(isAllowedBase(CODELOGS_ORIGIN)).toBe(true);
+    expect(isAllowedBase("http://localhost:3000")).toBe(true);
+    expect(isAllowedBase("http://localhost:4000")).toBe(true);
+    expect(isAllowedBase("https://x.vercel.app")).toBe(false);
+    expect(isAllowedBase("https://codelogs.techsavy.space.evil.com")).toBe(false);
+  });
+});
+
+describe("manifest", () => {
+  const manifest = JSON.parse(
+    readFileSync(fileURLToPath(new URL("../extension/manifest.json", import.meta.url)), "utf8"),
+  ) as { host_permissions: string[]; optional_host_permissions: string[] };
+
+  it("grants the hosted CodeLogs and no wildcard hosts", () => {
+    expect(manifest.host_permissions).toContain(`${CODELOGS_ORIGIN}/*`);
+    for (const p of [...manifest.host_permissions, ...manifest.optional_host_permissions]) {
+      expect(p).not.toMatch(/^\w+:\/\/\*|<all_urls>/);
     }
   });
 });

@@ -10,14 +10,14 @@
     "128": "icons/icon-128.png"
   },
   "permissions": ["storage", "scripting", "alarms"],
-  "host_permissions": ["https://leetcode.com/*", "http://localhost:3000/*"],
+  "host_permissions": ["https://leetcode.com/*", "https://codelogs.techsavy.space/*"],
   "optional_host_permissions": [
     "https://www.codechef.com/*",
     "https://www.naukri.com/*",
     "https://www.hackerrank.com/*",
     "https://www.interviewbit.com/*",
     "https://www.geeksforgeeks.org/*",
-    "https://*/*"
+    "http://localhost/*"
   ],
   "background": { "service_worker": "background.js", "type": "module" },
   "action": {

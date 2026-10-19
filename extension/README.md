@@ -13,8 +13,12 @@ use those sites, and whenever you click **Sync**.
    access to the five platform sites; declining still connects, and each one asks again on its
    first Sync. A CodeLogs tab opens at `/extension/connect`: sign in there if it asks, and the
    extension links itself. There is no token to copy. The CodeLogs URL (default
-   `http://localhost:3000`) is under **Advanced**; a non-localhost https URL is asked for in the same
-   prompt.
+   `https://codelogs.techsavy.space`) is under **Advanced**. The only other URL it accepts is
+   `http://localhost` on any port, for a dev server, which is asked for in the same prompt.
+
+To publish, run `pnpm extension:zip` at the repo root and upload `codelogs-extension.zip` (manifest at
+the top level, no dotfiles or README) to the Chrome Web Store. Bump `version` in the manifest first;
+the store rejects a version it already has.
 4. It then syncs every platform once, opening a background tab for each of the five it has access to
    (closed afterwards). Platforms you aren't logged in to are skipped quietly.
 
@@ -87,10 +91,13 @@ the upload is dropped if the account changed.
 - `scripting`: runs the read functions inside the platform's tab, and the connect script in the
   CodeLogs tab.
 - `alarms`: the hourly check for LeetCode's daily sync.
-- Host access to `leetcode.com` (always) and `localhost:3000`.
+- Host access to `leetcode.com` and `codelogs.techsavy.space` (always).
 - Optional host access, asked when you click Connect (or on a platform's first Sync if declined),
   never at install: `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`,
-  `www.interviewbit.com`, `www.geeksforgeeks.org`, and a non-localhost CodeLogs URL.
+  `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the CodeLogs URL is a dev
+  server. No wildcard hosts: `tests/extension.test.ts` checks the manifest for them.
+
+Privacy policy: <https://codelogs.techsavy.space/privacy> (`app/privacy/page.tsx`).
 
 ## Caveats
 

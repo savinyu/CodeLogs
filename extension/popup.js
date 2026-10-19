@@ -1,5 +1,5 @@
 // @ts-check
-import { normalizeBaseUrl } from "./lib/leetcode.js";
+import { CODELOGS_ORIGIN, isAllowedBase, normalizeBaseUrl } from "./lib/leetcode.js";
 import { SYNC_PLATFORMS } from "./lib/registry.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
@@ -208,21 +208,21 @@ function render() {
 
 async function connect() {
   const base = normalizeBaseUrl(input("baseUrl").value);
-  if (!base) {
-    show(el("conn"), "Use an https:// URL (or http://localhost).", "error");
+  if (!base || !isAllowedBase(base)) {
+    show(el("conn"), `Use ${CODELOGS_ORIGIN} (or http://localhost).`, "error");
     return;
   }
-  // Inside the click (a user gesture), one prompt asks for the CodeLogs site (unless it's
-  // localhost, which is always allowed) and the five platforms read in their own tabs.
+  // Inside the click (a user gesture), one prompt asks for the five platforms read in their own
+  // tabs, plus localhost for a dev server (the hosted CodeLogs is always allowed).
   const local = base.startsWith("http://localhost");
   const origins = [
-    ...(local ? [] : [`${base}/*`]),
+    ...(local ? ["http://localhost/*"] : []),
     ...SYNC_PLATFORMS.filter((p) => p.kind === "page").flatMap((p) => p.permissions),
   ];
   const granted = await chrome.permissions.request({ origins });
   // Declining the platforms still connects; each one asks again on its first Sync.
-  if (!granted && !local) {
-    show(el("conn"), "CodeLogs needs permission to contact that site.", "error");
+  if (!granted && local) {
+    show(el("conn"), "CodeLogs needs permission to contact localhost.", "error");
     return;
   }
   await chrome.storage.local.set({ baseUrl: base });
