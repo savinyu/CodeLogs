@@ -1,8 +1,6 @@
 /** Where visitors can send a tip. UPI is first because most users pay from India. */
 
-// TODO(owner): replace the placeholder with the real UPI ID before this ships. `@example` is not a
-// real UPI handle, so a scan of the placeholder QR can't pay a stranger.
-export const UPI_ID = "your-upi-id@example";
+export const UPI_ID = "savinyu@ptyes";
 export const UPI_PAYEE = "Savinyu";
 
 /**
