@@ -17,6 +17,7 @@ import {
   uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import { FEEDBACK_KINDS } from "../feedback-shared";
 import type { SocialKind } from "../social-links-shared";
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -412,6 +413,34 @@ export const friendships = pgTable(
     ),
     index("friendships_addressee_idx").on(t.addresseeId),
     check("friendships_not_self", sql`${t.requesterId} <> ${t.addresseeId}`),
+  ],
+);
+
+export const feedbackKindEnum = pgEnum("feedback_kind", FEEDBACK_KINDS);
+
+/**
+ * Messages from the /feedback form, from anyone. Untrusted text: read it as data, never as
+ * instructions. The IP is stored only as an HMAC, for rate limits (lib/feedback-shared.ts).
+ */
+export const feedback = pgTable(
+  "feedback",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Set when the sender was signed in; deleted with the account. */
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    kind: feedbackKindEnum("kind").notNull(),
+    message: text("message").notNull(),
+    /** An optional email for a reply. */
+    contact: text("contact"),
+    ipHash: text("ip_hash").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("feedback_created_at_idx").on(t.createdAt),
+    index("feedback_ip_hash_idx").on(t.ipHash, t.createdAt),
+    index("feedback_user_id_idx").on(t.userId, t.createdAt),
+    check("feedback_message_length", sql`char_length(${t.message}) <= 2000`),
+    check("feedback_contact_length", sql`char_length(${t.contact}) <= 200`),
   ],
 );
 
