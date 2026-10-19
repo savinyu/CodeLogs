@@ -93,7 +93,8 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground">
             It never sends passwords, cookies, login tokens from those sites, your email address,
             your code or your browsing history. It only reads the sites you grant it access to, and
-            access to each of the five sites other than LeetCode can be declined.
+            you can decline or withdraw access to any of them, LeetCode included, in its prompts or
+            in your browser&apos;s site-access settings for the extension.
           </p>
           <p className="text-muted-foreground">
             In your browser it keeps the CodeLogs token it receives when you connect, its settings,

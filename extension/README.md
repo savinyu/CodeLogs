@@ -91,7 +91,9 @@ the upload is dropped if the account changed.
 - `scripting`: runs the read functions inside the platform's tab, and the connect script in the
   CodeLogs tab.
 - `alarms`: the hourly check for LeetCode's daily sync.
-- Host access to `leetcode.com` and `codelogs.techsavy.space` (always).
+- Host access to `leetcode.com` and `codelogs.techsavy.space` (always). If you limit the
+  extension's site access in Chrome (for example "On click"), Chrome withholds `leetcode.com`;
+  Connect and LeetCode's Sync ask for it again, and LeetCode syncs say so instead of failing.
 - Optional host access, asked when you click Connect (or on a platform's first Sync if declined),
   never at install: `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`,
   `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the CodeLogs URL is a dev

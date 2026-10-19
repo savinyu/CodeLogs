@@ -201,7 +201,7 @@ function syncAll() {
   return runJob(async (conn) => {
     for (const p of SYNC_PLATFORMS) {
       // A platform whose host access was declined is synced by hand later (its Sync asks again).
-      if (p.kind === "page" && !(await chrome.permissions.contains({ origins: p.permissions }))) {
+      if (!(await chrome.permissions.contains({ origins: p.permissions }))) {
         continue;
       }
       await syncOne(p.id, conn, { auto: false, includeDates: conn.includeDates });
