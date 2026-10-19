@@ -3,9 +3,22 @@
   "name": "CodeLogs: LeetCode history",
   "version": "0.1.0",
   "description": "Sends your LeetCode solved list (problem slugs and solve dates only) to your CodeLogs account.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "permissions": ["storage"],
   "host_permissions": ["https://leetcode.com/*", "http://localhost:3000/*"],
   "optional_host_permissions": ["https://*/*"],
   "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_popup": "popup.html", "default_title": "CodeLogs" }
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CodeLogs",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  }
 }
