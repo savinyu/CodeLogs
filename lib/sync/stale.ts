@@ -2,10 +2,10 @@
 // so overlapping runs (or a user pressing "Sync now") can't queue the same account twice.
 
 import "server-only";
-import { and, eq, exists, or, isNull, lt, sql, type SQL } from "drizzle-orm";
+import { and, eq, exists, inArray, or, isNull, lt, sql, type SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db/client";
-import { platformAccounts, sessions, users } from "@/lib/db/schema";
+import { platformAccounts, sessions, SYNCED_PLATFORMS, users } from "@/lib/db/schema";
 import { SYNC_STALE_MS, type ClaimedAccount } from "./runs";
 
 /** 20 h, not 24, so a daily cron doesn't drift past a day. Also the retry spacing after a failure. */
@@ -40,6 +40,8 @@ export function staleAccountsWhere(now?: Date): SQL {
   );
 
   return and(
+    // Extension platforms only update when the user runs the extension.
+    inArray(platformAccounts.platform, [...SYNCED_PLATFORMS]),
     olderThan(platformAccounts.lastSyncedAt, STALE_AFTER_MS),
     // Not mid-sync, unless the sync looks stuck.
     or(
@@ -54,9 +56,10 @@ export function staleAccountsWhere(now?: Date): SQL {
 
 /** Atomically marks every stale account of an active user as syncing and returns them. */
 export async function claimStaleAccounts(opts: { now?: Date } = {}): Promise<ClaimedAccount[]> {
-  return db
+  const claimed = await db
     .update(platformAccounts)
     .set({ status: "syncing", syncRequestedAt: sql`now()`, lastError: null })
     .where(staleAccountsWhere(opts.now))
     .returning({ accountId: platformAccounts.id, platform: platformAccounts.platform });
+  return claimed as ClaimedAccount[];
 }

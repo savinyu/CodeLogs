@@ -3,7 +3,8 @@
 
 import { z } from "zod";
 import type { PlatformId } from "@/lib/adapters/types";
-import { PLATFORM_ORDER } from "@/lib/platforms";
+import { EXT_COUNTS_KIND } from "@/lib/extension-upload";
+import { isExtensionPlatform, PLATFORM_ORDER } from "@/lib/platforms";
 import { normalizeDifficulty } from "@/lib/sync/difficulty";
 import { buildTopicStats, cfLevel, type TagSetCount } from "@/lib/topics/scoring";
 import type {
@@ -61,6 +62,14 @@ const lcDifficultySchema = z.object({
     hard: z.number().optional(),
   }),
 });
+/** The extension platforms' own counts (lib/extension-upload.ts ExtCounts). */
+const extCountsSchema = z.object({
+  total: z.number(),
+  split: z.object({ easy: z.number(), medium: z.number(), hard: z.number() }).nullable(),
+});
+type ExtSplit = NonNullable<z.infer<typeof extCountsSchema>["split"]>;
+/** Where a reported Easy / Medium / Hard count lands in the five difficulty bands. */
+const REPORTED_BAND = { easy: 1, medium: 3, hard: 4 } as const;
 const lcTagCountsSchema = z.array(
   z.object({ tagSlug: z.string(), tagName: z.string(), problemsSolved: z.number() }),
 );
@@ -119,6 +128,13 @@ function buildTotals(raw: DashboardRaw, connected: PlatformId[]): PlatformTotal[
         }
       }
     }
+    if (isExtensionPlatform(platform)) {
+      const ext = stat(raw, platform, EXT_COUNTS_KIND, extCountsSchema);
+      if (ext) {
+        Object.assign(total, { solved: ext.total, source: "reported" });
+        if (ext.split) total.split = { ...ext.split };
+      }
+    }
     if (platform === "codeforces") {
       const r = stat(raw, platform, "cf_rating", cfRatingSchema);
       if (r?.rating != null) {
@@ -162,9 +178,24 @@ function buildDifficulty(raw: DashboardRaw): DifficultyRow[] {
 
   // LeetCode's own lifetime split beats the handful of solve rows we hold.
   const lc = stat(raw, "leetcode", "lc_difficulty_counts", lcDifficultySchema)?.solved;
+  // Extension platforms: the reported split, unless the solve rows already cover the total
+  // (GFG's full list), so nothing is counted twice.
+  const ext = new Map<PlatformId, ExtSplit>();
+  for (const a of raw.accounts) {
+    if (!isExtensionPlatform(a.platform)) continue;
+    const counts = stat(raw, a.platform, EXT_COUNTS_KIND, extCountsSchema);
+    const tracked = raw.solveCounts.find((c) => c.platform === a.platform)?.count ?? 0;
+    if (counts?.split && tracked < counts.total) ext.set(a.platform, counts.split);
+  }
   for (const r of raw.difficulty) {
     if (r.platform === "leetcode" && lc) continue;
+    if (ext.has(r.platform)) continue;
     add(r.platform, r.band, r.count);
+  }
+  for (const [platform, split] of ext) {
+    for (const level of ["easy", "medium", "hard"] as const) {
+      if (split[level]) add(platform, REPORTED_BAND[level], split[level]);
+    }
   }
   if (lc) {
     for (const level of ["easy", "medium", "hard"] as const) {

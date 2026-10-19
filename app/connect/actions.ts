@@ -4,7 +4,8 @@ import { z } from "zod";
 import { addPlatformAccount, removePlatformAccount } from "@/lib/accounts";
 import { validateHandle } from "@/lib/adapters/validate";
 import { userDataChanged } from "@/lib/cache";
-import { PLATFORMS } from "@/lib/db/schema";
+import { PLATFORMS, SYNCED_PLATFORMS } from "@/lib/db/schema";
+import { isSyncedPlatform } from "@/lib/platforms";
 import { getCurrentUser } from "@/lib/session";
 import { requestSync } from "@/lib/sync/request";
 
@@ -17,7 +18,7 @@ const connectSchema = z.object({
   handle: z.string().min(1, "Enter your handle.").max(200, "That handle is too long."),
 });
 const disconnectSchema = z.object({ platform: platformSchema });
-const syncSchema = z.object({ platform: platformSchema.optional() });
+const syncSchema = z.object({ platform: z.enum(SYNCED_PLATFORMS).optional() });
 
 /** `queued` is how many accounts were sent to the sync queue; 0 means all were synced recently. */
 export type SyncState = { ok: true; queued: number } | { ok: false; error: string } | null;
@@ -44,8 +45,11 @@ export async function connectPlatform(
   if (!result.ok) return { ...result, handle };
 
   // Best effort: sync the new handle right away, but never fail the connect because of it.
+  // Extension platforms wait for the extension's first upload instead.
   try {
-    await requestSync(user.id, { platforms: [platform], ignoreCooldown: true });
+    if (isSyncedPlatform(platform)) {
+      await requestSync(user.id, { platforms: [platform], ignoreCooldown: true });
+    }
   } catch (err) {
     console.error("Could not queue the first sync", err);
   }

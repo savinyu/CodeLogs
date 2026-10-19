@@ -20,11 +20,21 @@ const STROKE: Record<PlatformId, string> = {
   codeforces: "stroke-platform-codeforces",
   atcoder: "stroke-platform-atcoder",
   leetcode: "stroke-platform-leetcode",
+  codechef: "stroke-platform-codechef",
+  code360: "stroke-platform-code360",
+  hackerrank: "stroke-platform-hackerrank",
+  interviewbit: "stroke-platform-interviewbit",
+  gfg: "stroke-platform-gfg",
 };
 const FILL: Record<PlatformId, string> = {
   codeforces: "fill-platform-codeforces",
   atcoder: "fill-platform-atcoder",
   leetcode: "fill-platform-leetcode",
+  codechef: "fill-platform-codechef",
+  code360: "fill-platform-code360",
+  hackerrank: "fill-platform-hackerrank",
+  interviewbit: "fill-platform-interviewbit",
+  gfg: "fill-platform-gfg",
 };
 
 const W = 560;

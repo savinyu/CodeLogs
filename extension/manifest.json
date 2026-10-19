@@ -1,17 +1,24 @@
 {
   "manifest_version": 3,
-  "name": "CodeLogs: LeetCode history",
-  "version": "0.1.0",
-  "description": "Sends your LeetCode solved list (problem slugs and solve dates only) to your CodeLogs account.",
+  "name": "CodeLogs",
+  "version": "0.2.0",
+  "description": "Syncs your solved problems from LeetCode, CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks to CodeLogs.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage"],
+  "permissions": ["storage", "scripting"],
   "host_permissions": ["https://leetcode.com/*", "http://localhost:3000/*"],
-  "optional_host_permissions": ["https://*/*"],
+  "optional_host_permissions": [
+    "https://www.codechef.com/*",
+    "https://www.naukri.com/*",
+    "https://www.hackerrank.com/*",
+    "https://www.interviewbit.com/*",
+    "https://www.geeksforgeeks.org/*",
+    "https://*/*"
+  ],
   "background": { "service_worker": "background.js", "type": "module" },
   "action": {
     "default_popup": "popup.html",

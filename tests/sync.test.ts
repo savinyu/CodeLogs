@@ -77,6 +77,27 @@ describe("normalizeDifficulty", () => {
     expect(normalizeDifficulty("leetcode", "Extreme")).toBeNull();
   });
 
+  it("maps extension platforms' labels", () => {
+    expect(normalizeDifficulty("gfg", "School")).toBe(1);
+    expect(normalizeDifficulty("gfg", "Basic")).toBe(1);
+    expect(normalizeDifficulty("gfg", "Medium")).toBe(3);
+    expect(normalizeDifficulty("code360", "Moderate")).toBe(3);
+    expect(normalizeDifficulty("code360", "Ninja")).toBe(5);
+    expect(normalizeDifficulty("interviewbit", "very_easy")).toBe(1);
+    expect(normalizeDifficulty("interviewbit", "Very Easy")).toBe(1);
+    expect(normalizeDifficulty("hackerrank", "Expert")).toBe(5);
+    expect(normalizeDifficulty("codechef", "Beginner")).toBe(1);
+    expect(normalizeDifficulty("gfg", "Legendary")).toBeNull();
+  });
+
+  it("bands CodeChef's numeric difficulty rating", () => {
+    expect(normalizeDifficulty("codechef", 1000)).toBe(1);
+    expect(normalizeDifficulty("codechef", "1500")).toBe(2);
+    expect(normalizeDifficulty("codechef", 1800)).toBe(3);
+    expect(normalizeDifficulty("codechef", 2000)).toBe(4);
+    expect(normalizeDifficulty("codechef", 2600)).toBe(5);
+  });
+
   it("returns null when unrated", () => {
     expect(normalizeDifficulty("codeforces", undefined)).toBeNull();
     expect(normalizeDifficulty("codeforces", "")).toBeNull();

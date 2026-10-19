@@ -1,5 +1,7 @@
 import "server-only";
+import { NonRetriableError } from "inngest";
 import { ADAPTERS } from "@/lib/adapters";
+import { isSyncedPlatform } from "@/lib/platforms";
 import { failAccountSync, finishAccountSync, startAccountSync } from "@/lib/sync/runs";
 import { applySnapshot } from "@/lib/sync/upsert";
 import { accountSyncEvent, inngest } from "../client";
@@ -9,7 +11,12 @@ const deps: AccountSyncDeps = {
   startAccountSync,
   finishAccountSync,
   applySnapshot,
-  getAdapter: (platform) => ADAPTERS[platform],
+  getAdapter: (platform) => {
+    if (!isSyncedPlatform(platform)) {
+      throw new NonRetriableError(`${platform} is read by the browser extension, not synced.`);
+    }
+    return ADAPTERS[platform];
+  },
 };
 
 export const syncAccount = inngest.createFunction(

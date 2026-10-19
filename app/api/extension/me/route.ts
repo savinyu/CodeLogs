@@ -1,19 +1,36 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { authenticateBearer } from "@/lib/api-tokens";
+import type { PlatformId } from "@/lib/adapters/types";
 import { db } from "@/lib/db/client";
 import { platformAccounts } from "@/lib/db/schema";
 
-// The browser extension's connection check: who the token belongs to and their LeetCode handle.
+// The browser extension's connection check: who the token belongs to, their LeetCode handle
+// (the current extension reads it) and every connected handle.
 export async function GET(request: Request) {
   const user = await authenticateBearer(request.headers.get("authorization"));
   if (!user) return unauthorized();
-  const [account] = await db
-    .select({ handle: platformAccounts.handle })
+  const accounts = await db
+    .select({
+      platform: platformAccounts.platform,
+      handle: platformAccounts.handle,
+      verified: platformAccounts.verified,
+      lastSyncedAt: platformAccounts.lastSyncedAt,
+    })
     .from(platformAccounts)
-    .where(and(eq(platformAccounts.userId, user.userId), eq(platformAccounts.platform, "leetcode")))
-    .limit(1);
+    .where(eq(platformAccounts.userId, user.userId));
+
+  const handles: Partial<
+    Record<PlatformId, { handle: string; verified: boolean; lastSyncedAt: string | null }>
+  > = {};
+  for (const a of accounts) {
+    handles[a.platform] = {
+      handle: a.handle,
+      verified: a.verified,
+      lastSyncedAt: a.lastSyncedAt?.toISOString() ?? null,
+    };
+  }
   return Response.json(
-    { username: user.username, leetcodeHandle: account?.handle ?? null },
+    { username: user.username, leetcodeHandle: handles.leetcode?.handle ?? null, handles },
     { headers: noStore },
   );
 }

@@ -1,0 +1,29 @@
+{
+  "difficulty_problems_solved": [
+    {
+      "id": null,
+      "difficulty_level": "easy",
+      "time_to_solve": 8104456,
+      "solved_problems_count": 259
+    },
+    {
+      "id": null,
+      "difficulty_level": "medium",
+      "time_to_solve": 232858,
+      "solved_problems_count": 248
+    },
+    {
+      "id": null,
+      "difficulty_level": "hard",
+      "time_to_solve": 9492,
+      "solved_problems_count": 36
+    },
+    {
+      "id": null,
+      "difficulty_level": "very_easy",
+      "time_to_solve": 224549,
+      "solved_problems_count": 32
+    }
+  ],
+  "total_problems_solved": 575
+}

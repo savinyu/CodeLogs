@@ -4,6 +4,7 @@ import { Bar } from "@/components/kit/bar";
 import { Chip } from "@/components/kit/chip";
 import { DifficultyBadge } from "@/components/kit/difficulty-badge";
 import { PlatformDot } from "@/components/kit/platform-dot";
+import { PLATFORM_META } from "@/lib/platforms";
 import { WEAK_BELOW } from "@/lib/topics/scoring";
 import type { Recommendation } from "@/lib/topics/recommend";
 import { formatPct, type TopicState, type TopicView } from "@/lib/topics/view";
@@ -18,8 +19,6 @@ const BAR_TONE: Record<TopicState, "weak" | "ontrack" | "strong"> = {
   ontrack: "ontrack",
   strong: "strong",
 };
-const PLATFORM_SHORT = { codeforces: "CF", atcoder: "AC", leetcode: "LC" } as const;
-
 export interface SheetRow {
   key: string;
   label: string;
@@ -89,7 +88,7 @@ export function TopicDetail({
           {topic.platforms.map((p) => (
             <Chip key={p.platform}>
               <PlatformDot platform={p.platform} />
-              {PLATFORM_SHORT[p.platform]} {p.solved} of ~{Math.round(p.expected)}
+              {PLATFORM_META[p.platform].short} {p.solved} of ~{Math.round(p.expected)}
             </Chip>
           ))}
         </div>

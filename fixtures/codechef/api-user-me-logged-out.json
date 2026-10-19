@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "user": {
+    "username": null,
+    "uid": null,
+    "email": null,
+    "html_handle": null,
+    "fullName": null,
+    "rating": -1
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "models": [
+    {
+      "id": 5,
+      "status": "Accepted",
+      "language": "python3",
+      "score": 1.0,
+      "challenge_id": 50,
+      "challenge": {
+        "name": "Solve Me First",
+        "slug": "solve-me-first"
+      },
+      "created_at": 1700003000
+    },
+    {
+      "id": 4,
+      "status": "Wrong Answer",
+      "language": "python3",
+      "score": 1.0,
+      "challenge_id": 40,
+      "challenge": {
+        "name": "Simple Array Sum",
+        "slug": "simple-array-sum"
+      },
+      "created_at": 1700002000
+    },
+    {
+      "id": 3,
+      "status": "Accepted",
+      "language": "python3",
+      "score": 1.0,
+      "challenge_id": 30,
+      "challenge": {
+        "name": "Simple Array Sum",
+        "slug": "simple-array-sum"
+      },
+      "created_at": 1700001000
+    },
+    {
+      "id": 2,
+      "status": "Terminated due to timeout",
+      "language": "python3",
+      "score": 1.0,
+      "challenge_id": 20,
+      "challenge": {
+        "name": "Compare the Triplets",
+        "slug": "compare-the-triplets"
+      },
+      "created_at": 1700000500
+    },
+    {
+      "id": 1,
+      "status": "Accepted",
+      "language": "python3",
+      "score": 1.0,
+      "challenge_id": 10,
+      "challenge": {
+        "name": "Solve Me First",
+        "slug": "solve-me-first"
+      },
+      "created_at": 1699990000
+    }
+  ],
+  "total": 5
+}

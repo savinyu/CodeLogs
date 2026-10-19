@@ -1,0 +1,35 @@
+{
+  "uuid": "ab12cd34",
+  "dsa_domain_data": {
+    "contest_ranks": {
+      "1": 2,
+      "2": 1
+    },
+    "problem_count_data": {
+      "difficulty_data": [
+        {
+          "level": "Easy",
+          "count": 178
+        },
+        {
+          "level": "Moderate",
+          "count": 67
+        },
+        {
+          "level": "Hard",
+          "count": 28
+        },
+        {
+          "level": "Ninja",
+          "count": 0
+        }
+      ],
+      "total_count": 273
+    },
+    "badges_hash_keys": [
+      "master",
+      "specialist",
+      "achiever"
+    ]
+  }
+}

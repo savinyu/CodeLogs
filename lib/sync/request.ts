@@ -1,5 +1,5 @@
 import "server-only";
-import type { PlatformId } from "@/lib/adapters/types";
+import type { SyncedPlatformId } from "@/lib/adapters/types";
 import { accountSyncEvent, inngest } from "@/lib/inngest/client";
 import { claimAccountsForSync, releaseClaim } from "./runs";
 
@@ -13,7 +13,7 @@ const QUEUE_ERROR = "Couldn't queue the sync. Is the Inngest dev server running?
  */
 export async function requestSync(
   userId: string,
-  opts: { platforms?: PlatformId[]; ignoreCooldown?: boolean } = {},
+  opts: { platforms?: SyncedPlatformId[]; ignoreCooldown?: boolean } = {},
 ): Promise<RequestSyncResult> {
   const claimed = await claimAccountsForSync(userId, opts);
   if (claimed.length === 0) return { ok: true, queued: 0 };

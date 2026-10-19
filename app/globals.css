@@ -42,6 +42,11 @@
   --color-platform-codeforces: var(--platform-codeforces);
   --color-platform-atcoder: var(--platform-atcoder);
   --color-platform-leetcode: var(--platform-leetcode);
+  --color-platform-codechef: var(--platform-codechef);
+  --color-platform-code360: var(--platform-code360);
+  --color-platform-hackerrank: var(--platform-hackerrank);
+  --color-platform-interviewbit: var(--platform-interviewbit);
+  --color-platform-gfg: var(--platform-gfg);
   --color-heat-0: var(--heat-0);
   --color-heat-1: var(--heat-1);
   --color-heat-2: var(--heat-2);
@@ -116,6 +121,11 @@
   --platform-codeforces: #2563eb;
   --platform-atcoder: #0d8a7e;
   --platform-leetcode: #d97706;
+  --platform-codechef: #8a5a35;
+  --platform-code360: #a21caf;
+  --platform-hackerrank: #475467;
+  --platform-interviewbit: #4338ca;
+  --platform-gfg: #2f8d46;
   --heat-0: #e8e0e2;
   --heat-1: #bfe5cd;
   --heat-2: #78c79f;
@@ -183,6 +193,11 @@
   --platform-codeforces: #6aa0ff;
   --platform-atcoder: #2dd4bf;
   --platform-leetcode: #fbbf24;
+  --platform-codechef: #d4a373;
+  --platform-code360: #e879f9;
+  --platform-hackerrank: #b4bfcc;
+  --platform-interviewbit: #8b93ff;
+  --platform-gfg: #5fd07a;
   --heat-0: #2d2528;
   --heat-1: #1f4d38;
   --heat-2: #2f7a54;

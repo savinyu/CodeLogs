@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "problem_statement": "Max Sum Contiguous Subarray",
+      "slug": "max-sum-contiguous-subarray",
+      "difficulty_level": "medium",
+      "score": 100,
+      "average_solving_time": 600,
+      "solved_by": 1000,
+      "topic_title": "Arrays",
+      "tag_names": [
+        "Arrays"
+      ],
+      "has_solved": false
+    },
+    {
+      "id": 2,
+      "problem_statement": "Noble Integer",
+      "slug": "noble-integer",
+      "difficulty_level": "easy",
+      "score": 100,
+      "average_solving_time": 600,
+      "solved_by": 1000,
+      "topic_title": "Arrays",
+      "tag_names": [
+        "Arrays"
+      ],
+      "has_solved": false
+    }
+  ]
+}

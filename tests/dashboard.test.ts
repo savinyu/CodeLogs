@@ -78,7 +78,8 @@ describe("helpers", () => {
 
   it("parses the platform filter, defaulting to all", () => {
     expect(parsePlatformFilter("codeforces")).toBe("codeforces");
-    expect(parsePlatformFilter("hackerrank")).toBe("all");
+    expect(parsePlatformFilter("hackerrank")).toBe("hackerrank");
+    expect(parsePlatformFilter("topcoder")).toBe("all");
     expect(parsePlatformFilter(undefined)).toBe("all");
     expect(parsePlatformFilter(["codeforces"])).toBe("all");
   });
@@ -169,6 +170,125 @@ describe("buildDashboard", () => {
       { codeforces: 6 },
     ]);
     expect(d.difficulty.map((r) => r.total)).toEqual([121, 0, 195, 43, 0, 6]);
+  });
+
+  describe("extension platforms", () => {
+    const ibCounts = {
+      platform: "interviewbit" as const,
+      kind: "ext_counts",
+      payload: {
+        total: 40,
+        byDifficulty: { very_easy: 5, easy: 15, medium: 15, hard: 5 },
+        split: { easy: 20, medium: 15, hard: 5 },
+      },
+    };
+
+    it("uses the reported ext_counts total and split, in platform order", () => {
+      const d = buildDashboard(
+        raw({
+          accounts: [account("interviewbit"), account("leetcode"), account("gfg")],
+          stats: [ibCounts],
+        }),
+        ASOF,
+      );
+      expect(d.totals.map((t) => t.platform)).toEqual(["leetcode", "interviewbit", "gfg"]);
+      expect(d.totals.find((t) => t.platform === "interviewbit")).toEqual({
+        platform: "interviewbit",
+        solved: 40,
+        source: "reported",
+        listed: 0,
+        split: { easy: 20, medium: 15, hard: 5 },
+      });
+      // No upload yet: tracked rows, no split.
+      expect(d.totals.find((t) => t.platform === "gfg")).toEqual({
+        platform: "gfg",
+        solved: 0,
+        source: "tracked",
+        listed: 0,
+      });
+    });
+
+    it("keeps the total but omits the split when no label maps to a tier", () => {
+      const d = buildDashboard(
+        raw({
+          accounts: [account("codechef")],
+          solveCounts: [],
+          stats: [
+            {
+              platform: "codechef",
+              kind: "ext_counts",
+              payload: { total: 12, byDifficulty: {}, split: null },
+            },
+          ],
+        }),
+        ASOF,
+      );
+      expect(d.totals).toEqual([
+        { platform: "codechef", solved: 12, source: "reported", listed: 0 },
+      ]);
+    });
+
+    it("ignores a malformed ext_counts payload", () => {
+      const d = buildDashboard(
+        raw({
+          accounts: [account("hackerrank")],
+          solveCounts: [{ platform: "hackerrank", count: 3 }],
+          stats: [{ platform: "hackerrank", kind: "ext_counts", payload: { total: "many" } }],
+        }),
+        ASOF,
+      );
+      expect(d.totals).toEqual([
+        { platform: "hackerrank", solved: 3, source: "tracked", listed: 3 },
+      ]);
+    });
+
+    it("adds the reported split to the difficulty chart: easy 1, medium 3, hard 4", () => {
+      const d = buildDashboard(
+        raw({ accounts: [account("interviewbit")], difficulty: [], stats: [ibCounts] }),
+        ASOF,
+      );
+      expect(d.difficulty.map((r) => r.counts)).toEqual([
+        { interviewbit: 20 },
+        {},
+        { interviewbit: 15 },
+        { interviewbit: 5 },
+        {},
+        {},
+      ]);
+    });
+
+    it("prefers the solve rows when they cover the reported total (no double counting)", () => {
+      const gfg = {
+        platform: "gfg" as const,
+        kind: "ext_counts",
+        payload: { total: 10, byDifficulty: {}, split: { easy: 6, medium: 3, hard: 1 } },
+      };
+      const rows = (count: number) => ({
+        accounts: [account("gfg")],
+        solveCounts: [{ platform: "gfg" as const, count }],
+        difficulty: [
+          { platform: "gfg" as const, band: 1, count: Math.floor(count / 2) },
+          { platform: "gfg" as const, band: 3, count: count - Math.floor(count / 2) },
+        ],
+        stats: [gfg],
+      });
+      const covered = buildDashboard(raw(rows(10)), ASOF);
+      expect(covered.difficulty.map((r) => r.total)).toEqual([5, 0, 5, 0, 0, 0]);
+      const partial = buildDashboard(raw(rows(4)), ASOF);
+      expect(partial.difficulty.map((r) => r.total)).toEqual([6, 0, 3, 1, 0, 0]);
+    });
+
+    it("filters to one extension platform", () => {
+      const d = filterDashboard(
+        buildDashboard(
+          raw({ accounts: [account("interviewbit"), account("leetcode")], stats: [ibCounts] }),
+          ASOF,
+        ),
+        parsePlatformFilter("interviewbit"),
+      );
+      expect(d.totals.map((t) => t.platform)).toEqual(["interviewbit"]);
+      expect(d.contests).toEqual([]);
+    });
   });
 
   it("lists only connected platforms in the totals", () => {

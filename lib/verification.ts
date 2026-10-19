@@ -1,6 +1,6 @@
 // Pure helpers for the handle verification flow (no DB, safe for client code and tests).
 
-import type { PlatformId } from "@/lib/adapters/types";
+import type { SyncedPlatformId } from "@/lib/adapters/types";
 
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 const TOKEN_PREFIX = "codelogs-";
@@ -25,8 +25,9 @@ export function fieldContainsToken(field: string | null, token: string): boolean
   return field.toLowerCase().includes(token.toLowerCase());
 }
 
+/** The bio-code check, for server-synced platforms. Extension platforms verify by login match. */
 export const VERIFY_FIELD: Record<
-  PlatformId,
+  SyncedPlatformId,
   { label: string; settingsUrl: string; hint: string }
 > = {
   codeforces: {
