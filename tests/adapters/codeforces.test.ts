@@ -331,6 +331,51 @@ describe("fetchPage", () => {
     expect(page.resumeCursor).toEqual(cursor(20));
   });
 
+  it("incremental: the cursor stops below the oldest pending submission", async () => {
+    mockHttp([
+      {
+        match: "user.status",
+        json: {
+          status: "OK",
+          result: [
+            { ...sub(30, "OK"), verdict: undefined },
+            sub(25, "TESTING"),
+            sub(20, "OK", "B"),
+            sub(15, "WA"),
+          ],
+        },
+      },
+    ]);
+    const page = await codeforcesAdapter.fetchPage("h", cursor(10), 1);
+    expect(page.resumeCursor).toEqual(cursor(20));
+  });
+
+  it("incremental: all-pending new rows keep the old cursor", async () => {
+    mockHttp([{ match: "user.status", json: { status: "OK", result: [sub(30, "TESTING")] } }]);
+    const page = await codeforcesAdapter.fetchPage("h", cursor(10), 1);
+    expect(page.resumeCursor).toBeNull();
+  });
+
+  it("first sync: the cursor stops below a pending submission", async () => {
+    mockHttp([
+      {
+        match: "user.status",
+        json: {
+          status: "OK",
+          result: [{ ...sub(9, "OK"), verdict: undefined }, sub(8, "OK", "B"), sub(7, "WA")],
+        },
+      },
+    ]);
+    const page = await codeforcesAdapter.fetchPage("h", null, 1);
+    expect(page.resumeCursor).toEqual(cursor(8));
+  });
+
+  it("first sync: all-pending history gives no cursor", async () => {
+    mockHttp([{ match: "user.status", json: { status: "OK", result: [sub(9, "TESTING")] } }]);
+    const page = await codeforcesAdapter.fetchPage("h", null, 1);
+    expect(page.resumeCursor).toBeNull();
+  });
+
   it("retries after 'Call limit exceeded' and then succeeds", async () => {
     const http = mockHttp([
       {

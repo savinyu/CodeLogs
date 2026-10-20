@@ -3,6 +3,7 @@
 // (kenkoooo returns `200 []` for unknown users, so it can't validate). See FINDINGS.md.
 // Pure: HTTP in, normalized data out. No DB, env or server-only imports.
 
+import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import { HttpError, isRetryableError, request, requestJson } from "@/lib/adapters/http";
 import type {
   CatalogAdapter,
@@ -146,7 +147,9 @@ async function validateHandle(handle: string): Promise<ValidateResult> {
 
 async function readVerificationField(handle: string): Promise<string | null> {
   const res = await fetchProfile(handle);
-  if (res.status === 404) return null;
+  if (res.status === 404) {
+    throw new PlatformUserNotFoundError(`AtCoder user "${handle}" not found (HTTP 404)`);
+  }
   if (!res.ok) {
     throw new HttpError(
       "status",
