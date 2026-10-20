@@ -122,19 +122,13 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
   return (
     <Panel id="extension" aria-labelledby="extension-title">
       <PanelHeader title="CodeLogs browser extension" titleId="extension-title">
-        The extension reads your own logged-in browser and sends CodeLogs only handles, problem
-        titles, difficulty, dates and counts. It syncs your full LeetCode history (the public API
-        only shows your 20 most recent solves) and CodeChef, Code360, HackerRank, InterviewBit and
-        GeeksforGeeks. Your cookies and passwords never leave your browser. See the{" "}
-        <Link href="/privacy" className="text-foreground underline underline-offset-2">
-          privacy policy
-        </Link>
-        .
+        The public API only shows your last 20 LeetCode solves. The extension syncs your full
+        history, plus CodeChef, Code360, HackerRank, InterviewBit and GFG.
       </PanelHeader>
       <ol className="mb-4 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
         {EXTENSION_STORE_URL ? (
           <li>
-            Install the extension from the{" "}
+            <strong>Install:</strong> get the extension from the{" "}
             <a
               href={EXTENSION_STORE_URL}
               target="_blank"
@@ -147,21 +141,26 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
           </li>
         ) : (
           <li>
-            Install the extension. It isn&apos;t on the Chrome Web Store yet, so load the{" "}
-            <code>extension/</code> folder of the CodeLogs repo as an unpacked extension
-            (chrome://extensions → Developer mode → Load unpacked).
+            <strong>Install:</strong> chrome://extensions → Developer mode → Load unpacked → pick{" "}
+            <code>extension/</code> from the CodeLogs repo.
           </li>
         )}
         <li>
-          Open the extension and click <strong>Connect to CodeLogs</strong>. It links to this
-          account: no token to copy.
+          <strong>Connect:</strong> open the extension → <strong>Connect to CodeLogs</strong>. No
+          token needed.
         </li>
         <li>
-          That&apos;s it. It syncs right away, then by itself: whenever you visit one of these sites
-          (at most every 6 hours) and LeetCode once a day. You can turn automatic sync off in the
-          extension, and Sync any platform by hand.
+          <strong>That&apos;s it.</strong> It syncs when you visit these sites (at most every 6 h)
+          and LeetCode daily. You can pause it anytime.
         </li>
       </ol>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Only handles, problem titles, difficulty and dates are sent. Never your cookies or
+        passwords.{" "}
+        <Link href="/privacy" className="text-foreground underline underline-offset-2">
+          Privacy policy
+        </Link>
+      </p>
       {EXTENSION_STORE_URL ? (
         <a
           href={EXTENSION_STORE_URL}
