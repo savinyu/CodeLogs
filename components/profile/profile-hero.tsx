@@ -1,4 +1,4 @@
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { AddFriendButton } from "@/components/friends/add-friend-button";
 import { Chip } from "@/components/kit/chip";
 import { PlatformDot } from "@/components/kit/platform-dot";
@@ -28,7 +28,8 @@ function monthYear(day: string): string {
 
 /**
  * The public profile's top block (Coach's .pub-hero): avatar, name, @username, social pills and
- * verified handle chips. `friendship` is set only for a signed-in visitor who isn't the owner.
+ * verified handle chips. The handles sit behind one summary pill so a long list doesn't crowd the
+ * hero. `friendship` is set only for a signed-in visitor who isn't the owner.
  */
 export function ProfileHero({
   name,
@@ -112,29 +113,43 @@ export function ProfileHero({
           </ul>
         ) : null}
         {handles.length > 0 ? (
-          <ul aria-label="Verified handles" className="mt-2.5 flex list-none flex-wrap gap-2 p-0">
-            {handles.map(({ platform, handle }) => {
-              const meta = PLATFORM_META[platform];
-              return (
-                <li key={platform}>
-                  <a
-                    href={meta.profileUrl(handle)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-[5px] text-sm font-semibold no-underline outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
-                  >
-                    <PlatformDot platform={platform} />
-                    <span className="[overflow-wrap:anywhere]">
-                      {meta.name} {handle}
-                    </span>
-                    <span className="text-good" title="Verified">
-                      <CheckIcon className="size-3.5" aria-label="Verified" />
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+          <details className="group mt-2.5">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full bg-card py-[5px] pr-2.5 pl-3 text-sm font-semibold outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+              <span aria-hidden="true" className="flex -space-x-1">
+                {handles.map(({ platform }) => (
+                  <PlatformDot key={platform} platform={platform} className="ring-2 ring-card" />
+                ))}
+              </span>
+              {handles.length} verified {handles.length === 1 ? "handle" : "handles"}
+              <ChevronDownIcon
+                aria-hidden="true"
+                className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <ul aria-label="Verified handles" className="mt-2 flex list-none flex-wrap gap-2 p-0">
+              {handles.map(({ platform, handle }) => {
+                const meta = PLATFORM_META[platform];
+                return (
+                  <li key={platform}>
+                    <a
+                      href={meta.profileUrl(handle)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-[5px] text-sm font-semibold no-underline outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <PlatformDot platform={platform} />
+                      <span className="[overflow-wrap:anywhere]">
+                        {meta.name} {handle}
+                      </span>
+                      <span className="text-good" title="Verified">
+                        <CheckIcon className="size-3.5" aria-label="Verified" />
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </details>
         ) : null}
       </div>
     </div>
