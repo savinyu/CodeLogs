@@ -146,8 +146,7 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
           </li>
         )}
         <li>
-          <strong>Connect:</strong> open the extension → <strong>Connect to CodeLogs</strong>. No
-          token needed.
+          <strong>Connect:</strong> open the extension → <strong>Connect to CodeLogs</strong>.
         </li>
         <li>
           <strong>That&apos;s it.</strong> It syncs when you visit these sites (at most every 6 h)
@@ -156,7 +155,7 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
       </ol>
       <p className="mb-4 text-sm text-muted-foreground">
         Only handles, problem titles, difficulty and dates are sent. Never your cookies or
-        passwords.{" "}
+        passwords.{" "} <br/>
         <Link href="/privacy" className="text-foreground underline underline-offset-2">
           Privacy policy
         </Link>
