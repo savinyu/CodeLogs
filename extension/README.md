@@ -7,6 +7,8 @@ use those sites, and whenever you click **Sync**.
 
 ## Install
 
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/codelogs/cnhphpfejpffijadknkhiaifgmpgmmch). To run this folder instead (for development):
+
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick this `extension/` folder.
 3. A welcome tab opens (the popup's own page). Click **Connect to CodeLogs**. Chrome asks once for

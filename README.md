@@ -39,7 +39,7 @@ LeetCode keeps your full solved list private, and CodeChef, Code360, HackerRank,
 - **Syncs on its own:** once when you connect, then when you visit a platform (at most every 6 hours, in that same tab) and LeetCode daily. A switch turns this off, and **Sync** runs it now.
 - **Sends only what's needed:** handles, problem ids, titles, difficulty, dates and counts. It never sends passwords, cookies or your code.
 
-The Chrome Web Store listing is on its way. Until then, load it unpacked: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder. See [`extension/README.md`](extension/README.md) for details.
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/codelogs/cnhphpfejpffijadknkhiaifgmpgmmch). To run it from source, load it unpacked: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder. See [`extension/README.md`](extension/README.md) for details.
 
 ## How it works
 
