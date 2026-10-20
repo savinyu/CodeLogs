@@ -15,6 +15,8 @@ const SHEET_SLUGS: ReadonlySet<string> = new Set(
   SHEETS.flatMap((s) => s.sections.flatMap((sec) => sec.problems.map((p) => p.slug))),
 );
 
+const SAVE_FAILED = "Could not save that. Try again.";
+
 const followInput = z.object({ sheetId: z.enum(SHEET_IDS), following: z.boolean() });
 const tickInput = z.object({ slug: z.string().min(1).max(200), ticked: z.boolean() });
 
@@ -25,13 +27,17 @@ export async function setSheetFollow(input: unknown): Promise<SheetActionResult>
   const parsed = followInput.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid sheet." };
   const { sheetId, following } = parsed.data;
-  await db
-    .insert(sheetFollows)
-    .values({ userId: user.id, sheetId, following })
-    .onConflictDoUpdate({
-      target: [sheetFollows.userId, sheetFollows.sheetId],
-      set: { following, updatedAt: new Date() },
-    });
+  try {
+    await db
+      .insert(sheetFollows)
+      .values({ userId: user.id, sheetId, following })
+      .onConflictDoUpdate({
+        target: [sheetFollows.userId, sheetFollows.sheetId],
+        set: { following, updatedAt: new Date() },
+      });
+  } catch {
+    return { ok: false, error: SAVE_FAILED };
+  }
   userDataChanged(user.id);
   return { ok: true };
 }
@@ -44,12 +50,16 @@ export async function setSheetTick(input: unknown): Promise<SheetActionResult> {
   if (!parsed.success) return { ok: false, error: "Invalid problem." };
   const { slug, ticked } = parsed.data;
   if (!SHEET_SLUGS.has(slug)) return { ok: false, error: "That problem is not on a sheet." };
-  if (ticked) {
-    await db.insert(sheetTicks).values({ userId: user.id, slug }).onConflictDoNothing();
-  } else {
-    await db
-      .delete(sheetTicks)
-      .where(and(eq(sheetTicks.userId, user.id), eq(sheetTicks.slug, slug)));
+  try {
+    if (ticked) {
+      await db.insert(sheetTicks).values({ userId: user.id, slug }).onConflictDoNothing();
+    } else {
+      await db
+        .delete(sheetTicks)
+        .where(and(eq(sheetTicks.userId, user.id), eq(sheetTicks.slug, slug)));
+    }
+  } catch {
+    return { ok: false, error: SAVE_FAILED };
   }
   userDataChanged(user.id);
   return { ok: true };

@@ -7,7 +7,7 @@ import { users } from "@/lib/db/schema";
 import { emailUsernameBase, usernameBase, usernameCandidates } from "@/lib/usernames";
 
 /** Postgres unique violation; with neon-http + drizzle the pg error may sit on `cause`. */
-function isUniqueViolation(err: unknown): boolean {
+export function isUniqueViolation(err: unknown): boolean {
   const e = err as { code?: unknown; cause?: { code?: unknown } } | null;
   return e?.code === "23505" || e?.cause?.code === "23505";
 }

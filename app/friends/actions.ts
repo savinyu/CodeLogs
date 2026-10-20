@@ -3,13 +3,18 @@
 import { and, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { userDataChanged } from "@/lib/cache";
+import { isUniqueViolation } from "@/lib/assign-username";
 import { db } from "@/lib/db/client";
 import { friendships, users } from "@/lib/db/schema";
 import { pairWhere } from "@/lib/friends/queries";
 import { isValidUsername, normalizeUsername } from "@/lib/friends/username";
 import { getCurrentUser } from "@/lib/session";
 
-export type FriendActionResult = { ok: true; message: string } | { ok: false; error: string };
+/** Machine-readable reason for a failed request, so the UI can show the real relationship. */
+export type FriendFailureCode = "pending_out" | "pending_in" | "friends";
+
+export type FriendActionResult =
+  { ok: true; message: string } | { ok: false; error: string; code?: FriendFailureCode };
 
 /** Pending requests one person may have out at a time. */
 const MAX_OUTGOING = 20;
@@ -25,6 +30,30 @@ async function findUser(username: string) {
     .where(sql`lower(${users.username}) = ${username}`)
     .limit(1);
   return row ?? null;
+}
+
+/** The failure for a pair that already has a friendship row, or null when there is none. */
+async function findExisting(
+  userId: string,
+  otherId: string,
+  target: string,
+): Promise<FriendActionResult | null> {
+  const [existing] = await db
+    .select({ requesterId: friendships.requesterId, status: friendships.status })
+    .from(friendships)
+    .where(pairWhere(userId, otherId))
+    .limit(1);
+  if (!existing) return null;
+  if (existing.status === "accepted") {
+    return { ok: false, error: `@${target} is already your friend.`, code: "friends" };
+  }
+  return existing.requesterId === userId
+    ? { ok: false, error: `Your request to @${target} is still pending.`, code: "pending_out" }
+    : {
+        ok: false,
+        error: `@${target} already sent you a request. Accept it below.`,
+        code: "pending_in",
+      };
 }
 
 export async function sendFriendRequest(username: unknown): Promise<FriendActionResult> {
@@ -44,23 +73,8 @@ export async function sendFriendRequest(username: unknown): Promise<FriendAction
     if (!other || other.id === user.id) {
       return { ok: false, error: "No CodeLogs user with that username." };
     }
-    const [existing] = await db
-      .select({ requesterId: friendships.requesterId, status: friendships.status })
-      .from(friendships)
-      .where(pairWhere(user.id, other.id))
-      .limit(1);
-    if (existing?.status === "accepted") {
-      return { ok: false, error: `@${target} is already your friend.` };
-    }
-    if (existing) {
-      return {
-        ok: false,
-        error:
-          existing.requesterId === user.id
-            ? `Your request to @${target} is still pending.`
-            : `@${target} already sent you a request. Accept it below.`,
-      };
-    }
+    const existing = await findExisting(user.id, other.id, target);
+    if (existing) return existing;
     const [{ n } = { n: 0 }] = await db
       .select({ n: count() })
       .from(friendships)
@@ -76,7 +90,17 @@ export async function sendFriendRequest(username: unknown): Promise<FriendAction
       .values({ requesterId: user.id, addresseeId: other.id, status: "pending" });
     userDataChanged(user.id, other.id);
     return { ok: true, message: `Request sent to @${target}.` };
-  } catch {
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      // A concurrent request between the two of you won the race: report what is there now.
+      try {
+        const other = await findUser(target);
+        const existing = other ? await findExisting(user.id, other.id, target) : null;
+        if (existing) return existing;
+      } catch {
+        // fall through to the generic error
+      }
+    }
     return { ok: false, error: FAILED };
   }
 }
