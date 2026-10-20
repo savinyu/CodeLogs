@@ -37,6 +37,13 @@ function statusTone(platform: PlatformId, status: AccountSummary["status"]) {
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
+// The split chips show only the number, in the difficulty's color; the tier name is on hover.
+const SPLIT: { key: "easy" | "medium" | "hard"; name: string; className: string }[] = [
+  { key: "easy", name: "Easy", className: "text-difficulty-easy" },
+  { key: "medium", name: "Medium", className: "text-difficulty-medium" },
+  { key: "hard", name: "Hard", className: "text-difficulty-hard" },
+];
+
 /** The "Total solved" tile and one tile per shown platform (Coach's .tiles). */
 export function PlatformTiles({
   totals,
@@ -52,14 +59,12 @@ export function PlatformTiles({
   const only = filter === "all" ? null : totals[0];
   const label = only ? `${PLATFORM_META[only.platform].name} solved` : "Total solved";
   const sub = only
-    ? only.source === "reported"
-      ? `count reported by ${PLATFORM_META[only.platform].name}`
-      : "tracked from your submissions"
+    ? undefined
     : `across ${shown.length} ${shown.length === 1 ? "platform" : "platforms"}`;
 
   return (
     <StatTiles>
-      <StatTile tone="primary" label={label} value={fmt(sum)} sub={sub} />
+      <StatTile tone="primary" size="lg" label={label} value={fmt(sum)} sub={sub} />
       {shown.map((t) => {
         const meta = PLATFORM_META[t.platform];
         const account = accounts.find((a) => a.platform === t.platform);
@@ -82,26 +87,16 @@ export function PlatformTiles({
             }
             value={fmt(t.solved)}
             sub={
-              <>
-                {t.source === "reported"
-                  ? isExtensionPlatform(t.platform)
-                    ? "reported count"
-                    : `count (reported by ${meta.name})`
-                  : "solved"}
-                {account ? (
-                  <>
-                    {" · "}
-                    <a
-                      href={meta.profileUrl(account.handle)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
-                    >
-                      {account.handle}
-                    </a>
-                  </>
-                ) : null}
-              </>
+              account ? (
+                <a
+                  href={meta.profileUrl(account.handle)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  {account.handle}
+                </a>
+              ) : undefined
             }
           >
             <Extra total={t} />
@@ -122,12 +117,15 @@ function Extra({ total: t }: { total: PlatformTotal }) {
       </div>
     );
   }
-  if (t.split) {
+  const split = t.split;
+  if (split) {
     return (
       <div className="flex flex-wrap gap-1.5">
-        <Chip>Easy {fmt(t.split.easy)}</Chip>
-        <Chip>Medium {fmt(t.split.medium)}</Chip>
-        <Chip>Hard {fmt(t.split.hard)}</Chip>
+        {SPLIT.map((d) => (
+          <Chip key={d.key} title={d.name} className={d.className}>
+            {fmt(split[d.key])}
+          </Chip>
+        ))}
       </div>
     );
   }
