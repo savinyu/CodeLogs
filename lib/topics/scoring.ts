@@ -192,6 +192,8 @@ export interface TopicScore {
   solved: number;
   /** Solves at the catalog's share, for your volume. */
   expected: number;
+  /** Solves weighted by difficulty against your level (CF); equals solved where unweighted. */
+  weighted: number;
   /** (weighted + K) / (expected + K): 1 = on par with the catalog; below WEAK_BELOW is weak. */
   coverage: number;
 }
@@ -206,7 +208,17 @@ export function scoreTopic(topic: TopicStat): TopicScore {
     weighted += p.weighted;
     expected += p.expected;
   }
-  return { solved, expected, coverage: (weighted + K) / (expected + K) };
+  return { solved, expected, weighted, coverage: (weighted + K) / (expected + K) };
+}
+
+/**
+ * Full-weight solves needed to lift a weak topic to WEAK_BELOW:
+ * (weighted + n + K) / (expected + K) >= WEAK_BELOW. 0 when it is already there.
+ */
+export function solvesToLeaveWeak(s: Pick<TopicScore, "expected" | "weighted">): number {
+  // The epsilon absorbs float error, e.g. 0.8 * 5 = 4.000000000000001.
+  const need = Math.ceil(WEAK_BELOW * (s.expected + K) - K - s.weighted - 1e-9);
+  return Math.max(0, need);
 }
 
 /** Problems short of the expectation, in coverage-consistent units. */

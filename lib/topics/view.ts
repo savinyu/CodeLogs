@@ -2,7 +2,7 @@
 
 import type { PlatformId } from "@/lib/adapters/types";
 import type { MacroTopicStat, TopicStat } from "@/lib/dashboard/types";
-import { scoreTopic, WEAK_BELOW } from "./scoring";
+import { scoreTopic, solvesToLeaveWeak, WEAK_BELOW } from "./scoring";
 import type { MacroSlug, TopicSlug } from "./taxonomy";
 
 export type TopicState = "weak" | "ontrack" | "strong";
@@ -80,8 +80,7 @@ export function topicViews(topics: MacroTopicStat[]): TopicView[] {
         expected: p.expected,
       })),
       micros: t.micros.map(micro),
-      toLeaveWeak:
-        state === "weak" ? Math.max(0, Math.ceil(WEAK_BELOW * s.expected) - s.solved) : 0,
+      toLeaveWeak: state === "weak" ? Math.max(1, solvesToLeaveWeak(s)) : 0,
     };
   });
 }
