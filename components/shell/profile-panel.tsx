@@ -39,11 +39,12 @@ function SwitchRow({
   const id = useId();
   return (
     <div className="flex items-center justify-between gap-3">
-      <div>
+      <div className="min-w-0 flex-1">
         <span className="font-semibold" id={`${id}-label`}>
           {label}
         </span>
-        <div className="text-sm text-muted-foreground" id={`${id}-note`}>
+        {/* The public URL has no spaces, so it may break anywhere instead of pushing the switch out. */}
+        <div className="text-sm wrap-anywhere text-muted-foreground" id={`${id}-note`}>
           {note}
         </div>
       </div>
