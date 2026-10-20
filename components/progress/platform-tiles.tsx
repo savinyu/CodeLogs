@@ -37,11 +37,17 @@ function statusTone(platform: PlatformId, status: AccountSummary["status"]) {
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-// The split chips show only the number, in the difficulty's color; the tier name is on hover.
-const SPLIT: { key: "easy" | "medium" | "hard"; name: string; className: string }[] = [
-  { key: "easy", name: "Easy", className: "text-difficulty-easy" },
-  { key: "medium", name: "Medium", className: "text-difficulty-medium" },
-  { key: "hard", name: "Hard", className: "text-difficulty-hard" },
+// The split chips show the tier's initial and the number in the difficulty's color; the full tier
+// name is on hover.
+const SPLIT: {
+  key: "easy" | "medium" | "hard";
+  letter: string;
+  name: string;
+  className: string;
+}[] = [
+  { key: "easy", letter: "E", name: "Easy", className: "text-difficulty-easy" },
+  { key: "medium", letter: "M", name: "Medium", className: "text-difficulty-medium" },
+  { key: "hard", letter: "H", name: "Hard", className: "text-difficulty-hard" },
 ];
 
 /** The "Total solved" tile and one tile per shown platform (Coach's .tiles). */
@@ -123,7 +129,7 @@ function Extra({ total: t }: { total: PlatformTotal }) {
       <div className="flex flex-wrap gap-1.5">
         {SPLIT.map((d) => (
           <Chip key={d.key} title={d.name} className={d.className}>
-            {fmt(split[d.key])}
+            {d.letter} {fmt(split[d.key])}
           </Chip>
         ))}
       </div>
