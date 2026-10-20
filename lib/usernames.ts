@@ -35,3 +35,16 @@ export function usernameCandidates(base: string, count = 20): string[] {
   }
   return out;
 }
+
+const SUFFIX_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+/** `base-xxxxx` with a random 5-char [a-z0-9] suffix, ≤ 39 chars; for when every numbered candidate is taken. */
+export function randomUsernameCandidate(
+  base: string,
+  random: (max: number) => number = (max) => crypto.getRandomValues(new Uint32Array(1))[0]! % max,
+): string {
+  let suffix = "-";
+  for (let i = 0; i < 5; i++) suffix += SUFFIX_ALPHABET[random(SUFFIX_ALPHABET.length)];
+  const head = trimPunctuation(base.slice(0, MAX_LENGTH - suffix.length));
+  return `${head}${suffix}`;
+}

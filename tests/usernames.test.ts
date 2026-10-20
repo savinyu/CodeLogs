@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { isValidUsername } from "@/lib/friends/username";
-import { emailUsernameBase, usernameBase, usernameCandidates } from "@/lib/usernames";
+import {
+  emailUsernameBase,
+  randomUsernameCandidate,
+  usernameBase,
+  usernameCandidates,
+} from "@/lib/usernames";
 
 describe("usernameBase", () => {
   it("lowercases and keeps dots, underscores and dashes", () => {
@@ -59,5 +64,20 @@ describe("usernameCandidates", () => {
     const c = usernameCandidates(`${"a".repeat(35)}.bcd`, 12);
     for (const name of c) expect(isValidUsername(name)).toBe(true);
     expect(c[11]).toBe(`${"a".repeat(35)}-12`);
+  });
+});
+
+describe("randomUsernameCandidate", () => {
+  it("appends a 5-char [a-z0-9] suffix", () => {
+    const name = randomUsernameCandidate("alice");
+    expect(name).toMatch(/^alice-[a-z0-9]{5}$/);
+    expect(isValidUsername(name)).toBe(true);
+  });
+  it("is deterministic for a given random source and shortens long bases", () => {
+    expect(randomUsernameCandidate("bob", () => 0)).toBe("bob-aaaaa");
+    const long = randomUsernameCandidate(`${"a".repeat(35)}.bcd`, () => 35);
+    expect(long.length).toBeLessThanOrEqual(39);
+    expect(long.endsWith("-99999")).toBe(true);
+    expect(isValidUsername(long)).toBe(true);
   });
 });

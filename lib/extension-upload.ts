@@ -20,6 +20,16 @@ export const PROBLEM_HOSTS: Record<ExtensionPlatformId, readonly string[]> = {
   gfg: ["www.geeksforgeeks.org", "practice.geeksforgeeks.org"],
 };
 
+/** A real calendar day (YYYY-MM-DD) from 2000 on: rejects 2026-02-31, 2026-13-01, 0000-00-00. */
+export const calendarDay = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((day) => {
+    if (Number(day.slice(0, 4)) < 2000) return false;
+    const d = new Date(`${day}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === day;
+  }, "Not a real calendar day");
+
 const count = z.number().int().min(0).max(100_000);
 
 const solveSchema = z.object({
@@ -56,7 +66,7 @@ export const extensionUploadSchema = z.object({
   activity: z
     .array(
       z.object({
-        day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        day: calendarDay,
         count: z.number().int().min(0).max(10_000),
       }),
     )
