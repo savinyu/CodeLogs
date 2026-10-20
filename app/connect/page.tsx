@@ -155,7 +155,7 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
       </ol>
       <p className="mb-4 text-sm text-muted-foreground">
         Only handles, problem titles, difficulty and dates are sent. Never your cookies or
-        passwords.{" "} <br/>
+        passwords. <br />
         See{" "}
         <Link href="/privacy" className="text-foreground underline underline-offset-2">
           Privacy policy
