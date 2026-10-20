@@ -6,6 +6,7 @@
 import {
   buildPlatformUpload,
   expectData,
+  getPage,
   isRecord,
   NotLoggedInError,
   ReaderError,
@@ -111,8 +112,12 @@ async function read(ctx) {
   let offset = 0;
   for (let page = 0; page < MAX_PAGES; page++) {
     ctx.progress(`Reading your HackerRank submissions (page ${page + 1})...`);
-    const res = await ctx.get(`/rest/contests/master/submissions/?offset=${offset}&limit=${LIMIT}`);
-    if (res.status !== 200 && page > 0) break;
+    const res = await getPage(
+      ctx,
+      `/rest/contests/master/submissions/?offset=${offset}&limit=${LIMIT}`,
+      page === 0,
+    );
+    if (!res || (res.status !== 200 && page > 0)) break;
     const parsed = parseSubmissionsPage(expectData(NAME, res, "your submissions"));
     if (!parsed.ok) {
       if (page > 0) break;
@@ -125,8 +130,11 @@ async function read(ctx) {
         prev.solvedAt = a.solvedAt;
       }
     }
-    offset += LIMIT;
-    if (parsed.count < LIMIT || (parsed.total !== null && offset >= parsed.total)) {
+    // Advance by what the server returned: it may cap pages below LIMIT, and a short page is only
+    // the end of the list when the total is unknown.
+    offset += parsed.count;
+    const done = parsed.total !== null ? offset >= parsed.total : parsed.count < LIMIT;
+    if (parsed.count === 0 || done) {
       complete = true;
       break;
     }

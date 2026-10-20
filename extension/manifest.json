@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CodeLogs",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Syncs the problems you solve on coding sites to your CodeLogs dashboard, from the browser you are already logged in with.",
   "icons": {
     "16": "icons/icon-16.png",

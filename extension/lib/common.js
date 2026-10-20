@@ -26,6 +26,26 @@ const MAX_COUNT = 100_000;
 /** A human message for the popup. Anything else thrown in a job is shown as a generic error. */
 export class ReaderError extends Error {}
 
+/** The platform kept answering 429/403 after the back-off budget (see job.js). */
+export class ThrottledError extends ReaderError {}
+
+/**
+ * One page of a paginated read. A throttle after the first page returns null: the caller stops
+ * and uploads the pages it has, as an incomplete list. On the first page it still throws.
+ * @param {{ get: (url: string, opts?: any) => Promise<{ status: number, data: unknown }> }} ctx
+ * @param {string} url
+ * @param {boolean} first  whether this is the first page
+ * @returns {Promise<{ status: number, data: unknown } | null>}
+ */
+export async function getPage(ctx, url, first) {
+  try {
+    return await ctx.get(url);
+  } catch (e) {
+    if (!first && e instanceof ThrottledError) return null;
+    throw e;
+  }
+}
+
 /** The platform tab shows no logged-in user. A tab loaded before the user logged in looks like this. */
 export class NotLoggedInError extends ReaderError {}
 

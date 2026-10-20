@@ -2,7 +2,7 @@
 // The request context a platform reader runs against. It paces requests (one at a time, at least
 // minDelayMs apart), backs off on 429/403 and turns problems into short human messages. The
 // actual page access is injected as `runInPage`, so tests can drive a reader with fixtures.
-import { ReaderError, cleanIdentity, sleep as defaultSleep } from "./common.js";
+import { ReaderError, ThrottledError, cleanIdentity, sleep as defaultSleep } from "./common.js";
 
 export const MIN_DELAY_MS = 1500;
 export const BACKOFF_MS = [10_000, 20_000];
@@ -75,7 +75,7 @@ export function createContext(platform, options) {
         if (status === 429 || status === 403) {
           const wait = backoffMs[attempt];
           if (wait === undefined) {
-            throw new ReaderError(
+            throw new ThrottledError(
               `${name} keeps refusing requests (HTTP ${status}). Wait a few minutes and try again.`,
             );
           }

@@ -6,6 +6,7 @@
 import {
   buildPlatformUpload,
   expectData,
+  getPage,
   isRecord,
   istToEpoch,
   NotLoggedInError,
@@ -129,8 +130,8 @@ async function read(ctx) {
   let complete = false;
   for (let page = 0; page < MAX_PAGES; page++) {
     ctx.progress(`Reading your CodeChef submissions (page ${page + 1})...`);
-    const res = await ctx.get(`/recent/user?user_handle=${h}&page=${page}`);
-    if (res.status !== 200 && page > 0) break;
+    const res = await getPage(ctx, `/recent/user?user_handle=${h}&page=${page}`, page === 0);
+    if (!res || (res.status !== 200 && page > 0)) break;
     const parsed = parseRecentPage(expectData(NAME, res, "your submissions"));
     if (!parsed.ok) {
       if (page > 0) break;

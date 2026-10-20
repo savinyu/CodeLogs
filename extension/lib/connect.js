@@ -23,7 +23,7 @@ export async function connectInPage() {
   }
   /** @type {string | null} */
   let marker = null;
-  for (let i = 0; i < 40 && !marker; i++) {
+  for (let i = 0; i < 120 && !marker; i++) {
     marker = document.querySelector(`[${ATTR}]`)?.getAttribute(ATTR) ?? null;
     if (!marker) await new Promise((resolve) => setTimeout(resolve, 250));
   }
