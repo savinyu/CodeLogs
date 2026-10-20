@@ -1,19 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
 
 /** A dropdown menu item that signs the user out. Render it inside <DropdownMenuContent>. */
 export function SignOutMenuItem() {
-  const router = useRouter();
-
   async function handleClick() {
     try {
-      await signOut();
-      router.push("/");
-      router.refresh();
+      const result = await signOut();
+      if (result.error) throw new Error(result.error.message);
+      // Hard navigation, so the client router cache can't show signed-in pages on Back.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign("/");
     } catch {
       toast.error("Could not sign out. Please try again.");
     }
@@ -24,14 +23,13 @@ export function SignOutMenuItem() {
 
 /** A plain button that signs the user out, for panels that aren't dropdown menus. */
 export function SignOutButton({ className, onDone }: { className?: string; onDone?: () => void }) {
-  const router = useRouter();
-
   async function handleClick() {
     try {
-      await signOut();
+      const result = await signOut();
+      if (result.error) throw new Error(result.error.message);
       onDone?.();
-      router.push("/");
-      router.refresh();
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign("/");
     } catch {
       toast.error("Could not sign out. Please try again.");
     }

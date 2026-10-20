@@ -170,13 +170,13 @@ export function TopicDetail({
               <>
                 {" "}
                 Your weakest is{" "}
-                <Link
+                <a
                   href={`/topics?topic=${weakest.slug}`}
                   data-topic-link={weakest.slug}
                   className="font-semibold text-primary-ink"
                 >
                   {weakest.name}
-                </Link>
+                </a>
                 .
               </>
             ) : null}

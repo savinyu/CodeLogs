@@ -78,16 +78,24 @@ export function ProfilePanel({
   function changePublic(next: boolean) {
     startTransition(async () => {
       setPublicOptimistic(next);
-      const result = await setPublicProfile(next);
-      if (!result.ok) toast.error(result.error);
+      try {
+        const result = await setPublicProfile(next);
+        if (!result.ok) toast.error(result.error);
+      } catch {
+        toast.error("Could not save that. Check your connection and try again.");
+      }
     });
   }
 
   function changeBoard(next: boolean) {
     startTransition(async () => {
       setBoardOptimistic(next);
-      const result = await setGlobalBoard(next);
-      if (!result.ok) toast.error(result.error);
+      try {
+        const result = await setGlobalBoard(next);
+        if (!result.ok) toast.error(result.error);
+      } catch {
+        toast.error("Could not save that. Check your connection and try again.");
+      }
     });
   }
 

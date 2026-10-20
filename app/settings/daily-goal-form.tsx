@@ -32,12 +32,16 @@ export function DailyGoalForm({ goal }: { goal: number }) {
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await setDailyGoal(n);
-      if (result.ok) {
-        setSaved(n);
-        setMessage({ ok: true, text: "Saved." });
-      } else {
-        setMessage({ ok: false, text: result.error });
+      try {
+        const result = await setDailyGoal(n);
+        if (result.ok) {
+          setSaved(n);
+          setMessage({ ok: true, text: "Saved." });
+        } else {
+          setMessage({ ok: false, text: result.error });
+        }
+      } catch {
+        setMessage({ ok: false, text: "Could not save. Check your connection and try again." });
       }
     });
   }

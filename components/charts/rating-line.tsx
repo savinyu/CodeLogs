@@ -98,6 +98,9 @@ export function RatingLine({
     for (let j = 1; j < px.length; j++) {
       if (Math.abs((px[j] ?? 0) - vx) < Math.abs((px[i] ?? 0) - vx)) i = j;
     }
+    // On touch a second tap on the same point clears it (pointerleave is ignored for touch).
+    if (e.pointerType === "touch" && e.type === "pointerdown" && hover?.i === i)
+      return setHover(null);
     setHover({ i, w: box.width, h: box.height });
   }
 
@@ -120,7 +123,10 @@ export function RatingLine({
       className="relative"
       onPointerMove={track}
       onPointerDown={track}
-      onPointerLeave={() => setHover(null)}
+      onPointerLeave={(e) => {
+        // On touch, pointerleave fires right after pointerup: keep the tapped point shown.
+        if (e.pointerType !== "touch") setHover(null);
+      }}
     >
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} className="block h-auto w-full">
         {grid.map((v) => (
