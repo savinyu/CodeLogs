@@ -81,7 +81,8 @@ export function UsernameForm({ username }: { username: string | null }) {
     <form onSubmit={onSubmit} className="grid gap-3">
       <div className="grid gap-1.5">
         <Label htmlFor="new-username">New username</Label>
-        <div className="flex h-11 items-center rounded-full bg-raised pl-4 focus-within:ring-3 focus-within:ring-ring/50">
+        {/* The pill is the field: it carries the focus and invalid rings, so the input has none. */}
+        <div className="flex h-11 items-center rounded-full bg-raised pl-4 focus-within:ring-3 focus-within:ring-ring/50 has-[[aria-invalid=true]]:ring-3 has-[[aria-invalid=true]]:ring-destructive/20 dark:has-[[aria-invalid=true]]:ring-destructive/40">
           <span className="text-muted-foreground select-none" aria-hidden>
             @
           </span>
@@ -103,7 +104,7 @@ export function UsernameForm({ username }: { username: string | null }) {
             }}
             aria-invalid={status?.ok === false ? true : undefined}
             aria-describedby="new-username-status"
-            className="h-11 rounded-full border-0 bg-transparent pl-0.5 focus-visible:ring-0 dark:bg-transparent"
+            className="h-11 rounded-full border-0 bg-transparent pl-0.5 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent"
           />
         </div>
         <p
