@@ -1,4 +1,5 @@
 import { cn } from "cn";
+import { InfoTip } from "@/components/kit/info-tip";
 import { WEAK_BELOW } from "@/lib/topics/scoring";
 import { squarify } from "@/lib/topics/treemap";
 import { formatPct, publicStep, type TopicView } from "@/lib/topics/view";
@@ -62,6 +63,22 @@ export function MapLegend({ mode }: { mode: Mode }) {
       {mode === "owner" ? (
         <span className="ml-auto">Weak = under {formatPct(WEAK_BELOW)}</span>
       ) : null}
+    </div>
+  );
+}
+
+/** How "expected" is worked out, for under the owner map; the (i) gives a worked example. */
+export function ExpectedNote() {
+  return (
+    <div className="mt-3 flex items-center gap-2 px-1 text-[0.84rem] text-muted-foreground">
+      <p className="min-w-0">
+        Expected = your solves × the topic&apos;s share of problems. Over 100% is fine: a problem
+        counts toward each of its tags.
+      </p>
+      <InfoTip label="Example of expected">
+        Say 10% of a platform&apos;s problems are Graphs and you&apos;ve solved 200 there: expected
+        is ~20. Solve 40 graph problems and you&apos;re at about 200%.
+      </InfoTip>
     </div>
   );
 }
