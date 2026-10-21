@@ -66,14 +66,18 @@ function sector(a0: number, a1: number): string {
  */
 export function DifficultyRing({ slices, label }: { slices: RingSlice[]; label: string }) {
   const [hovered, setHovered] = useState<number | null>(null);
-  const [pinned, setPinned] = useState<number | null>(null);
+  // Pinned by label, so it survives only while that band still exists (e.g. after ?platform=).
+  const [pinnedLabel, setPinnedLabel] = useState<string | null>(null);
   const totals = slices.map((s) => PLATFORM_ORDER.reduce((n, p) => n + (s.counts[p] ?? 0), 0));
   const total = totals.reduce((a, b) => a + b, 0);
   const pad = slices.length > 1 ? PAD : 0;
-  const activeIndex = hovered ?? pinned;
+  const pinnedIndex = pinnedLabel === null ? -1 : slices.findIndex((s) => s.label === pinnedLabel);
+  const pinned = pinnedIndex === -1 ? null : pinnedIndex;
+  const activeIndex = (hovered !== null && hovered < slices.length ? hovered : null) ?? pinned;
   const active = activeIndex === null ? undefined : slices[activeIndex];
   const activeTotal = activeIndex === null ? 0 : (totals[activeIndex] ?? 0);
-  const pin = (i: number) => setPinned((p) => (p === i ? null : i));
+  const pin = (i: number) =>
+    setPinnedLabel((p) => (p === slices[i]?.label ? null : (slices[i]?.label ?? null)));
 
   // Each slice starts where the ones before it end, in degrees from the top.
   const spans = totals.map((n) => (total > 0 ? (n / total) * 360 : 0));

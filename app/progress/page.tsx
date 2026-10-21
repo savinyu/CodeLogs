@@ -42,9 +42,11 @@ async function ProgressContent({ searchParams }: Pick<PageProps<"/progress">, "s
   const all = await getDashboardData(user.id);
   if (all.accounts.length === 0) return <ConnectPrompt />;
 
-  const filter = parsePlatformFilter(params.platform);
-  const data = filterDashboard(all, filter);
+  const parsed = parsePlatformFilter(params.platform);
   const connected = all.accounts.map((a) => a.platform);
+  // A platform the user hasn't connected would show an empty page with no pill to leave it.
+  const filter = parsed === "all" || connected.includes(parsed) ? parsed : "all";
+  const data = filterDashboard(all, filter);
   const shown = data.accounts.map((a) => a.platform);
   const years = activityYears(data.activity);
   const period = parseActivityPeriod(params.year, years);

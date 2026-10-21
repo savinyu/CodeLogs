@@ -82,6 +82,9 @@ export function StackedColumns({ rows, label }: { rows: StackedColumn[]; label: 
     const y = e.clientY - box.top;
     const i = Math.floor(((x / box.width) * W - PL) / bw);
     if (i < 0 || i >= rows.length) return setHover(null);
+    // On touch a second tap on the same column clears it (pointerleave is ignored for touch).
+    if (e.pointerType === "touch" && e.type === "pointerdown" && hover?.i === i)
+      return setHover(null);
     setHover({ i, x, y, flip: x > box.width / 2 });
   }
 
@@ -93,7 +96,10 @@ export function StackedColumns({ rows, label }: { rows: StackedColumn[]; label: 
       className="relative"
       onPointerMove={track}
       onPointerDown={track}
-      onPointerLeave={() => setHover(null)}
+      onPointerLeave={(e) => {
+        // On touch, pointerleave fires right after pointerup: keep the tapped column shown.
+        if (e.pointerType !== "touch") setHover(null);
+      }}
     >
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} className="block h-auto w-full">
         {gridlines.map((v) => {

@@ -53,11 +53,14 @@ function TokenRow({ token }: { token: ApiTokenSummary }) {
     if (timer.current) clearTimeout(timer.current);
     setError(null);
     startTransition(async () => {
-      const res = await revokeExtensionToken(token.id);
-      if (!res.ok) {
-        setError("Could not revoke this token. Try again.");
-        setConfirming(false);
+      try {
+        const res = await revokeExtensionToken(token.id);
+        if (res.ok) return;
+      } catch {
+        // Treated like a returned failure below.
       }
+      setError("Could not revoke this token. Try again.");
+      setConfirming(false);
     });
   }
 

@@ -37,11 +37,17 @@ export function LeetcodeImport({
       return;
     }
     startTransition(async () => {
-      const result = await importLeetcodeSolves({
-        userName: parsed.userName,
-        slugs: parsed.slugs,
-        numSolved: parsed.numSolved,
-      });
+      let result: Awaited<ReturnType<typeof importLeetcodeSolves>>;
+      try {
+        result = await importLeetcodeSolves({
+          userName: parsed.userName,
+          slugs: parsed.slugs,
+          numSolved: parsed.numSolved,
+        });
+      } catch {
+        setError("Could not reach the server. Check your connection and try again.");
+        return;
+      }
       if (!result.ok) {
         setError(result.error);
         return;
@@ -151,6 +157,8 @@ export function LeetcodeImport({
             type="file"
             accept=".json,.html,.htm,.txt,application/json,text/html,text/plain"
             className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
             id="lc-import-file"
             disabled={pending}
             onChange={(e) => void onFile(e.target.files?.[0])}

@@ -100,7 +100,13 @@ export function Heatmap({
 
   return (
     // rtl starts the scroll at the right edge, so narrow screens show the latest weeks.
-    <div dir="rtl" className="overflow-x-auto pb-1.5">
+    <div
+      dir="rtl"
+      tabIndex={0}
+      role="region"
+      aria-label={`Activity heatmap ${when}, scrollable`}
+      className="overflow-x-auto rounded-item pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <div dir="ltr" className="w-max">
         <svg
           role="img"

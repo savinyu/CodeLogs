@@ -127,6 +127,8 @@ export function TopicsExplorer({
           ref={bodyRef}
           className="flex-1 overflow-y-auto px-6 pt-5 pb-8 max-[560px]:px-4"
           onClick={(e) => {
+            // Let modified and non-primary clicks open normally (new tab, etc.).
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
             // In-drawer links to another topic switch topics instead of reloading the page.
             const link = (e.target as HTMLElement).closest<HTMLElement>("[data-topic-link]");
             const slug = valid(link?.dataset.topicLink ?? null);
