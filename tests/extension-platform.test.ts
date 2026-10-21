@@ -266,6 +266,20 @@ describe("extensionUploadSchema", () => {
     expect(extensionUploadSchema.safeParse(valid).success).toBe(true);
   });
 
+  it("accepts real calendar days, including leap days", () => {
+    for (const day of ["2024-02-29", "2000-01-01", "2026-12-31"]) {
+      const r = extensionUploadSchema.safeParse({ ...valid, activity: [{ day, count: 1 }] });
+      expect(r.success, day).toBe(true);
+    }
+  });
+
+  it("rejects activity days that are not real calendar days", () => {
+    for (const day of ["2026-02-31", "2026-13-01", "0000-00-00", "2025-02-29", "1999-12-31"]) {
+      const r = extensionUploadSchema.safeParse({ ...valid, activity: [{ day, count: 1 }] });
+      expect(r.success, day).toBe(false);
+    }
+  });
+
   it("accepts null counts and empty lists", () => {
     expect(
       extensionUploadSchema.safeParse({ ...valid, counts: null, solves: [], activity: [] }).success,

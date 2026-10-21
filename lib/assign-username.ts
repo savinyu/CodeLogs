@@ -4,7 +4,12 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { DB } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
-import { emailUsernameBase, usernameBase, usernameCandidates } from "@/lib/usernames";
+import {
+  emailUsernameBase,
+  randomUsernameCandidate,
+  usernameBase,
+  usernameCandidates,
+} from "@/lib/usernames";
 
 /** Postgres unique violation; with neon-http + drizzle the pg error may sit on `cause`. */
 function isUniqueViolation(err: unknown): boolean {
@@ -13,7 +18,7 @@ function isUniqueViolation(err: unknown): boolean {
 }
 
 /**
- * Sets the first free `base`, `base-2`, … as the username, only while the user has none.
+ * Sets the first free `base`, `base-2`, … (else `base-xxxxx`) as the username, only while the user has none.
  * Retries once if another signup grabs the name between the lookup and the update.
  */
 export async function claimUsername(db: DB, userId: string, base: string): Promise<string | null> {
@@ -24,8 +29,18 @@ export async function claimUsername(db: DB, userId: string, base: string): Promi
       .from(users)
       .where(inArray(users.username, candidates));
     const takenSet = new Set(taken.map((r) => r.username));
-    const free = candidates.find((c) => !takenSet.has(c));
-    if (!free) return null;
+    let free = candidates.find((c) => !takenSet.has(c));
+    if (!free) {
+      // All numbered names are taken: fall back to a random suffix (a rare clash retries once).
+      const random = randomUsernameCandidate(base);
+      const [clash] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.username, random))
+        .limit(1);
+      if (clash) continue;
+      free = random;
+    }
     try {
       const updated = await db
         .update(users)
