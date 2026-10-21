@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlatformId } from "@/lib/adapters/types";
-import { isExtensionPlatform, isSyncedPlatform } from "@/lib/platforms";
+import { displayHandle, isExtensionPlatform, isSyncedPlatform } from "@/lib/platforms";
 import { connectPlatform, disconnectPlatform, type ActionState } from "./actions";
 import { LeetcodeImport } from "./leetcode-import";
 import { SyncButton } from "./sync-button";
@@ -115,11 +115,12 @@ function ConnectedView({
     <div className="flex flex-wrap items-center gap-3">
       <a
         href={account.profileUrl}
+        title={account.handle}
         target="_blank"
         rel="noopener noreferrer"
         className="font-semibold underline-offset-4 hover:underline"
       >
-        {account.handle}
+        {displayHandle(platform, account.handle)}
       </a>
       {viaExtension ? (
         // The extension's first upload verifies the handle (a login match) and ends "pending".

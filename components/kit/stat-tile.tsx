@@ -33,7 +33,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "grid min-w-0 gap-2 rounded-card p-5",
+        "grid min-w-0 content-start gap-2 rounded-card p-5",
         primary ? "bg-primary text-primary-foreground" : "bg-card",
       )}
     >

@@ -123,3 +123,12 @@ export function isSyncedPlatform(platform: PlatformId): platform is SyncedPlatfo
 export function isExtensionPlatform(platform: PlatformId): platform is ExtensionPlatformId {
   return PLATFORM_META[platform].source === "extension";
 }
+
+/**
+ * A handle short enough to show in a tile or pill. Code360's handle is a profile UUID, so it shows
+ * the first 8 characters; callers keep the full handle in the link and its title.
+ */
+export function displayHandle(platform: PlatformId, handle: string): string {
+  if (platform === "code360" && handle.length > 12) return `${handle.slice(0, 8)}…`;
+  return handle;
+}

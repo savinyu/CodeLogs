@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LeetcodeBadgesGrid } from "@/components/contests/badges-grid";
 import { ContestCard } from "@/components/contests/contest-card";
-import { Chip } from "@/components/kit/chip";
 import { Note } from "@/components/kit/note";
 import { Page } from "@/components/kit/page";
 import { Panel, PanelHeader } from "@/components/kit/panel";
@@ -15,6 +14,7 @@ import { ProfileHero } from "@/components/profile/profile-hero";
 import { SignupCta } from "@/components/profile/signup-cta";
 import { ActivityRow } from "@/components/progress/activity-row";
 import { RecentSolvesList } from "@/components/progress/recent-solves";
+import { RatingLine, SplitChips } from "@/components/progress/tile-extras";
 import { MapLegend, TopicMap } from "@/components/topics/topic-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listUnverifiedPlatforms } from "@/lib/accounts";
@@ -104,6 +104,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
       <StatTiles>
         <StatTile
           tone="primary"
+          size="lg"
           label="Problems solved"
           value={fmt(total)}
           sub={joinNames(platformNames)}
@@ -124,28 +125,16 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
                 }
                 value={fmt(t.solved)}
                 sub={
-                  t.rating ? (
+                  lcRating != null ? (
                     <>
-                      solved · rating {fmt(t.rating.current)}
-                      {t.rating.rank ? ` (${t.rating.rank})` : ""} · max {fmt(t.rating.max)}
-                    </>
-                  ) : lcRating != null ? (
-                    <>
-                      solved · contest rating {fmt(lcRating)}
+                      Contest rating {fmt(lcRating)}
                       {lcTop != null ? ` · top ${lcTop}%` : ""}
                     </>
-                  ) : (
-                    "solved"
-                  )
+                  ) : undefined
                 }
               >
-                {t.split ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    <Chip>Easy {fmt(t.split.easy)}</Chip>
-                    <Chip>Medium {fmt(t.split.medium)}</Chip>
-                    <Chip>Hard {fmt(t.split.hard)}</Chip>
-                  </div>
-                ) : null}
+                {t.rating ? <RatingLine rating={t.rating} /> : null}
+                {t.split ? <SplitChips split={t.split} /> : null}
               </StatTile>
             );
           })}

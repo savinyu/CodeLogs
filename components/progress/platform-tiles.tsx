@@ -4,7 +4,8 @@ import { StatTile, StatTiles } from "@/components/kit/stat-tile";
 import type { PlatformId } from "@/lib/adapters/types";
 import { shownTotals } from "@/lib/dashboard/filters";
 import type { AccountSummary, PlatformFilter, PlatformTotal } from "@/lib/dashboard/types";
-import { isExtensionPlatform, PLATFORM_META } from "@/lib/platforms";
+import { displayHandle, isExtensionPlatform, PLATFORM_META } from "@/lib/platforms";
+import { RatingLine, SplitChips } from "@/components/progress/tile-extras";
 
 const STATUS_LABEL: Record<AccountSummary["status"], string> = {
   ok: "Synced",
@@ -36,19 +37,6 @@ function statusTone(platform: PlatformId, status: AccountSummary["status"]) {
 }
 
 const fmt = (n: number) => n.toLocaleString("en-US");
-
-// The split chips show the tier's initial and the number in the difficulty's color; the full tier
-// name is on hover.
-const SPLIT: {
-  key: "easy" | "medium" | "hard";
-  letter: string;
-  name: string;
-  className: string;
-}[] = [
-  { key: "easy", letter: "E", name: "Easy", className: "text-difficulty-easy" },
-  { key: "medium", letter: "M", name: "Medium", className: "text-difficulty-medium" },
-  { key: "hard", letter: "H", name: "Hard", className: "text-difficulty-hard" },
-];
 
 /** The "Total solved" tile and one tile per shown platform (Coach's .tiles). */
 export function PlatformTiles({
@@ -98,9 +86,10 @@ export function PlatformTiles({
                   href={meta.profileUrl(account.handle)}
                   target="_blank"
                   rel="noreferrer"
+                  title={account.handle}
                   className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  {account.handle}
+                  {displayHandle(t.platform, account.handle)}
                 </a>
               ) : undefined
             }
@@ -114,27 +103,8 @@ export function PlatformTiles({
 }
 
 function Extra({ total: t }: { total: PlatformTotal }) {
-  if (t.rating) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Rating <b className="font-semibold text-foreground">{t.rating.current}</b> · max{" "}
-        {t.rating.max}
-        {t.rating.rank ? ` · ${t.rating.rank}` : ""}
-      </div>
-    );
-  }
-  const split = t.split;
-  if (split) {
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        {SPLIT.map((d) => (
-          <Chip key={d.key} title={d.name} className={d.className}>
-            {d.letter} {fmt(split[d.key])}
-          </Chip>
-        ))}
-      </div>
-    );
-  }
+  if (t.rating) return <RatingLine rating={t.rating} />;
+  if (t.split) return <SplitChips split={t.split} />;
   if (t.platform === "atcoder") {
     return (
       <div className="text-sm text-muted-foreground">
