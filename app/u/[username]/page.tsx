@@ -81,7 +81,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
   }
 
   const total = data.totals.reduce((n, t) => n + t.solved, 0);
-  const platformCount = data.totals.filter((t) => t.solved > 0).length;
+  const solvedTotals = data.totals.filter((t) => t.solved > 0);
   const lcContests = data.contests.find((c) => c.platform === "leetcode");
   // Tile size is problems solved, so topics with none would be empty slivers.
   const solvedTopics = topicViews(data.topics).filter((t) => Math.round(t.solved) > 0);
@@ -99,28 +99,26 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
           size="lg"
           label="Problems solved"
           value={fmt(total)}
-          sub={acrossPlatforms(platformCount)}
+          sub={acrossPlatforms(solvedTotals.length)}
         />
-        {data.totals
-          .filter((t) => t.solved > 0)
-          .map((t) => {
-            const lcRating = t.platform === "leetcode" ? lcContests?.currentRating : null;
-            const lcTop = t.platform === "leetcode" ? lcContests?.topPercentage : null;
-            return (
-              <PlatformStatTile
-                key={t.platform}
-                total={t}
-                sub={
-                  lcRating != null ? (
-                    <>
-                      Contest rating {fmt(lcRating)}
-                      {lcTop != null ? ` · top ${lcTop}%` : ""}
-                    </>
-                  ) : undefined
-                }
-              />
-            );
-          })}
+        {solvedTotals.map((t) => {
+          const lcRating = t.platform === "leetcode" ? lcContests?.currentRating : null;
+          const lcTop = t.platform === "leetcode" ? lcContests?.topPercentage : null;
+          return (
+            <PlatformStatTile
+              key={t.platform}
+              total={t}
+              sub={
+                lcRating != null ? (
+                  <>
+                    Contest rating {fmt(lcRating)}
+                    {lcTop != null ? ` · top ${lcTop}%` : ""}
+                  </>
+                ) : undefined
+              }
+            />
+          );
+        })}
       </StatTiles>
 
       <div className="mt-5">

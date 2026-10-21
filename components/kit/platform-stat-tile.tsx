@@ -21,7 +21,7 @@ const SPLIT: {
 ];
 
 /** A platform's lifetime Easy / Medium / Hard split as E / M / H chips. */
-export function SplitChips({ split }: { split: NonNullable<PlatformTotal["split"]> }) {
+function SplitChips({ split }: { split: NonNullable<PlatformTotal["split"]> }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {SPLIT.map((d) => (
@@ -86,7 +86,7 @@ function PlatformExtra({ total: t }: { total: PlatformTotal }) {
 
 /**
  * One platform's tile: its name, solved count, the sub line and its rating or split. Progress and
- * the public profile both use it. `badge` sits beside the name; `sub` replaces the default line.
+ * the public profile both use it. `badge` sits beside the name; `sub` is the line under the count.
  */
 export function PlatformStatTile({
   total,
