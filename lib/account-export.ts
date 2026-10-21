@@ -7,7 +7,6 @@ import {
   activityDays,
   contestResults,
   dailyMarks,
-  feedback,
   friendships,
   platformAccounts,
   platformStats,
@@ -26,7 +25,6 @@ export async function buildAccountExport(userId: string) {
       name: users.name,
       email: users.email,
       username: users.username,
-      githubLogin: users.githubLogin,
       image: users.image,
       publicProfile: users.publicProfile,
       globalBoard: users.globalBoard,
@@ -51,7 +49,6 @@ export async function buildAccountExport(userId: string) {
     followRows,
     tickRows,
     friendRows,
-    feedbackRows,
   ] = await Promise.all([
     db
       .select({ kind: socialLinks.kind, value: socialLinks.value })
@@ -155,17 +152,6 @@ export async function buildAccountExport(userId: string) {
       .innerJoin(addressee, eq(addressee.id, friendships.addresseeId))
       .where(or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId)))
       .orderBy(asc(friendships.createdAt)),
-    // The user's own messages only; never the ip hash.
-    db
-      .select({
-        kind: feedback.kind,
-        message: feedback.message,
-        contact: feedback.contact,
-        createdAt: feedback.createdAt,
-      })
-      .from(feedback)
-      .where(eq(feedback.userId, userId))
-      .orderBy(asc(feedback.createdAt), asc(feedback.id)),
   ]);
 
   const friends = friendRows.map((r) => ({
@@ -182,7 +168,6 @@ export async function buildAccountExport(userId: string) {
       name: user.name,
       email: user.email,
       username: user.username,
-      githubLogin: user.githubLogin,
       image: user.image,
       publicProfile: user.publicProfile,
       createdAt: user.createdAt,
@@ -202,6 +187,5 @@ export async function buildAccountExport(userId: string) {
     sheetFollows: followRows,
     sheetTicks: tickRows,
     friends,
-    feedback: feedbackRows,
   };
 }
