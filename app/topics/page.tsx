@@ -6,7 +6,7 @@ import { PageHead } from "@/components/kit/page-head";
 import { Panel } from "@/components/kit/panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TopicDetail, type SheetRow } from "@/components/topics/topic-detail";
-import { MapLegend } from "@/components/topics/topic-map";
+import { ExpectedNote, MapLegend } from "@/components/topics/topic-map";
 import { TopicsExplorer } from "@/components/topics/topics-explorer";
 import { getDashboardData } from "@/lib/dashboard/queries";
 import { requireUser } from "@/lib/session";
@@ -74,10 +74,13 @@ async function TopicsContent({ searchParams }: Pick<PageProps<"/topics">, "searc
   const initialTopic = typeof param === "string" ? param : null;
 
   return (
-    <Panel size="lg">
-      <TopicsExplorer topics={topics} details={details} initialTopic={initialTopic} />
-      <MapLegend mode="owner" />
-    </Panel>
+    <>
+      <Panel size="lg">
+        <TopicsExplorer topics={topics} details={details} initialTopic={initialTopic} />
+        <MapLegend mode="owner" />
+      </Panel>
+      <ExpectedNote />
+    </>
   );
 }
 

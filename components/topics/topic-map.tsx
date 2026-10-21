@@ -1,5 +1,6 @@
 import { cn } from "cn";
-import { LEVEL_HEADROOM, WEAK_BELOW } from "@/lib/topics/scoring";
+import { InfoTip } from "@/components/kit/info-tip";
+import { WEAK_BELOW } from "@/lib/topics/scoring";
 import { squarify } from "@/lib/topics/treemap";
 import { formatPct, publicStep, type TopicView } from "@/lib/topics/view";
 
@@ -47,33 +48,38 @@ const PUBLIC_HEIGHT = 40;
 const COV_LEGEND = ["Under 50%", "50–80%", "80–100%", "100–120%", "Over 120%"];
 const PUB_LEGEND = ["Under 25", "25–44", "45–99", "100 or more"];
 
-/** Legend for the map; the owner one also states the weak threshold and what "expected" means. */
+/** Legend for the map; the owner one also states the weak threshold. */
 export function MapLegend({ mode }: { mode: Mode }) {
   const labels = mode === "owner" ? COV_LEGEND : PUB_LEGEND;
   const swatch = mode === "owner" ? COV_SWATCH : PUB_SWATCH;
   return (
-    <>
-      <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-[0.84rem] text-muted-foreground">
-        {labels.map((label, i) => (
-          <span key={label} className="inline-flex items-center gap-1.5">
-            <i className={cn("inline-block h-3 w-[18px] rounded-sm", swatch[i + 1])} />
-            {label}
-          </span>
-        ))}
-        {mode === "owner" ? (
-          <span className="ml-auto">Weak = under {formatPct(WEAK_BELOW)}</span>
-        ) : null}
-      </div>
+    <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-[0.84rem] text-muted-foreground">
+      {labels.map((label, i) => (
+        <span key={label} className="inline-flex items-center gap-1.5">
+          <i className={cn("inline-block h-3 w-[18px] rounded-sm", swatch[i + 1])} />
+          {label}
+        </span>
+      ))}
       {mode === "owner" ? (
-        <p className="mt-2.5 max-w-[72ch] text-[0.84rem] text-muted-foreground">
-          <b className="font-semibold text-foreground">Expected</b> is how many you&apos;d have
-          solved in a topic if your solves followed each platform&apos;s problem mix (on Codeforces,
-          problems up to {LEVEL_HEADROOM} above your level, with solves weighted by rating). A
-          problem counts toward every topic it&apos;s tagged with, so over 100% just means
-          you&apos;ve practised that topic more than its usual share.
-        </p>
+        <span className="ml-auto">Weak = under {formatPct(WEAK_BELOW)}</span>
       ) : null}
-    </>
+    </div>
+  );
+}
+
+/** How "expected" is worked out, for under the owner map; the (i) gives a worked example. */
+export function ExpectedNote() {
+  return (
+    <div className="mt-3 flex items-center gap-2 px-1 text-[0.84rem] text-muted-foreground">
+      <p className="min-w-0">
+        Expected = your solves × the topic&apos;s share of problems. Over 100% is fine: a problem
+        counts toward each of its tags.
+      </p>
+      <InfoTip label="Example of expected">
+        Say 10% of a platform&apos;s problems are Graphs and you&apos;ve solved 200 there: expected
+        is ~20. Solve 40 graph problems and you&apos;re at about 200%.
+      </InfoTip>
+    </div>
   );
 }
 
