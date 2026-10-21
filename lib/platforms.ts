@@ -132,3 +132,8 @@ export function displayHandle(platform: PlatformId, handle: string): string {
   if (platform === "code360" && handle.length > 12) return `${handle.slice(0, 8)}…`;
   return handle;
 }
+
+/** "across 6 platforms" for a total tile's sub line. */
+export function acrossPlatforms(count: number): string {
+  return `across ${count} ${count === 1 ? "platform" : "platforms"}`;
+}

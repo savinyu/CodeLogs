@@ -1,11 +1,15 @@
 import { Chip } from "@/components/kit/chip";
-import { PlatformDot } from "@/components/kit/platform-dot";
+import { PlatformStatTile } from "@/components/kit/platform-stat-tile";
 import { StatTile, StatTiles } from "@/components/kit/stat-tile";
 import type { PlatformId } from "@/lib/adapters/types";
 import { shownTotals } from "@/lib/dashboard/filters";
 import type { AccountSummary, PlatformFilter, PlatformTotal } from "@/lib/dashboard/types";
-import { displayHandle, isExtensionPlatform, PLATFORM_META } from "@/lib/platforms";
-import { RatingLine, SplitChips } from "@/components/progress/tile-extras";
+import {
+  acrossPlatforms,
+  displayHandle,
+  isExtensionPlatform,
+  PLATFORM_META,
+} from "@/lib/platforms";
 
 const STATUS_LABEL: Record<AccountSummary["status"], string> = {
   ok: "Synced",
@@ -52,9 +56,7 @@ export function PlatformTiles({
   const shown = shownTotals(totals, accounts, filter);
   const only = filter === "all" ? null : totals[0];
   const label = only ? `${PLATFORM_META[only.platform].name} solved` : "Total solved";
-  const sub = only
-    ? undefined
-    : `across ${shown.length} ${shown.length === 1 ? "platform" : "platforms"}`;
+  const sub = only ? undefined : acrossPlatforms(shown.length);
 
   return (
     <StatTiles>
@@ -63,23 +65,19 @@ export function PlatformTiles({
         const meta = PLATFORM_META[t.platform];
         const account = accounts.find((a) => a.platform === t.platform);
         return (
-          <StatTile
+          <PlatformStatTile
             key={t.platform}
-            label={
-              <>
-                <PlatformDot platform={t.platform} />
-                {meta.name}
-                {account ? (
-                  <Chip
-                    tone={statusTone(t.platform, account.status)}
-                    title={statusLabel(t.platform, account.status)}
-                  >
-                    {statusLabel(t.platform, account.status, true)}
-                  </Chip>
-                ) : null}
-              </>
+            total={t}
+            badge={
+              account ? (
+                <Chip
+                  tone={statusTone(t.platform, account.status)}
+                  title={statusLabel(t.platform, account.status)}
+                >
+                  {statusLabel(t.platform, account.status, true)}
+                </Chip>
+              ) : null
             }
-            value={fmt(t.solved)}
             sub={
               account ? (
                 <a
@@ -93,24 +91,9 @@ export function PlatformTiles({
                 </a>
               ) : undefined
             }
-          >
-            <Extra total={t} />
-          </StatTile>
+          />
         );
       })}
     </StatTiles>
   );
-}
-
-function Extra({ total: t }: { total: PlatformTotal }) {
-  if (t.rating) return <RatingLine rating={t.rating} />;
-  if (t.split) return <SplitChips split={t.split} />;
-  if (t.platform === "atcoder") {
-    return (
-      <div className="text-sm text-muted-foreground">
-        No rating on file. AtCoder history is limited.
-      </div>
-    );
-  }
-  return null;
 }

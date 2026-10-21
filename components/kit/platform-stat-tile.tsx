@@ -1,6 +1,9 @@
 import { cn } from "cn";
 import { Chip } from "@/components/kit/chip";
+import { PlatformDot } from "@/components/kit/platform-dot";
+import { StatTile } from "@/components/kit/stat-tile";
 import type { PlatformTotal } from "@/lib/dashboard/types";
+import { PLATFORM_META } from "@/lib/platforms";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -46,14 +49,14 @@ const CF_RANK: Record<string, string> = {
 };
 
 /** A Codeforces rank name in its rank color. */
-export function CfRank({ rank }: { rank: string }) {
+function CfRank({ rank }: { rank: string }) {
   return (
     <span className={cn("font-semibold", CF_RANK[rank.toLowerCase()])}>{rank.toLowerCase()}</span>
   );
 }
 
-/** "Rating 839 · max 1062 · newbie", with the rank in its color. */
-export function RatingLine({ rating }: { rating: NonNullable<PlatformTotal["rating"]> }) {
+/** "Rating 839 · max 1,062 · newbie", with the rank in its color. */
+function RatingLine({ rating }: { rating: NonNullable<PlatformTotal["rating"]> }) {
   return (
     <div className="text-sm text-muted-foreground">
       Rating <b className="font-semibold text-foreground">{fmt(rating.current)}</b> · max{" "}
@@ -65,5 +68,48 @@ export function RatingLine({ rating }: { rating: NonNullable<PlatformTotal["rati
         </>
       ) : null}
     </div>
+  );
+}
+
+function PlatformExtra({ total: t }: { total: PlatformTotal }) {
+  if (t.rating) return <RatingLine rating={t.rating} />;
+  if (t.split) return <SplitChips split={t.split} />;
+  if (t.platform === "atcoder") {
+    return (
+      <div className="text-sm text-muted-foreground">
+        No rating on file. AtCoder history is limited.
+      </div>
+    );
+  }
+  return null;
+}
+
+/**
+ * One platform's tile: its name, solved count, the sub line and its rating or split. Progress and
+ * the public profile both use it. `badge` sits beside the name; `sub` replaces the default line.
+ */
+export function PlatformStatTile({
+  total,
+  badge,
+  sub,
+}: {
+  total: PlatformTotal;
+  badge?: React.ReactNode;
+  sub?: React.ReactNode;
+}) {
+  return (
+    <StatTile
+      label={
+        <>
+          <PlatformDot platform={total.platform} />
+          {PLATFORM_META[total.platform].name}
+          {badge}
+        </>
+      }
+      value={fmt(total.solved)}
+      sub={sub}
+    >
+      <PlatformExtra total={total} />
+    </StatTile>
   );
 }
