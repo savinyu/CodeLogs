@@ -140,7 +140,7 @@ export function UsernameForm({ username }: { username: string | null }) {
       )}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending || !free}>
-          {pending ? "Saving…" : confirming && free ? `Yes, use @${free}` : "Change username"}
+          {pending ? "Saving…" : confirming && free ? "Confirm" : "Change username"}
         </Button>
         {confirming && !pending && (
           <Button type="button" variant="outline" onClick={() => setConfirming(false)}>
