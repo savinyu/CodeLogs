@@ -47,4 +47,23 @@ describe("topicViews", () => {
     expect(dp!.step).toBe(5);
     expect(dp!.toLeaveWeak).toBe(0);
   });
+
+  it("computes toLeaveWeak from the smoothed, weighted coverage", () => {
+    const weighted = (solved: number, w: number, expected: number) => ({
+      slug: "t",
+      name: "t",
+      micros: [],
+      platforms: [{ platform: "codeforces" as const, solved, weighted: w, expected }],
+    });
+    const [none, light, exact] = topicViews([
+      weighted(0, 0, 3),
+      weighted(8, 2, 10),
+      weighted(0, 0, 5), // 0.8 * 7 - 2 = 3.6000000000000005 -> 4
+    ] as unknown as MacroTopicStat[]);
+    expect(none!.state).toBe("weak");
+    expect(none!.toLeaveWeak).toBe(2); // (2 + 2) / 5 = 0.8
+    expect(light!.state).toBe("weak");
+    expect(light!.toLeaveWeak).toBe(6); // ceil(0.8 * 12 - 2 - 2) = 6 (5 only reach 0.75)
+    expect(exact!.toLeaveWeak).toBe(4);
+  });
 });

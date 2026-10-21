@@ -76,6 +76,16 @@ describe("heat levels", () => {
 });
 
 describe("activityStats", () => {
+  it("counts a current streak longer than 400 days", () => {
+    const asOf = "2026-10-13";
+    const run = Array.from({ length: 500 }, (_, i) => {
+      const d = new Date(`${asOf}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() - i);
+      return day(d.toISOString().slice(0, 10), 1);
+    });
+    expect(activityStats(run, { start: asOf, end: asOf }, asOf).currentStreak).toBe(500);
+  });
+
   const act = [
     day("2026-10-01", 2),
     day("2026-10-02", 1),
@@ -138,6 +148,21 @@ describe("year views", () => {
     expect(cells[0]?.day).toBe("2025-01-01");
     expect(cells[cells.length - 1]?.day).toBe("2025-12-31");
     expect(months[0]).toMatchObject({ weekIndex: 0, label: "Jan" });
+  });
+
+  it("labels January as a month for leap and non-leap calendar years", () => {
+    for (const year of [2024, 2023]) {
+      const { months } = buildHeatmapGrid([], periodRange(year, asOf));
+      expect(months[0]).toMatchObject({ weekIndex: 0, label: "Jan" });
+    }
+    expect(
+      buildHeatmapGrid([], periodRange("last12", asOf)).months.map((m) => m.label),
+    ).not.toContain("2025");
+  });
+
+  it("labels January with its year once a range exceeds 366 days", () => {
+    const { months } = buildHeatmapGrid([], { start: "2023-12-31", end: "2025-01-05" });
+    expect(months.map((m) => m.label)).toContain("2024");
   });
 
   it("cuts the current year at asOf", () => {

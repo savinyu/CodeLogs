@@ -96,8 +96,9 @@ export function heatLevel(total: number, { bounds, max }: HeatThresholds): HeatL
 
 export function buildHeatmapGrid(activity: ActivityDay[], range: DayRange): HeatmapGrid {
   const { start: windowStart, end: windowEnd } = range;
-  // Past one year, January is labeled with its year so multi-year grids stay readable.
-  const multiYear = shift(windowStart, HEATMAP_WINDOW) <= windowEnd;
+  // Past one year (366 days covers a leap calendar year), January is labeled with its year so
+  // multi-year grids stay readable.
+  const multiYear = shift(windowStart, HEATMAP_WINDOW + 1) <= windowEnd;
   const gridStart = shift(windowStart, -weekday(windowStart));
   const inside = inRange(activity, range);
   const thresholds = heatThresholds(inside);
