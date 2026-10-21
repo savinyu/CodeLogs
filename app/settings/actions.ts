@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -9,7 +9,7 @@ import { isDeleteConfirmed } from "@/lib/account-export-shared";
 import { auth } from "@/lib/auth";
 import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
-import { socialLinks, users } from "@/lib/db/schema";
+import { friendships, socialLinks, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import {
   parseSocialLink,
@@ -20,6 +20,8 @@ import {
 
 export type SettingResult = { ok: true } | { ok: false; error: string };
 
+const SAVE_FAILED = "Could not save that. Try again.";
+
 /** Opt in to (or out of) the public /u/<username> page. */
 export async function setPublicProfile(enabled: unknown): Promise<SettingResult> {
   const user = await getCurrentUser();
@@ -28,7 +30,15 @@ export async function setPublicProfile(enabled: unknown): Promise<SettingResult>
   if (!parsed.success) return { ok: false, error: "Invalid setting." };
   if (!user.username) return { ok: false, error: "Your account has no username for a public URL." };
 
-  await db.update(users).set({ publicProfile: parsed.data }).where(eq(users.id, user.id));
+  try {
+    // Going private also leaves the global board, so a later opt-in doesn't silently relist.
+    await db
+      .update(users)
+      .set(parsed.data ? { publicProfile: true } : { publicProfile: false, globalBoard: false })
+      .where(eq(users.id, user.id));
+  } catch {
+    return { ok: false, error: SAVE_FAILED };
+  }
   userDataChanged(user.id);
   return { ok: true };
 }
@@ -39,18 +49,21 @@ export async function setGlobalBoard(enabled: unknown): Promise<SettingResult> {
   if (!user) return { ok: false, error: "Sign in to change your profile." };
   const parsed = z.boolean().safeParse(enabled);
   if (!parsed.success) return { ok: false, error: "Invalid setting." };
-  if (parsed.data) {
-    const [row] = await db
-      .select({ publicProfile: users.publicProfile })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1);
-    if (!row?.publicProfile) {
-      return { ok: false, error: "Make your profile public to join the global leaderboard." };
+  try {
+    if (parsed.data) {
+      const [row] = await db
+        .select({ publicProfile: users.publicProfile })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
+      if (!row?.publicProfile) {
+        return { ok: false, error: "Make your profile public to join the global leaderboard." };
+      }
     }
+    await db.update(users).set({ globalBoard: parsed.data }).where(eq(users.id, user.id));
+  } catch {
+    return { ok: false, error: SAVE_FAILED };
   }
-
-  await db.update(users).set({ globalBoard: parsed.data }).where(eq(users.id, user.id));
   userDataChanged(user.id);
   return { ok: true };
 }
@@ -129,17 +142,31 @@ export async function deleteAccount(
     return { ok: false, error: "The confirmation text does not match." };
   }
 
+  let friendIds: string[];
   try {
-    await auth.api.signOut({ headers: await headers() });
-  } catch {
-    // The session rows are deleted with the user anyway.
-  }
-
-  try {
+    const rows = await db
+      .select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
+      .from(friendships)
+      .where(or(eq(friendships.requesterId, user.id), eq(friendships.addresseeId, user.id)));
+    friendIds = [
+      ...new Set(
+        rows.flatMap((r) => [r.requesterId, r.addresseeId]).filter((id) => id !== user.id),
+      ),
+    ];
     // Sessions, OAuth links, platform accounts and everything under them cascade from users.id.
     await db.delete(users).where(eq(users.id, user.id));
   } catch {
     return { ok: false, error: "Could not delete your account. Please try again." };
+  }
+
+  // Their friends' cached lists and boards, and the global board, still show the deleted user.
+  userDataChanged(user.id, ...friendIds);
+
+  try {
+    // Clears the session cookies; the session rows are already gone, which signOut tolerates.
+    await auth.api.signOut({ headers: await headers() });
+  } catch {
+    // Nothing left to sign out of.
   }
 
   redirect("/");

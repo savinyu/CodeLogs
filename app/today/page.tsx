@@ -79,7 +79,12 @@ async function TodayContent() {
         weak={topicPicks.every((t) => t.weak)}
       />
       <div className="grid items-start gap-5 min-[900px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <TodaysSet picks={picks} todayTotal={todayTotal} dailyGoal={settings.dailyGoal} />
+        <TodaysSet
+          picks={picks}
+          todayTotal={todayTotal}
+          dailyGoal={settings.dailyGoal}
+          day={data.asOf}
+        />
         <div className="grid min-w-0 gap-5">
           <ThisWeek week={week} />
           {topicPicks.length > 0 ? <WhyThese topics={topicPicks} /> : null}

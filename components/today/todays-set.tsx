@@ -50,11 +50,14 @@ export function TodaysSet({
   picks,
   todayTotal,
   dailyGoal,
+  day,
 }: {
   picks: { pick: TodayPick; marked: boolean; track: string | null }[];
   /** Today's synced solves. */
   todayTotal: number;
   dailyGoal: number;
+  /** The UTC day this page shows (YYYY-MM-DD); marks are filed under it. */
+  day: string;
 }) {
   const [marks, setMark] = useOptimistic(
     new Set(picks.filter((p) => p.marked).map((p) => keyOf(p.pick))),
@@ -70,12 +73,17 @@ export function TodaysSet({
   function change(pick: TodayPick, done: boolean) {
     startTransition(async () => {
       setMark({ key: keyOf(pick), done });
-      const result = await setPickDone({
-        platform: pick.problem.platform,
-        externalId: pick.problem.externalId,
-        done,
-      });
-      if (!result.ok) toast.error(result.error);
+      try {
+        const result = await setPickDone({
+          platform: pick.problem.platform,
+          externalId: pick.problem.externalId,
+          done,
+          day,
+        });
+        if (!result.ok) toast.error(result.error);
+      } catch {
+        toast.error("Could not save that. Try again.");
+      }
     });
   }
 

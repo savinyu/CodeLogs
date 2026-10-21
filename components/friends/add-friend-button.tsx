@@ -28,8 +28,15 @@ export function AddFriendButton({ username, state }: { username: string; state: 
       if (result.ok) {
         setError(null);
         setCurrent(next);
-      } else if (result.error.includes("is still pending")) {
+      } else if (result.code === "pending_out") {
+        setError(null);
         setCurrent("outgoing");
+      } else if (result.code === "pending_in") {
+        setError(null);
+        setCurrent("incoming");
+      } else if (result.code === "friends") {
+        setError(null);
+        setCurrent("friends");
       } else {
         setError(result.error);
       }
