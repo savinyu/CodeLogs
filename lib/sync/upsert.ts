@@ -79,14 +79,15 @@ export async function applySnapshot(
     });
     solvesSkipped += batch.length - rows.length;
     if (rows.length > 0) {
-      // Existing rows keep their date; an undated one (from an import) takes the first date seen.
+      // The earlier date wins: an undated row (from an import) takes the first date seen, and a
+      // row stored from a newer page (CF pages arrive newest first) moves back to an older one.
       const written = await db
         .insert(solves)
         .values(rows)
         .onConflictDoUpdate({
           target: [solves.userId, solves.problemId],
           set: { firstSolvedAt: sql`excluded.first_solved_at` },
-          setWhere: sql`${solves.firstSolvedAt} IS NULL AND excluded.first_solved_at IS NOT NULL`,
+          setWhere: sql`excluded.first_solved_at IS NOT NULL AND (${solves.firstSolvedAt} IS NULL OR excluded.first_solved_at < ${solves.firstSolvedAt})`,
         })
         .returning({ inserted: sql<boolean>`xmax = 0` });
       const inserted = written.filter((w) => w.inserted).length;

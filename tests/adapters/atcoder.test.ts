@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { PlatformUserNotFoundError } from "@/lib/adapters/errors";
 import { atcoderAdapter, atcoderCatalog } from "@/lib/adapters/atcoder";
 import { loadFixture, mockHttp } from "../helpers/mock-http";
 
@@ -240,9 +241,11 @@ describe("readVerificationField", () => {
     expect(await atcoderAdapter.readVerificationField("missing")).toBeNull();
   });
 
-  it("returns null on 404", async () => {
+  it("throws PlatformUserNotFoundError on 404", async () => {
     mockHttp([{ match: "atcoder.jp/users/", status: 404, text: "not found" }]);
-    expect(await atcoderAdapter.readVerificationField("nobody")).toBeNull();
+    await expect(atcoderAdapter.readVerificationField("nobody")).rejects.toBeInstanceOf(
+      PlatformUserNotFoundError,
+    );
   });
 });
 

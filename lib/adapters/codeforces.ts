@@ -8,11 +8,13 @@
 //                  Runs on every sync, first and incremental.
 //   page = k >= 1  and cursor === null (first sync):
 //                  user.status with no from/count = the whole history in one call.
-//                  nextPage = null; resumeCursor = max submission id over ALL verdicts.
+//                  nextPage = null; resumeCursor = max submission id below the oldest
+//                  pending one (no verdict / TESTING), so a late verdict is never skipped.
 //   page = k >= 1  and cursor present (incremental): user.status?from=k&count=50 (newest first).
 //                  Only submissions with id > cursor.maxSubmissionId count. If the page was full
 //                  (50 rows) and every row was new, nextPage = k + 50 (the next `from`); otherwise
-//                  null. resumeCursor is reported on k === 1 only (max new id, null if none).
+//                  null. resumeCursor is reported on k === 1 only (max new id below the oldest pending
+//                  one, null if none: the previous cursor is kept).
 // Solves are verdict "OK" only, deduped per problem within the page, keeping the earliest
 // creationTimeSeconds as firstSolvedAt. Difficulty is the raw rating; normalising happens elsewhere.
 
@@ -191,9 +193,25 @@ function solvesFrom(submissions: CfSubmission[]): NormalizedSolve[] {
   return [...byProblem.values()];
 }
 
-function maxId(submissions: CfSubmission[]): number | null {
+function isPending(s: CfSubmission): boolean {
+  return s.verdict === undefined || s.verdict === "TESTING";
+}
+
+/**
+ * The highest id the cursor may safely move to: the max id strictly below the smallest pending
+ * (still-judged) submission, so a verdict that lands later is still newer than the cursor.
+ * Null when nothing qualifies, which keeps the previous cursor (or none on a first sync).
+ */
+function safeMaxId(submissions: CfSubmission[]): number | null {
+  let minPending: number | null = null;
+  for (const s of submissions) {
+    if (isPending(s) && (minPending === null || s.id < minPending)) minPending = s.id;
+  }
   let max: number | null = null;
-  for (const s of submissions) if (max === null || s.id > max) max = s.id;
+  for (const s of submissions) {
+    if (minPending !== null && s.id >= minPending) continue;
+    if (max === null || s.id > max) max = s.id;
+  }
   return max;
 }
 
@@ -279,7 +297,7 @@ async function fetchPage(
     return {
       snapshot: { solves: solvesFrom(submissions), extras: [] },
       nextPage: null,
-      resumeCursor: cursorFor(maxId(submissions)),
+      resumeCursor: cursorFor(safeMaxId(submissions)),
     };
   }
 
@@ -295,7 +313,7 @@ async function fetchPage(
   return {
     snapshot: { solves: solvesFrom(fresh), extras: [] },
     nextPage: hasMore ? page + PAGE_SIZE : null,
-    resumeCursor: page === 1 ? cursorFor(maxId(fresh)) : null,
+    resumeCursor: page === 1 ? cursorFor(safeMaxId(fresh)) : null,
   };
 }
 
