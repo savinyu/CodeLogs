@@ -130,6 +130,7 @@ async function syncOne(platform, conn, opts) {
   });
   try {
     let text;
+    let datesDone = false;
     if (platform === "leetcode") {
       const runs = await readRuns();
       const out = await runLeetcodeJob({
@@ -140,6 +141,7 @@ async function syncOne(platform, conn, opts) {
         setStatus,
       });
       text = describeLeetcodeResult(out);
+      datesDone = out.datesDone;
     } else {
       const out = await runPlatformJob({
         platformId: platform,
@@ -150,7 +152,7 @@ async function syncOne(platform, conn, opts) {
       });
       text = describePlatformResult(out);
     }
-    await saveRun(platform, { ok: true, auto: opts.auto, text });
+    await saveRun(platform, { ok: true, auto: opts.auto, text, datesDone });
     return { ok: true, text };
   } catch (e) {
     if (e instanceof TokenRevokedError) {

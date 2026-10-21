@@ -289,6 +289,7 @@ async function startSync(p) {
       [p.id]: {
         at: Date.now(),
         okAt: runs[p.id]?.okAt ?? null,
+        datesAt: runs[p.id]?.datesAt ?? null,
         ok: false,
         loggedOut: false,
         auto: false,
@@ -321,7 +322,10 @@ async function loadConnection() {
   runs = s.runs ?? {};
   autoSync = s.autoSync !== false;
   me = conn && s.meCache && typeof s.meCache.username === "string" ? s.meCache : null;
-  if (typeof s.baseUrl === "string") input("baseUrl").value = s.baseUrl;
+  // Don't overwrite what the user is typing in the Advanced field.
+  if (typeof s.baseUrl === "string" && document.activeElement !== input("baseUrl")) {
+    input("baseUrl").value = s.baseUrl;
+  }
   if (changed) connOpen = conn === null;
   render();
   if (changed && conn) await refreshMe(conn);

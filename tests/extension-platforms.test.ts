@@ -384,6 +384,7 @@ describe("HackerRank", () => {
         { match: "submission_histories", status: 404 },
         { match: "offset=0", data: full },
         { match: "offset=50", data: second },
+        { match: "offset=60", data: { models: [], total: 120 } },
         { match: "offset=100", data: { models: [], total: 120 } },
       ],
     });

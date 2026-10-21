@@ -6,6 +6,7 @@
 import {
   buildPlatformUpload,
   expectData,
+  getPage,
   isRecord,
   NotLoggedInError,
   ReaderError,
@@ -134,10 +135,12 @@ async function read(ctx) {
   let complete = false;
   for (let page = 0; page < MAX_PAGES; page++) {
     ctx.progress(`Reading your InterviewBit problems (page ${page + 1})...`);
-    const res = await ctx.get(
+    const res = await getPage(
+      ctx,
       `/v2/problem_list/?page_offset=${page * PAGE_SIZE}&page_limit=${PAGE_SIZE}`,
+      page === 0,
     );
-    if (res.status !== 200 && page > 0) break;
+    if (!res || (res.status !== 200 && page > 0)) break;
     const parsed = parseProblemListPage(expectData(NAME, res, "the problem list"));
     if (!parsed.ok) {
       if (page > 0) break;

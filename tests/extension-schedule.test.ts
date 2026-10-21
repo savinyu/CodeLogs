@@ -32,9 +32,15 @@ describe("isDue", () => {
   });
 
   it("retries a failure after the retry delay, not the full interval", () => {
-    const r = run({ at: NOW - 5 * 60_000, okAt: null, ok: false, loggedOut: true });
+    const r = run({ at: NOW - 5 * 60_000, okAt: null, ok: false });
     expect(isDue(r, NOW, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(false);
     expect(isDue(r, NOW + 5 * 60_000, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(true);
+  });
+
+  it("retries a logged-out visit after a minute, not ten", () => {
+    const r = run({ at: NOW - 61_000, okAt: null, ok: false, loggedOut: true });
+    expect(isDue(r, NOW, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(true);
+    expect(isDue({ ...r, at: NOW - 30_000 }, NOW, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(false);
   });
 
   it("an old success with a recent failed attempt waits for the retry delay", () => {
@@ -52,6 +58,17 @@ describe("nextRun", () => {
       okAt: NOW,
       loggedOut: false,
     });
+  });
+});
+
+describe("nextRun datesAt", () => {
+  it("sets datesAt only when the date walk completed, else carries it over", () => {
+    const base = { now: NOW, ok: true, auto: true, text: "" };
+    expect(nextRun(undefined, { ...base, datesDone: true }).datesAt).toBe(NOW);
+    expect(nextRun(undefined, base).datesAt).toBeNull();
+    const prev = run({ datesAt: NOW - HOUR });
+    expect(nextRun(prev, base).datesAt).toBe(NOW - HOUR);
+    expect(nextRun(prev, { ...base, ok: false, datesDone: true }).datesAt).toBe(NOW - HOUR);
   });
 });
 
@@ -81,10 +98,12 @@ describe("LeetCode automatic sync", () => {
     expect(r).toMatchObject({ ok: false, loggedOut: true });
   });
 
-  it("walks dates back to a day before the last success, or all of them", () => {
+  it("walks dates back to a day before the last completed walk, or all of them", () => {
     expect(leetcodeDatesSince(undefined)).toBeNull();
-    expect(leetcodeDatesSince(run({ okAt: null }))).toBeNull();
-    expect(leetcodeDatesSince(run({ okAt: NOW }))).toBe((NOW - DAILY_INTERVAL_MS) / 1000);
+    expect(leetcodeDatesSince(run({ datesAt: null }))).toBeNull();
+    // a 0.3.3 record has okAt but no datesAt: one full walk
+    expect(leetcodeDatesSince(run({ okAt: NOW }))).toBeNull();
+    expect(leetcodeDatesSince(run({ datesAt: NOW }))).toBe((NOW - DAILY_INTERVAL_MS) / 1000);
   });
 
   it("finds the oldest submission on a page", () => {

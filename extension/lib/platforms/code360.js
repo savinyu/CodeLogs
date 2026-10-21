@@ -6,6 +6,7 @@
 import {
   buildPlatformUpload,
   expectData,
+  getPage,
   isRecord,
   NotLoggedInError,
   ReaderError,
@@ -114,10 +115,12 @@ async function read(ctx) {
     ctx.progress(
       `Reading your Code360 solved problems (page ${page}${totalPages > 1 ? ` of ${totalPages}` : ""})...`,
     );
-    const res = await ctx.get(
+    const res = await getPage(
+      ctx,
       `${API}/v3/public_section/profile/view_solved_problems?page=${page}&naukri_request=true`,
+      page === 1,
     );
-    if (res.status !== 200 && page > 1) break;
+    if (!res || (res.status !== 200 && page > 1)) break;
     const parsed = parseSolvedPage(expectData(NAME, res, "your solved problems"));
     if (!parsed.ok) {
       if (page > 1) break;
