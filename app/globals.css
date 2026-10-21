@@ -76,6 +76,13 @@
   --color-band-easy: var(--band-easy);
   --color-band-medium: var(--band-medium);
   --color-band-hard: var(--band-hard);
+  --color-cf-newbie: var(--cf-newbie);
+  --color-cf-pupil: var(--cf-pupil);
+  --color-cf-specialist: var(--cf-specialist);
+  --color-cf-expert: var(--cf-expert);
+  --color-cf-candidate-master: var(--cf-candidate-master);
+  --color-cf-master: var(--cf-master);
+  --color-cf-grandmaster: var(--cf-grandmaster);
   --color-streak: var(--streak);
   --shadow-pop: var(--shadow-pop);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -159,6 +166,14 @@
   --band-easy: #00b8a3;
   --band-medium: #d97706;
   --band-hard: #ff375f;
+  /* Codeforces rank text: gray, green, cyan, blue, violet, orange, red (darkened for contrast). */
+  --cf-newbie: #6b6b6b;
+  --cf-pupil: #138a13;
+  --cf-specialist: #038a82;
+  --cf-expert: #1f3fe0;
+  --cf-candidate-master: #9a0a9a;
+  --cf-master: #c96a00;
+  --cf-grandmaster: #d91a1a;
   --streak: #c01f4a;
   --shadow-pop: 0 1px 2px rgb(60 20 35 / 0.06), 0 8px 24px rgb(60 20 35 / 0.07);
   --radius: 0.75rem;
@@ -226,6 +241,13 @@
   --difficulty-hard: #ff375f;
   --band-easy: #6fdba0;
   --band-medium: #ffc01e;
+  --cf-newbie: #b3b3b3;
+  --cf-pupil: #5fd07a;
+  --cf-specialist: #2dd4bf;
+  --cf-expert: #7c9cff;
+  --cf-candidate-master: #e07ae0;
+  --cf-master: #ffa940;
+  --cf-grandmaster: #ff6b6b;
   --streak: #ff6f8e;
   --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
 }

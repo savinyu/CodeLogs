@@ -16,27 +16,38 @@ export function StatTile({
   value,
   sub,
   tone = "default",
+  size = "default",
   children,
 }: {
   label: React.ReactNode;
   value: React.ReactNode;
   sub?: React.ReactNode;
   tone?: "default" | "primary";
+  /** "lg" for the headline tile of a row, such as Progress's total. */
+  size?: "default" | "lg";
   /** After the sub line, such as a chip row. */
   children?: React.ReactNode;
 }) {
   const primary = tone === "primary";
+  const lg = size === "lg";
   return (
     <div
       className={cn(
-        "grid min-w-0 gap-2 rounded-card p-5",
+        "grid min-w-0 content-start gap-2 rounded-card p-5",
         primary ? "bg-primary text-primary-foreground" : "bg-card",
       )}
     >
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.9375rem] font-semibold">
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold",
+          lg ? "text-lg" : "text-[0.9375rem]",
+        )}
+      >
         {label}
       </div>
-      <div className="font-display text-5xl leading-none font-bold">{value}</div>
+      <div className={cn("font-display leading-none font-bold", lg ? "text-6xl" : "text-5xl")}>
+        {value}
+      </div>
       {sub ? (
         <div
           className={cn(

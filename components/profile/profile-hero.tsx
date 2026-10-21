@@ -6,7 +6,7 @@ import { UserAvatar } from "@/components/kit/user-avatar";
 import { SOCIAL_META } from "@/components/social-icons";
 import type { PlatformId } from "@/lib/adapters/types";
 import type { Friendship } from "@/lib/friends/queries";
-import { PLATFORM_META } from "@/lib/platforms";
+import { displayHandle, PLATFORM_META } from "@/lib/platforms";
 import {
   SOCIAL_KINDS,
   socialLinkHref,
@@ -133,13 +133,14 @@ export function ProfileHero({
                   <li key={platform}>
                     <a
                       href={meta.profileUrl(handle)}
+                      title={handle}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-[5px] text-sm font-semibold no-underline outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
                     >
                       <PlatformDot platform={platform} />
                       <span className="[overflow-wrap:anywhere]">
-                        {meta.name} {handle}
+                        {meta.name} {displayHandle(platform, handle)}
                       </span>
                       <span className="text-good" title="Verified">
                         <CheckIcon className="size-3.5" aria-label="Verified" />

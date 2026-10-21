@@ -1,10 +1,15 @@
 import { Chip } from "@/components/kit/chip";
-import { PlatformDot } from "@/components/kit/platform-dot";
+import { PlatformStatTile } from "@/components/kit/platform-stat-tile";
 import { StatTile, StatTiles } from "@/components/kit/stat-tile";
 import type { PlatformId } from "@/lib/adapters/types";
 import { shownTotals } from "@/lib/dashboard/filters";
 import type { AccountSummary, PlatformFilter, PlatformTotal } from "@/lib/dashboard/types";
-import { isExtensionPlatform, PLATFORM_META } from "@/lib/platforms";
+import {
+  acrossPlatforms,
+  displayHandle,
+  isExtensionPlatform,
+  PLATFORM_META,
+} from "@/lib/platforms";
 
 const STATUS_LABEL: Record<AccountSummary["status"], string> = {
   ok: "Synced",
@@ -51,92 +56,50 @@ export function PlatformTiles({
   const shown = shownTotals(totals, accounts, filter);
   const only = filter === "all" ? null : totals[0];
   const label = only ? `${PLATFORM_META[only.platform].name} solved` : "Total solved";
-  const sub = only
-    ? only.source === "reported"
-      ? `count reported by ${PLATFORM_META[only.platform].name}`
-      : "tracked from your submissions"
-    : `across ${shown.length} ${shown.length === 1 ? "platform" : "platforms"}`;
+  const sub = only ? undefined : acrossPlatforms(shown.length);
 
   return (
     <StatTiles>
-      <StatTile tone="primary" label={label} value={fmt(sum)} sub={sub} />
+      <StatTile tone="primary" size="lg" label={label} value={fmt(sum)} sub={sub} />
       {shown.map((t) => {
         const meta = PLATFORM_META[t.platform];
         const account = accounts.find((a) => a.platform === t.platform);
         return (
-          <StatTile
+          <PlatformStatTile
             key={t.platform}
-            label={
-              <>
-                <PlatformDot platform={t.platform} />
-                {meta.name}
-                {account ? (
-                  <Chip
-                    tone={statusTone(t.platform, account.status)}
-                    title={statusLabel(t.platform, account.status)}
-                  >
-                    {statusLabel(t.platform, account.status, true)}
-                  </Chip>
-                ) : null}
-              </>
+            total={t}
+            badge={
+              account ? (
+                <Chip
+                  tone={statusTone(t.platform, account.status)}
+                  title={statusLabel(t.platform, account.status)}
+                >
+                  {statusLabel(t.platform, account.status, true)}
+                </Chip>
+              ) : null
             }
-            value={fmt(t.solved)}
             sub={
-              <>
-                {t.source === "reported"
-                  ? isExtensionPlatform(t.platform)
-                    ? "reported count"
-                    : `count (reported by ${meta.name})`
-                  : "solved"}
-                {account ? (
-                  <>
-                    {" · "}
-                    <a
-                      href={meta.profileUrl(account.handle)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
-                    >
-                      {account.handle}
-                    </a>
-                  </>
-                ) : null}
-              </>
+              account ? (
+                <a
+                  href={meta.profileUrl(account.handle)}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={account.handle}
+                  className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  {displayHandle(t.platform, account.handle)}
+                </a>
+              ) : undefined
             }
           >
-            <Extra total={t} />
-          </StatTile>
+            {t.platform === "atcoder" && !t.rating ? (
+              <div className="text-sm text-muted-foreground">
+                No rating on file. AtCoder history is limited.
+              </div>
+            ) : null}
+          </PlatformStatTile>
         );
       })}
     </StatTiles>
   );
-}
-
-function Extra({ total: t }: { total: PlatformTotal }) {
-  if (t.rating) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Rating <b className="font-semibold text-foreground">{t.rating.current}</b> · max{" "}
-        {t.rating.max}
-        {t.rating.rank ? ` · ${t.rating.rank}` : ""}
-      </div>
-    );
-  }
-  if (t.split) {
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        <Chip>Easy {fmt(t.split.easy)}</Chip>
-        <Chip>Medium {fmt(t.split.medium)}</Chip>
-        <Chip>Hard {fmt(t.split.hard)}</Chip>
-      </div>
-    );
-  }
-  if (t.platform === "atcoder") {
-    return (
-      <div className="text-sm text-muted-foreground">
-        No rating on file. AtCoder history is limited.
-      </div>
-    );
-  }
-  return null;
 }

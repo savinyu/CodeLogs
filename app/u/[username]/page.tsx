@@ -4,11 +4,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LeetcodeBadgesGrid } from "@/components/contests/badges-grid";
 import { ContestCard } from "@/components/contests/contest-card";
-import { Chip } from "@/components/kit/chip";
 import { Note } from "@/components/kit/note";
 import { Page } from "@/components/kit/page";
 import { Panel, PanelHeader } from "@/components/kit/panel";
-import { PlatformDot } from "@/components/kit/platform-dot";
+import { PlatformStatTile } from "@/components/kit/platform-stat-tile";
 import { StatTile, StatTiles } from "@/components/kit/stat-tile";
 import { OwnerBanner } from "@/components/profile/owner-banner";
 import { ProfileHero } from "@/components/profile/profile-hero";
@@ -21,7 +20,7 @@ import { listUnverifiedPlatforms } from "@/lib/accounts";
 import { getDashboardData, getPublicProfile } from "@/lib/dashboard/queries";
 import { getFriendship } from "@/lib/friends/queries";
 import { renderNow } from "@/lib/clock";
-import { PLATFORM_META } from "@/lib/platforms";
+import { acrossPlatforms } from "@/lib/platforms";
 import { getCurrentUser } from "@/lib/session";
 import { getSocialLinks } from "@/lib/social-links";
 import { topicViews } from "@/lib/topics/view";
@@ -37,11 +36,6 @@ export async function generateMetadata({ params }: PageProps<"/u/[username]">): 
 }
 
 const fmt = (n: number) => n.toLocaleString("en-US");
-
-function joinNames(names: string[]): string {
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-}
 
 async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">, "params">) {
   const { username } = await params;
@@ -87,9 +81,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
   }
 
   const total = data.totals.reduce((n, t) => n + t.solved, 0);
-  const platformNames = data.totals
-    .filter((t) => t.solved > 0)
-    .map((t) => PLATFORM_META[t.platform].name);
+  const solvedTotals = data.totals.filter((t) => t.solved > 0);
   const lcContests = data.contests.find((c) => c.platform === "leetcode");
   // Tile size is problems solved, so topics with none would be empty slivers.
   const solvedTopics = topicViews(data.topics).filter((t) => Math.round(t.solved) > 0);
@@ -104,51 +96,29 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
       <StatTiles>
         <StatTile
           tone="primary"
+          size="lg"
           label="Problems solved"
           value={fmt(total)}
-          sub={joinNames(platformNames)}
+          sub={solvedTotals.length > 0 ? acrossPlatforms(solvedTotals.length) : undefined}
         />
-        {data.totals
-          .filter((t) => t.solved > 0)
-          .map((t) => {
-            const lcRating = t.platform === "leetcode" ? lcContests?.currentRating : null;
-            const lcTop = t.platform === "leetcode" ? lcContests?.topPercentage : null;
-            return (
-              <StatTile
-                key={t.platform}
-                label={
+        {solvedTotals.map((t) => {
+          const lcRating = t.platform === "leetcode" ? lcContests?.currentRating : null;
+          const lcTop = t.platform === "leetcode" ? lcContests?.topPercentage : null;
+          return (
+            <PlatformStatTile
+              key={t.platform}
+              total={t}
+              sub={
+                lcRating != null ? (
                   <>
-                    <PlatformDot platform={t.platform} />
-                    {PLATFORM_META[t.platform].name}
+                    Contest rating {fmt(lcRating)}
+                    {lcTop != null ? ` · top ${lcTop}%` : ""}
                   </>
-                }
-                value={fmt(t.solved)}
-                sub={
-                  t.rating ? (
-                    <>
-                      solved · rating {fmt(t.rating.current)}
-                      {t.rating.rank ? ` (${t.rating.rank})` : ""} · max {fmt(t.rating.max)}
-                    </>
-                  ) : lcRating != null ? (
-                    <>
-                      solved · contest rating {fmt(lcRating)}
-                      {lcTop != null ? ` · top ${lcTop}%` : ""}
-                    </>
-                  ) : (
-                    "solved"
-                  )
-                }
-              >
-                {t.split ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    <Chip>Easy {fmt(t.split.easy)}</Chip>
-                    <Chip>Medium {fmt(t.split.medium)}</Chip>
-                    <Chip>Hard {fmt(t.split.hard)}</Chip>
-                  </div>
-                ) : null}
-              </StatTile>
-            );
-          })}
+                ) : undefined
+              }
+            />
+          );
+        })}
       </StatTiles>
 
       <div className="mt-5">
