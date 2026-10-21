@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { respondToRequest, sendFriendRequest } from "@/app/friends/actions";
+import { respondToRequest, sendFriendRequestTo } from "@/app/friends/actions";
 import { Chip } from "@/components/kit/chip";
 import { Button } from "@/components/ui/button";
 
 type State = "none" | "friends" | "outgoing" | "incoming";
 
-/** Friend button for a public profile: add, request sent, accept, or the Friends chip. */
-export function AddFriendButton({ username, state }: { username: string; state: State }) {
+/**
+ * Friend button for a public profile: add, request sent, accept, or the Friends chip. Acts by
+ * user id, so a page loaded before a username change can't reach whoever takes the old name.
+ */
+export function AddFriendButton({ userId, state }: { userId: string; state: State }) {
   const [current, setCurrent] = useState<State>(state);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -22,7 +25,7 @@ export function AddFriendButton({ username, state }: { username: string; state: 
     );
   }
 
-  function run(task: () => ReturnType<typeof sendFriendRequest>, next: State) {
+  function run(task: () => ReturnType<typeof sendFriendRequestTo>, next: State) {
     start(async () => {
       const result = await task();
       if (result.ok) {
@@ -49,7 +52,7 @@ export function AddFriendButton({ username, state }: { username: string; state: 
         <Button
           size="sm"
           disabled={pending}
-          onClick={() => run(() => respondToRequest({ username, accept: true }), "friends")}
+          onClick={() => run(() => respondToRequest({ userId, accept: true }), "friends")}
         >
           Accept request
         </Button>
@@ -57,7 +60,7 @@ export function AddFriendButton({ username, state }: { username: string; state: 
         <Button
           size="sm"
           disabled={pending}
-          onClick={() => run(() => sendFriendRequest(username), "outgoing")}
+          onClick={() => run(() => sendFriendRequestTo(userId), "outgoing")}
         >
           Add friend
         </Button>

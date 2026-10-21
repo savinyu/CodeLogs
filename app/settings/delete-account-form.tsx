@@ -20,7 +20,10 @@ export function DeleteAccountForm({ username }: { username: string | null }) {
     <form action={action} className="grid gap-3">
       <div className="grid gap-1.5">
         <Label htmlFor="delete-confirmation">
-          Type <span className="font-mono font-semibold">{phrase}</span> to confirm
+          {/* One span: Label is a flex row, which would space out the parts. */}
+          <span>
+            Type <span className="font-semibold">{phrase}</span> to confirm
+          </span>
         </Label>
         <Input
           id="delete-confirmation"

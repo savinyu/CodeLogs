@@ -1,11 +1,13 @@
 "use server";
 
-import { eq, or } from "drizzle-orm";
+import { and, eq, isNull, ne, notExists, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { isDeleteConfirmed } from "@/lib/account-export-shared";
+import { isUniqueViolation } from "@/lib/assign-username";
 import { auth } from "@/lib/auth";
 import { userDataChanged } from "@/lib/cache";
 import { db } from "@/lib/db/client";
@@ -17,10 +19,12 @@ import {
   type SocialKind,
   type SocialLinks,
 } from "@/lib/social-links-shared";
+import { parseNewUsername } from "@/lib/username-change";
 
 export type SettingResult = { ok: true } | { ok: false; error: string };
 
 const SAVE_FAILED = "Could not save that. Try again.";
+const SIGNED_OUT = "You are signed out. Sign in again to continue.";
 
 /** Opt in to (or out of) the public /u/<username> page. */
 export async function setPublicProfile(enabled: unknown): Promise<SettingResult> {
@@ -66,6 +70,116 @@ export async function setGlobalBoard(enabled: unknown): Promise<SettingResult> {
   }
   userDataChanged(user.id);
   return { ok: true };
+}
+
+/** Every friendships row the user is in (friends and pending requests either way). */
+function friendPairs(userId: string) {
+  return db
+    .select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
+    .from(friendships)
+    .where(or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId)));
+}
+
+/** The other person in each row: whose cached lists and boards show this user. */
+function otherIds(pairs: { requesterId: string; addresseeId: string }[], userId: string) {
+  return [...new Set(pairs.map((p) => (p.requesterId === userId ? p.addresseeId : p.requesterId)))];
+}
+
+/** Another user holds `username` as their username or as their (verified) GitHub login. */
+function heldByOther(username: string, userId: string) {
+  return and(
+    or(eq(users.username, username), eq(users.githubLogin, username)),
+    ne(users.id, userId),
+  );
+}
+
+export type UsernameCheckResult = { ok: true; username: string } | { ok: false; error: string };
+
+const USERNAME_TAKEN = "That username is taken.";
+
+/**
+ * Live check for the username field: valid and free. changeUsername checks again on save. A DB
+ * failure throws, so the form doesn't remember it as the name's answer.
+ */
+export async function checkUsername(input: unknown): Promise<UsernameCheckResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: SIGNED_OUT };
+  const parsed = parseNewUsername(input, user.username);
+  if (!parsed.ok) return parsed;
+  const [taken] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(heldByOther(parsed.username, user.id))
+    .limit(1);
+  return taken ? { ok: false, error: USERNAME_TAKEN } : parsed;
+}
+
+/**
+ * Sets a username the user picked. Changing one is allowed once (usernameChangedAt marks it used);
+ * picking one when the user has none is free.
+ */
+export async function changeUsername(input: unknown): Promise<UsernameCheckResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: SIGNED_OUT };
+  const parsed = parseNewUsername(input, user.username);
+  if (!parsed.ok) return parsed;
+  const { username } = parsed;
+
+  const other = alias(users, "other");
+  let friendIds: string[];
+  try {
+    // One round trip: the guarded update (the unique index catches a username race) and the
+    // friend ids whose cached lists show the old name. db.batch runs both in one transaction.
+    const [claimed, pairs] = await db.batch([
+      db
+        .update(users)
+        // Picking a first username (signup couldn't make one) doesn't use up the change.
+        .set({
+          username,
+          usernameChangedAt: sql`case when ${users.username} is null then null else now() end`,
+        })
+        .where(
+          and(
+            eq(users.id, user.id),
+            isNull(users.usernameChangedAt),
+            notExists(
+              db
+                .select({ id: other.id })
+                .from(other)
+                .where(and(eq(other.githubLogin, username), ne(other.id, user.id))),
+            ),
+          ),
+        )
+        .returning({ id: users.id }),
+      friendPairs(user.id),
+    ]);
+    if (claimed.length === 0) {
+      // Rare: already changed (another tab), or the name is someone's GitHub login.
+      const [row] = await db
+        .select({ usernameChangedAt: users.usernameChangedAt })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .limit(1);
+      return row?.usernameChangedAt
+        ? { ok: false, error: "You have already changed your username." }
+        : { ok: false, error: USERNAME_TAKEN };
+    }
+    friendIds = otherIds(pairs, user.id);
+  } catch (err) {
+    if (isUniqueViolation(err)) return { ok: false, error: USERNAME_TAKEN };
+    return { ok: false, error: SAVE_FAILED };
+  }
+
+  try {
+    // Rewrites the session cookie cache from the DB, or this device shows the old name for up
+    // to 5 minutes (lib/auth.ts). Other devices catch up when their cache expires.
+    await auth.api.getSession({ headers: await headers(), query: { disableCookieCache: true } });
+  } catch {
+    // The cookie cache expires on its own.
+  }
+  // Friends' cached lists and boards show the name, and their buttons act on it.
+  userDataChanged(user.id, ...friendIds);
+  return { ok: true, username };
 }
 
 /** Problems per day for Today's goal ring (1 to 20). */
@@ -138,21 +252,18 @@ export async function deleteAccount(
   if (!user) return { ok: false, error: "You are signed out. Sign in again to continue." };
 
   const confirmation = formData.get("confirmation");
-  if (typeof confirmation !== "string" || !isDeleteConfirmed(user.username, confirmation)) {
-    return { ok: false, error: "The confirmation text does not match." };
-  }
+  const mismatch = { ok: false as const, error: "The confirmation text does not match." };
+  if (typeof confirmation !== "string") return mismatch;
 
   let friendIds: string[];
   try {
-    const rows = await db
-      .select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
-      .from(friendships)
-      .where(or(eq(friendships.requesterId, user.id), eq(friendships.addresseeId, user.id)));
-    friendIds = [
-      ...new Set(
-        rows.flatMap((r) => [r.requesterId, r.addresseeId]).filter((id) => id !== user.id),
-      ),
-    ];
+    // The DB's username: the session's lags for a few minutes after a username change.
+    const [[row], pairs] = await db.batch([
+      db.select({ username: users.username }).from(users).where(eq(users.id, user.id)).limit(1),
+      friendPairs(user.id),
+    ]);
+    if (!isDeleteConfirmed(row?.username ?? null, confirmation)) return mismatch;
+    friendIds = otherIds(pairs, user.id);
     // Sessions, OAuth links, platform accounts and everything under them cascade from users.id.
     await db.delete(users).where(eq(users.id, user.id));
   } catch {

@@ -9,6 +9,10 @@ export interface UserSettings {
   publicProfile: boolean;
   globalBoard: boolean;
   dailyGoal: number;
+  /** From the DB, so a change shows at once; the session's copy can lag by its cookie cache. */
+  username: string | null;
+  /** False once the user has used their one username change. */
+  canChangeUsername: boolean;
 }
 
 /** The user's preferences. The columns are read here rather than through Better Auth's session. */
@@ -21,9 +25,21 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
       publicProfile: users.publicProfile,
       globalBoard: users.globalBoard,
       dailyGoal: users.dailyGoal,
+      username: users.username,
+      usernameChangedAt: users.usernameChangedAt,
     })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  return row ?? { publicProfile: false, globalBoard: false, dailyGoal: 3 };
+  if (!row) {
+    return {
+      publicProfile: false,
+      globalBoard: false,
+      dailyGoal: 3,
+      username: null,
+      canChangeUsername: false,
+    };
+  }
+  const { usernameChangedAt, ...rest } = row;
+  return { ...rest, canChangeUsername: usernameChangedAt === null };
 }

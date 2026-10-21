@@ -10,7 +10,13 @@ export async function ProfileMenu({ host }: { host: string }) {
   const settings = await getUserSettings(user.id);
   return (
     <ProfilePanel
-      user={{ name: user.name, username: user.username, email: user.email, image: user.image }}
+      user={{
+        name: user.name,
+        // The DB's copy: after a username change the session's lags on other devices.
+        username: settings.username,
+        email: user.email,
+        image: user.image,
+      }}
       settings={{ publicProfile: settings.publicProfile, globalBoard: settings.globalBoard }}
       host={host}
     />
