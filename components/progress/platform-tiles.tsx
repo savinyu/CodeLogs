@@ -91,7 +91,13 @@ export function PlatformTiles({
                 </a>
               ) : undefined
             }
-          />
+          >
+            {t.platform === "atcoder" && !t.rating ? (
+              <div className="text-sm text-muted-foreground">
+                No rating on file. AtCoder history is limited.
+              </div>
+            ) : null}
+          </PlatformStatTile>
         );
       })}
     </StatTiles>

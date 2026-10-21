@@ -74,13 +74,6 @@ function RatingLine({ rating }: { rating: NonNullable<PlatformTotal["rating"]> }
 function PlatformExtra({ total: t }: { total: PlatformTotal }) {
   if (t.rating) return <RatingLine rating={t.rating} />;
   if (t.split) return <SplitChips split={t.split} />;
-  if (t.platform === "atcoder") {
-    return (
-      <div className="text-sm text-muted-foreground">
-        No rating on file. AtCoder history is limited.
-      </div>
-    );
-  }
   return null;
 }
 
@@ -92,10 +85,13 @@ export function PlatformStatTile({
   total,
   badge,
   sub,
+  children,
 }: {
   total: PlatformTotal;
   badge?: React.ReactNode;
   sub?: React.ReactNode;
+  /** Owner-only lines after the rating or split, such as Progress's data-coverage note. */
+  children?: React.ReactNode;
 }) {
   return (
     <StatTile
@@ -110,6 +106,7 @@ export function PlatformStatTile({
       sub={sub}
     >
       <PlatformExtra total={total} />
+      {children}
     </StatTile>
   );
 }

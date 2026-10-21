@@ -99,7 +99,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
           size="lg"
           label="Problems solved"
           value={fmt(total)}
-          sub={acrossPlatforms(solvedTotals.length)}
+          sub={solvedTotals.length > 0 ? acrossPlatforms(solvedTotals.length) : undefined}
         />
         {solvedTotals.map((t) => {
           const lcRating = t.platform === "leetcode" ? lcContests?.currentRating : null;
