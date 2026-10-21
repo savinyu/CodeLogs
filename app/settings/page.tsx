@@ -60,7 +60,7 @@ async function UsernamePanel() {
           <>
             You are <span className="font-semibold text-foreground">@{username}</span>. Friends add
             you by it, and your public profile is at{" "}
-            <span className="font-mono">/u/{username}</span>.
+            <span className="font-semibold text-foreground">/u/{username}</span>.
           </>
         ) : (
           "Pick a username so friends can add you and your profile gets a public link."

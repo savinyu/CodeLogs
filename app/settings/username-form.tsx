@@ -122,11 +122,11 @@ export function UsernameForm({ username }: { username: string | null }) {
         <Note>
           <p>
             You can change your username only once. Your profile moves to{" "}
-            <span className="font-mono">/u/{free}</span>
+            <span className="font-semibold">/u/{free}</span>
             {username && (
               <>
-                , links to <span className="font-mono">/u/{username}</span> stop working, and{" "}
-                <span className="font-mono">@{username}</span> becomes free for someone else
+                , links to <span className="font-semibold">/u/{username}</span> stop working, and{" "}
+                <span className="font-semibold">@{username}</span> becomes free for someone else
               </>
             )}
             .
