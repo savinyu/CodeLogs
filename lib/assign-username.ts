@@ -1,9 +1,10 @@
 // Picks a free public username (users.username, for /u/<username>) for a user who has none.
 // No server-only import, so scripts can run it too.
 
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import type { DB } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
+import { RESERVED_USERNAMES } from "@/lib/username-change";
 import {
   emailUsernameBase,
   randomUsernameCandidate,
@@ -17,27 +18,34 @@ export function isUniqueViolation(err: unknown): boolean {
   return e?.code === "23505" || e?.cause?.code === "23505";
 }
 
+/** Names in `names` that are someone's username, or another user's GitHub login. */
+async function takenNames(db: DB, userId: string, names: string[]): Promise<Set<string>> {
+  const rows = await db
+    .select({ username: users.username, githubLogin: users.githubLogin })
+    .from(users)
+    .where(
+      or(
+        inArray(users.username, names),
+        and(inArray(users.githubLogin, names), ne(users.id, userId)),
+      ),
+    );
+  return new Set(rows.flatMap((r) => [r.username, r.githubLogin]).filter((n) => n !== null));
+}
+
 /**
  * Sets the first free `base`, `base-2`, … (else `base-xxxxx`) as the username, only while the user has none.
- * Retries once if another signup grabs the name between the lookup and the update.
+ * Free means not reserved, not a username, and not another user's GitHub login (the same rules as
+ * a change in Settings). Retries once if another signup grabs the name between the lookup and the update.
  */
 export async function claimUsername(db: DB, userId: string, base: string): Promise<string | null> {
-  const candidates = usernameCandidates(base);
+  const candidates = usernameCandidates(base).filter((c) => !RESERVED_USERNAMES.has(c));
   for (let attempt = 0; attempt < 2; attempt++) {
-    const taken = await db
-      .select({ username: users.username })
-      .from(users)
-      .where(inArray(users.username, candidates));
-    const takenSet = new Set(taken.map((r) => r.username));
+    const takenSet = await takenNames(db, userId, candidates);
     let free = candidates.find((c) => !takenSet.has(c));
     if (!free) {
       // All numbered names are taken: fall back to a random suffix (a rare clash retries once).
       const random = randomUsernameCandidate(base);
-      const [clash] = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.username, random))
-        .limit(1);
+      const clash = (await takenNames(db, userId, [random])).size > 0;
       if (clash) continue;
       free = random;
     }

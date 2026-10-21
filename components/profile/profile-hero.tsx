@@ -32,6 +32,7 @@ function monthYear(day: string): string {
  * hero. `friendship` is set only for a signed-in visitor who isn't the owner.
  */
 export function ProfileHero({
+  userId,
   name,
   username,
   image,
@@ -41,6 +42,8 @@ export function ProfileHero({
   handles,
   friendship,
 }: {
+  /** The owner's id, which the friend button acts on. */
+  userId: string;
   name: string;
   username: string;
   image: string | null;
@@ -73,9 +76,7 @@ export function ProfileHero({
           <h1 className="font-display text-[clamp(2.375rem,6vw,3.75rem)] leading-none font-bold [overflow-wrap:anywhere]">
             {name}
           </h1>
-          {friendship !== undefined ? (
-            <AddFriendButton username={username} state={friendship} />
-          ) : null}
+          {friendship !== undefined ? <AddFriendButton userId={userId} state={friendship} /> : null}
         </div>
         <p className="mt-1.5 text-lg font-semibold text-muted-foreground">
           @{username}

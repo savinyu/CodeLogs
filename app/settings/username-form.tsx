@@ -120,17 +120,19 @@ export function UsernameForm({ username }: { username: string | null }) {
       </div>
       {confirming && free && (
         <Note>
-          <p>
-            You can change your username only once. Your profile moves to{" "}
-            <span className="font-semibold">/u/{free}</span>
-            {username && (
-              <>
-                , links to <span className="font-semibold">/u/{username}</span> stop working, and{" "}
-                <span className="font-semibold">@{username}</span> becomes free for someone else
-              </>
-            )}
-            .
-          </p>
+          {username ? (
+            <p>
+              You can change your username only once. Your profile moves to{" "}
+              <span className="font-semibold">/u/{free}</span>, links to{" "}
+              <span className="font-semibold">/u/{username}</span> stop working, and{" "}
+              <span className="font-semibold">@{username}</span> becomes free for someone else.
+            </p>
+          ) : (
+            <p>
+              Your profile will be at <span className="font-semibold">/u/{free}</span>. You can
+              change it once later.
+            </p>
+          )}
         </Note>
       )}
       {saveError && (

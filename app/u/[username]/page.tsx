@@ -58,6 +58,7 @@ async function PublicProfileContent({ params }: Pick<PageProps<"/u/[username]">,
   const cta = viewer ? null : <SignupCta />;
   const hero = (
     <ProfileHero
+      userId={profile.userId}
       name={profile.name}
       username={profile.username}
       image={profile.image}

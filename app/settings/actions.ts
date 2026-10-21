@@ -114,7 +114,10 @@ export async function checkUsername(input: unknown): Promise<UsernameCheckResult
   return taken ? { ok: false, error: USERNAME_TAKEN } : parsed;
 }
 
-/** Sets a username the user picked. Allowed once: usernameChangedAt marks it used. */
+/**
+ * Sets a username the user picked. Changing one is allowed once (usernameChangedAt marks it used);
+ * picking one when the user has none is free.
+ */
 export async function changeUsername(input: unknown): Promise<UsernameCheckResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: SIGNED_OUT };
@@ -130,7 +133,11 @@ export async function changeUsername(input: unknown): Promise<UsernameCheckResul
     const [claimed, pairs] = await db.batch([
       db
         .update(users)
-        .set({ username, usernameChangedAt: sql`now()` })
+        // Picking a first username (signup couldn't make one) doesn't use up the change.
+        .set({
+          username,
+          usernameChangedAt: sql`case when ${users.username} is null then null else now() end`,
+        })
         .where(
           and(
             eq(users.id, user.id),

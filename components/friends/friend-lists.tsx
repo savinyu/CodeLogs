@@ -99,10 +99,8 @@ export function FriendLists({
               <span className="flex gap-1.5">
                 <Button
                   size="sm"
-                  disabled={pending || !p.username}
-                  onClick={() =>
-                    run(() => respondToRequest({ username: p.username, accept: true }))
-                  }
+                  disabled={pending}
+                  onClick={() => run(() => respondToRequest({ userId: p.userId, accept: true }))}
                 >
                   Accept
                 </Button>
@@ -110,10 +108,8 @@ export function FriendLists({
                   size="sm"
                   variant="outline"
                   className="bg-muted hover:bg-border"
-                  disabled={pending || !p.username}
-                  onClick={() =>
-                    run(() => respondToRequest({ username: p.username, accept: false }))
-                  }
+                  disabled={pending}
+                  onClick={() => run(() => respondToRequest({ userId: p.userId, accept: false }))}
                 >
                   Decline
                 </Button>
@@ -132,8 +128,8 @@ export function FriendLists({
                   size="sm"
                   variant="outline"
                   className="bg-muted hover:bg-border"
-                  disabled={pending || !p.username}
-                  onClick={() => run(() => cancelRequest(p.username))}
+                  disabled={pending}
+                  onClick={() => run(() => cancelRequest(p.userId))}
                 >
                   Cancel
                 </Button>
@@ -157,7 +153,7 @@ export function FriendLists({
                     size="xs"
                     variant="destructive"
                     disabled={pending}
-                    onClick={() => run(() => removeFriend(p.username))}
+                    onClick={() => run(() => removeFriend(p.userId))}
                   >
                     Yes
                   </Button>
@@ -175,7 +171,7 @@ export function FriendLists({
                 <Button
                   size="xs"
                   variant="ghost"
-                  disabled={pending || !p.username}
+                  disabled={pending}
                   aria-label={`Remove ${p.name}`}
                   onClick={() => setConfirming(p.userId)}
                 >
