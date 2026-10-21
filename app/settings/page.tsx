@@ -10,6 +10,7 @@ import { getUserSettings } from "@/lib/user-settings";
 import { DailyGoalForm } from "./daily-goal-form";
 import { DeleteAccountForm } from "./delete-account-form";
 import { SocialLinksForm } from "./social-links-form";
+import { UsernameForm } from "./username-form";
 
 export const metadata = { title: "Settings" };
 
@@ -18,6 +19,9 @@ export default function SettingsPage() {
     <Page className="max-w-3xl">
       <PageHead title="Settings" />
       <div className="grid gap-4">
+        <Suspense fallback={<PanelSkeleton />}>
+          <UsernamePanel />
+        </Suspense>
         <Suspense fallback={<PanelSkeleton />}>
           <DailyGoalPanel />
         </Suspense>
@@ -39,6 +43,34 @@ export default function SettingsPage() {
         </Suspense>
       </div>
     </Page>
+  );
+}
+
+async function UsernamePanel() {
+  const user = await requireUser();
+  const { username, canChangeUsername } = await getUserSettings(user.id);
+  return (
+    <Panel aria-labelledby="username-title">
+      <PanelHeader
+        title="Username"
+        titleId="username-title"
+        className={canChangeUsername ? undefined : "mb-0"}
+      >
+        {username ? (
+          <>
+            You are <span className="font-semibold text-foreground">@{username}</span>. Friends add
+            you by it, and your public profile is at{" "}
+            <span className="font-mono">/u/{username}</span>.
+          </>
+        ) : (
+          "Pick a username so friends can add you and your profile gets a public link."
+        )}
+        {canChangeUsername
+          ? " You can change it once."
+          : " You have used your one change, so it can't be changed again."}
+      </PanelHeader>
+      {canChangeUsername && <UsernameForm username={username} />}
+    </Panel>
   );
 }
 
@@ -72,6 +104,8 @@ async function SocialLinksPanel() {
 
 async function DeletePanel() {
   const user = await requireUser();
+  // The DB's username, which deleteAccount checks: the session's lags after a username change.
+  const { username } = await getUserSettings(user.id);
   return (
     <Panel aria-labelledby="delete-title" className="bg-destructive/5 ring-1 ring-destructive/30">
       <PanelHeader
@@ -82,7 +116,7 @@ async function DeletePanel() {
         and stats, and your public profile. It cannot be undone. It does not touch your accounts on
         Codeforces, AtCoder, LeetCode, GitHub or Google.
       </PanelHeader>
-      <DeleteAccountForm username={user.username} />
+      <DeleteAccountForm username={username} />
     </Panel>
   );
 }

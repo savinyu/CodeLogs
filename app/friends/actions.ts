@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { userDataChanged } from "@/lib/cache";
 import { isUniqueViolation } from "@/lib/assign-username";
@@ -23,11 +23,12 @@ const FAILED = "Something went wrong. Please try again.";
 
 const usernameSchema = z.string().max(80);
 
+/** By a normalized (lowercase) username: stored ones are lowercase, so this hits the unique index. */
 async function findUser(username: string) {
   const [row] = await db
     .select({ id: users.id, name: users.name, username: users.username })
     .from(users)
-    .where(sql`lower(${users.username}) = ${username}`)
+    .where(eq(users.username, username))
     .limit(1);
   return row ?? null;
 }
@@ -70,9 +71,9 @@ export async function sendFriendRequest(username: unknown): Promise<FriendAction
 
   try {
     const other = await findUser(target);
-    if (!other || other.id === user.id) {
-      return { ok: false, error: "No CodeLogs user with that username." };
-    }
+    if (!other) return { ok: false, error: "No CodeLogs user with that username." };
+    // The session's username can lag a username change by a few minutes; the id can't.
+    if (other.id === user.id) return { ok: false, error: "That is your own username." };
     const existing = await findExisting(user.id, other.id, target);
     if (existing) return existing;
     const [{ n } = { n: 0 }] = await db

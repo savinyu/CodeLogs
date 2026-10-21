@@ -42,8 +42,13 @@ export const users = pgTable(
     image: text("image"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    /** Set once at sign-up, for /u/<username>: the GitHub login, or one made from a Google email. */
+    /**
+     * For /u/<username>, always lowercase. Set at sign-up from the GitHub login or the Google
+     * email; the user can then pick their own once in Settings (usernameChangedAt).
+     */
     username: text("username").unique(),
+    /** When the user picked their own username; set means the one change is used. */
+    usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
     /** The linked GitHub login, shown on the profile as the verified GitHub link. */
     githubLogin: text("github_login"),
     publicProfile: boolean("public_profile").notNull().default(false),
@@ -52,7 +57,11 @@ export const users = pgTable(
     /** Opt-in to the global weekly board; only counts while publicProfile is on (v2). */
     globalBoard: boolean("global_board").notNull().default(false),
   },
-  (t) => [check("users_daily_goal_range", sql`${t.dailyGoal} between 1 and 20`)],
+  (t) => [
+    check("users_daily_goal_range", sql`${t.dailyGoal} between 1 and 20`),
+    // A picked username can't be someone else's GitHub login (lib/username-change.ts).
+    index("users_github_login_idx").on(t.githubLogin),
+  ],
 );
 
 export const sessions = pgTable(
