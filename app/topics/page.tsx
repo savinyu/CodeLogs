@@ -81,7 +81,7 @@ async function TopicsContent({ searchParams }: Pick<PageProps<"/topics">, "searc
 
 function TopicsSkeleton() {
   return (
-    <Skeleton className="aspect-[100/54] w-full rounded-card-lg max-[640px]:aspect-auto max-[640px]:h-96" />
+    <Skeleton className="aspect-[100/54] w-full rounded-card-lg max-[900px]:aspect-auto max-[900px]:h-96" />
   );
 }
 

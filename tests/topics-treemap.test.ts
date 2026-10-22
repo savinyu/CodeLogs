@@ -54,6 +54,27 @@ describe("squarify", () => {
     expect(b.w * b.h).toBeGreaterThan(0);
   });
 
+  it("raises every tile to minShare of the total", () => {
+    const out = squarify(
+      [
+        { item: "a", value: 90 },
+        { item: "b", value: 9 },
+        { item: "c", value: 1 },
+      ],
+      100,
+      40,
+      0.06,
+    );
+    // c is floored to 6 (6% of 100), so the total becomes 105.
+    const share = (id: string) => {
+      const r = out.find((x) => x.item === id)!;
+      return (r.w * r.h) / 4000;
+    };
+    expect(share("a")).toBeCloseTo(90 / 105, 6);
+    expect(share("b")).toBeCloseTo(9 / 105, 6);
+    expect(share("c")).toBeCloseTo(6 / 105, 6);
+  });
+
   it("handles all-zero and empty input", () => {
     expect(squarify([], 100, 40)).toEqual([]);
     const out = squarify(

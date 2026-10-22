@@ -44,6 +44,8 @@ const WEAK_TAG: Record<number, string> = {
 
 const OWNER_HEIGHT = 54;
 const PUBLIC_HEIGHT = 40;
+// Every tile gets at least this share of the map, so a small topic still fits its name and number.
+const MIN_TILE_SHARE = 0.06;
 
 const COV_LEGEND = ["Under 50%", "50–80%", "80–100%", "100–120%", "Over 120%"];
 const PUB_LEGEND = ["Under 25", "25–44", "45–99", "100 or more"];
@@ -85,8 +87,8 @@ export function ExpectedNote() {
 
 /**
  * The topic treemap. Owner: area = expected, colour = coverage, tiles are buttons. Public: area =
- * solved, colour = solves, tiles are list items with no expected or weak values. Under 640px it
- * becomes a stacked list.
+ * solved, colour = solves, tiles are list items with no expected or weak values. Small tiles are
+ * raised to MIN_TILE_SHARE so they stay readable. Under 900px it becomes a stacked list.
  */
 export function TopicMap({
   topics,
@@ -105,6 +107,7 @@ export function TopicMap({
     topics.map((t) => ({ item: t, value: owner ? t.expected : t.solved })),
     100,
     H,
+    MIN_TILE_SHARE,
   );
 
   return (
@@ -112,10 +115,10 @@ export function TopicMap({
       role={owner ? undefined : "list"}
       aria-label={owner ? undefined : "Problems solved by topic"}
       className={cn(
-        "relative max-[640px]:grid max-[640px]:gap-1.5",
+        "relative max-[900px]:grid max-[900px]:gap-1.5",
         owner
-          ? "aspect-[100/54] max-[640px]:aspect-auto"
-          : "aspect-[100/40] max-[640px]:aspect-auto",
+          ? "aspect-[100/54] max-[900px]:aspect-auto"
+          : "aspect-[100/40] max-[900px]:aspect-auto",
       )}
     >
       {rects.map(({ item: t, x, y, w, h }) => {
@@ -129,26 +132,28 @@ export function TopicMap({
           "--h": ((h / H) * 100).toFixed(2),
         } as React.CSSProperties;
         const tileClass = cn(
-          "group block min-w-0 border-0 bg-transparent p-0 text-left font-[inherit] text-inherit",
-          "min-[641px]:absolute min-[641px]:top-[calc(var(--y)*1%)] min-[641px]:left-[calc(var(--x)*1%)] min-[641px]:h-[calc(var(--h)*1%)] min-[641px]:w-[calc(var(--w)*1%)] min-[641px]:p-[3px]",
+          "group @container block min-w-0 border-0 bg-transparent p-0 text-left font-[inherit] text-inherit",
+          "min-[901px]:absolute min-[901px]:top-[calc(var(--y)*1%)] min-[901px]:left-[calc(var(--x)*1%)] min-[901px]:h-[calc(var(--h)*1%)] min-[901px]:w-[calc(var(--w)*1%)] min-[901px]:p-[3px]",
           owner ? "cursor-pointer outline-none" : "cursor-default",
         );
         const inner = (
           <span
             className={cn(
               "flex h-full flex-col justify-between gap-1 overflow-hidden rounded-[14px] px-3.5 py-3",
-              "max-[640px]:min-h-[58px] max-[640px]:flex-row max-[640px]:items-center max-[640px]:gap-2.5",
-              small && "min-[641px]:px-2.5 min-[641px]:py-[9px]",
+              "max-[900px]:min-h-[58px] max-[900px]:flex-row max-[900px]:items-center max-[900px]:gap-2.5",
+              small && "min-[901px]:px-2.5 min-[901px]:py-[9px]",
+              "@max-[150px]:px-2.5",
               owner ? COV[step] : PUB[step],
               owner &&
                 "group-hover:brightness-95 group-focus-visible:outline-3 group-focus-visible:-outline-offset-3 group-focus-visible:outline-foreground group-aria-pressed:shadow-[inset_0_0_0_3px_var(--foreground)]",
             )}
           >
-            <span className="flex items-start justify-between gap-1.5 max-[640px]:min-w-0 max-[640px]:flex-1 max-[640px]:flex-wrap max-[640px]:items-center max-[640px]:justify-start">
+            <span className="flex flex-wrap items-start justify-between gap-1.5 max-[900px]:min-w-0 max-[900px]:flex-1 max-[900px]:flex-wrap max-[900px]:items-center max-[900px]:justify-start">
               <span
                 className={cn(
-                  "text-base leading-tight font-bold [overflow-wrap:anywhere]",
-                  small && "min-[641px]:text-[0.78rem]",
+                  "text-base leading-tight font-bold [overflow-wrap:break-word] hyphens-auto",
+                  "@max-[180px]:text-[0.84rem]",
+                  small && "min-[901px]:text-[0.78rem]",
                 )}
               >
                 {t.name}
@@ -164,16 +169,16 @@ export function TopicMap({
                 </span>
               ) : null}
             </span>
-            <span className="grid gap-0.5 max-[640px]:justify-items-end">
+            <span className="grid gap-0.5 max-[900px]:justify-items-end">
               <span
                 className={cn(
-                  "font-display text-[clamp(18px,3vw,38px)] leading-none font-bold",
-                  small && "min-[641px]:text-[18px]",
+                  "font-display text-[clamp(18px,17cqw,38px)] leading-none font-bold max-[900px]:text-[19px]",
+                  small && "min-[901px]:text-[18px]",
                 )}
               >
                 {owner ? formatPct(t.coverage) : t.solved}
               </span>
-              <span className={cn("text-[0.81rem] opacity-85", small && "min-[641px]:hidden")}>
+              <span className={cn("text-[0.81rem] opacity-85", small && "min-[901px]:hidden")}>
                 {owner ? `${t.solved} / ~${Math.round(t.expected)}` : "solved"}
               </span>
             </span>

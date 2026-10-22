@@ -16,18 +16,22 @@ const isPositive = (v: number) => v > 0 && Number.isFinite(v);
 /**
  * Lays `items` out in a width x height box so each rectangle's area is proportional to its value.
  * Items with a value of 0 or less (or not finite) get a small minimum, MIN_SHARE of the positive
- * total (1 when nothing is positive), so every topic still has a tile to click. Larger values
- * come first; ties keep the input order, so the result is deterministic.
+ * total (1 when nothing is positive), so every topic still has a tile to click. `minShare` raises
+ * every value to at least that share of the positive total, so small tiles stay big enough to
+ * label. Larger values come first; ties keep the input order, so the result is deterministic.
  */
 export function squarify<T>(
   items: { item: T; value: number }[],
   width: number,
   height: number,
+  minShare = 0,
 ): TreemapRect<T>[] {
   if (items.length === 0 || width <= 0 || height <= 0) return [];
   const positive = items.reduce((n, i) => (isPositive(i.value) ? n + i.value : n), 0);
-  const floor = positive > 0 ? positive * MIN_SHARE : 1;
-  const values = items.map((i) => (isPositive(i.value) ? i.value : floor));
+  const floor = positive > 0 ? positive * Math.max(MIN_SHARE, minShare) : 1;
+  const values = items.map((i) =>
+    isPositive(i.value) ? Math.max(i.value, positive * minShare) : floor,
+  );
   const total = values.reduce((a, b) => a + b, 0);
   const k = (width * height) / total;
   const nodes = items
