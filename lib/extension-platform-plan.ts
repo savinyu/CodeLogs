@@ -7,6 +7,7 @@ import {
   difficultySplit,
   EXT_COUNTS_KIND,
   isPlatformProblemUrl,
+  problemUrl,
   type ExtCounts,
   type ExtensionUpload,
 } from "@/lib/extension-upload";
@@ -47,7 +48,7 @@ export function buildPlatformSnapshot(upload: ExtensionUpload): PlatformPlan {
       ...(solvedAt ? { firstSolvedAt: solvedAt } : {}),
       problemFallback: {
         title: s.title,
-        url: s.url,
+        url: problemUrl(platform, s.url),
         difficultyRaw: s.difficulty ?? undefined,
         rawTags: s.tags,
       },

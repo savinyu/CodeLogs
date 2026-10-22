@@ -112,3 +112,16 @@ export function isPlatformProblemUrl(platform: ExtensionPlatformId, url: string)
     return false;
   }
 }
+
+/**
+ * The URL to store for a problem. GFG's practice pages live under /problems/<slug>/1 and the bare
+ * slug is a 404, which extension 0.3.4 and older sent; other URLs are kept as they are.
+ */
+export function problemUrl(platform: ExtensionPlatformId, url: string): string {
+  if (platform !== "gfg") return url;
+  const parsed = new URL(url);
+  const slug = /^\/problems\/([^/]+)\/?$/.exec(parsed.pathname)?.[1];
+  if (!slug) return url;
+  parsed.pathname = `/problems/${slug}/1`;
+  return parsed.toString();
+}
