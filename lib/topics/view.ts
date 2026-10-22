@@ -2,6 +2,7 @@
 
 import type { PlatformId } from "@/lib/adapters/types";
 import type { MacroTopicStat, TopicStat } from "@/lib/dashboard/types";
+import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
 import { scoreTopic, solvesToLeaveWeak, WEAK_BELOW } from "./scoring";
 import type { MacroSlug, TopicSlug } from "./taxonomy";
 
@@ -83,6 +84,35 @@ export function topicViews(topics: MacroTopicStat[]): TopicView[] {
       toLeaveWeak: state === "weak" ? Math.max(1, solvesToLeaveWeak(s)) : 0,
     };
   });
+}
+
+/** "A", "A and B", "A, B and C". */
+function joinNames(names: string[]): string {
+  return names.length < 2
+    ? (names[0] ?? "")
+    : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
+/**
+ * Why the Topics page has no map, for the connected platforms (at least one) when none has topic
+ * data yet. Codeforces never gets here: it always has data once connected.
+ */
+export function noTopicMapReason(platforms: PlatformId[]): string {
+  const tagless = PLATFORM_ORDER.filter(
+    (p) => platforms.includes(p) && p !== "leetcode" && p !== "interviewbit",
+  ).map((p) => PLATFORM_META[p].name);
+  const reasons: string[] = [];
+  if (tagless.length > 0) {
+    reasons.push(`${joinNames(tagless)} ${tagless.length === 1 ? "has" : "have"} no problem tags.`);
+  }
+  if (platforms.includes("interviewbit")) {
+    reasons.push("None of your InterviewBit solves so far is in a topic the map tracks.");
+  }
+  if (platforms.includes("leetcode")) {
+    reasons.push("LeetCode's topic counts haven't synced yet.");
+    return `No topic map yet. ${reasons.join(" ")}`;
+  }
+  return `No topic map yet. ${reasons.join(" ")} Connect Codeforces or LeetCode to see one.`;
 }
 
 /** 0.834 -> "83%". */

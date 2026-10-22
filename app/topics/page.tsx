@@ -13,7 +13,7 @@ import { requireUser } from "@/lib/session";
 import { SHEETS, sectionsTraining, sheetProgress } from "@/lib/sheets";
 import { getSheetState } from "@/lib/sheets/queries";
 import { getSolveNext } from "@/lib/topics/recommend";
-import { topicViews } from "@/lib/topics/view";
+import { noTopicMapReason, topicViews } from "@/lib/topics/view";
 
 export const metadata = { title: "Topics" };
 
@@ -30,12 +30,7 @@ async function TopicsContent({ searchParams }: Pick<PageProps<"/topics">, "searc
 
   if (data.accounts.length === 0) return <ConnectPrompt />;
   if (data.topics.every((t) => t.platforms.length === 0)) {
-    return (
-      <Note>
-        AtCoder has no problem tags, so there is no topic map yet. Connect Codeforces or LeetCode to
-        see one.
-      </Note>
-    );
+    return <Note>{noTopicMapReason(data.accounts.map((a) => a.platform))}</Note>;
   }
 
   const picks = await getSolveNext(user.id, data);

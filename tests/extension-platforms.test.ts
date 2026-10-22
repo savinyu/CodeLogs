@@ -66,7 +66,7 @@ describe("GeeksforGeeks", () => {
     const first = r.solves.find((s) => s.id === "armstrong-numbers2727");
     expect(first).toMatchObject({
       title: "Armstrong Numbers",
-      url: "https://www.geeksforgeeks.org/problems/armstrong-numbers2727",
+      url: "https://www.geeksforgeeks.org/problems/armstrong-numbers2727/1",
       difficulty: "Easy",
       tags: [],
     });

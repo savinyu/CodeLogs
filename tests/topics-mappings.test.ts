@@ -4,6 +4,7 @@ import lcSlugs from "@/fixtures/leetcode/tag-slugs.json";
 import lcCounts from "@/fixtures/leetcode/tag-counts.json";
 import { TAXONOMY, isMacro, macroOf, type TopicSlug } from "@/lib/topics/taxonomy";
 import { CODEFORCES_TAGS } from "@/lib/topics/mappings/codeforces";
+import { INTERVIEWBIT_TAGS, interviewbitTagKey } from "@/lib/topics/mappings/interviewbit";
 import { LEETCODE_TAGS } from "@/lib/topics/mappings/leetcode";
 import { tagsForTopic, topicsForTag } from "@/lib/topics/mappings";
 
@@ -26,6 +27,7 @@ describe("coverage of fixtures", () => {
 describe.each([
   ["codeforces", CODEFORCES_TAGS],
   ["leetcode", LEETCODE_TAGS],
+  ["interviewbit", INTERVIEWBIT_TAGS],
 ])("%s table", (_name, table) => {
   it("maps only valid, non-redundant, non-duplicate slugs", () => {
     for (const [tag, slugs] of Object.entries(table)) {
@@ -48,6 +50,15 @@ describe("lookups", () => {
     expect(topicsForTag("atcoder", "dp")).toEqual([]);
     expect(topicsForTag("codeforces", "nope")).toEqual([]);
     expect(topicsForTag("leetcode", "constructor")).toEqual([]);
+    expect(topicsForTag("gfg", "Arrays")).toEqual([]);
+  });
+  it("matches InterviewBit tags whatever their case or spelling of 'and'", () => {
+    expect(topicsForTag("interviewbit", "Stacks And Queues")).toEqual(["stacks-queues"]);
+    expect(topicsForTag("interviewbit", "Graph Data Structure & Algorithms")).toEqual(["graphs"]);
+    expect(topicsForTag("interviewbit", " HEAPS  and maps")).toEqual(["heaps"]);
+    expect(topicsForTag("interviewbit", "Time Complexity")).toEqual([]);
+    expect(topicsForTag("interviewbit", "Amazon")).toEqual([]);
+    for (const key of Object.keys(INTERVIEWBIT_TAGS)) expect(interviewbitTagKey(key)).toBe(key);
   });
   it("tagsForTopic expands macros to micros", () => {
     const g = tagsForTopic("codeforces", "graphs");

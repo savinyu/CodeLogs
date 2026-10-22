@@ -62,6 +62,7 @@ function raw(overrides: Partial<DashboardRaw> = {}): DashboardRaw {
     ],
     recent: [],
     cfSolves: [],
+    ibSolves: [],
     cfCatalog: [],
     lcCatalog: [],
     contests: [],
