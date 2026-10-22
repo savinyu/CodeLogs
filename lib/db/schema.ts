@@ -210,6 +210,23 @@ export const platformAccounts = pgTable(
   (t) => [uniqueIndex("platform_accounts_user_platform_uq").on(t.userId, t.platform)],
 );
 
+/**
+ * Platforms the user removed on Connect. The extension doesn't connect them again on its own
+ * (PLAN-v2.md §9); a click on the platform in the extension, or a handle typed on Connect,
+ * deletes the row.
+ */
+export const platformOptOuts = pgTable(
+  "platform_opt_outs",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    platform: platformEnum("platform").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.platform] })],
+);
+
 /** Global problem catalog. Rows with catalogUpdatedAt = null are stubs written by a user sync. */
 export const problems = pgTable(
   "problems",

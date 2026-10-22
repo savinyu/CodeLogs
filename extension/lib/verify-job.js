@@ -5,16 +5,19 @@
 import { NotLoggedInError, ReaderError } from "./common.js";
 import { createContext } from "./job.js";
 import { pageRunner, withPlatformTab, withVisitedTab } from "./platform-job.js";
+import { skipsRemoved } from "./schedule.js";
 import { planVerify } from "./verify-plan.js";
 import { checkMe, postUpload } from "./server.js";
 import { VERIFIERS } from "./verifiers.js";
 
 /**
  * Without `tabId` it uses an open tab or a background one; with it, only that tab (a visit).
- * @param {{ platformId: string, base: string, token: string, tabId?: number, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
- * @returns {Promise<{ ok?: boolean, handle?: string, verified?: boolean, already?: boolean, created?: boolean }>}
+ * `manual`: the user clicked this platform, so a platform they removed on LogN is connected again;
+ * otherwise it is skipped before any tab is opened.
+ * @param {{ platformId: string, base: string, token: string, tabId?: number, manual: boolean, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ * @returns {Promise<{ ok?: boolean, handle?: string, verified?: boolean, already?: boolean, created?: boolean, skipped?: boolean }>}
  */
-export async function runVerifyJob({ platformId, base, token, tabId, setStatus }) {
+export async function runVerifyJob({ platformId, base, token, tabId, manual, setStatus }) {
   const v = /** @type {Record<string, (typeof VERIFIERS)[keyof typeof VERIFIERS]>} */ (VERIFIERS)[
     platformId
   ];
@@ -28,6 +31,7 @@ export async function runVerifyJob({ platformId, base, token, tabId, setStatus }
 
   await setStatus({ step: "connect", message: "Checking your LogN connection..." });
   const me = await checkMe(base, token);
+  if (skipsRemoved(me, platformId, manual)) return { skipped: true };
   const plan = planVerify(me.handles, platformId);
   if (plan.action === "done") return plan.result;
 
@@ -47,5 +51,9 @@ export async function runVerifyJob({ platformId, base, token, tabId, setStatus }
     tabId === undefined ? await withPlatformTab(v, readIn) : await withVisitedTab(v, tabId, readIn);
 
   await setStatus({ step: "upload", message: "Verifying with LogN..." });
-  return postUpload(base, token, "/api/extension/verify", { platform: platformId, loggedInAs });
+  return postUpload(base, token, "/api/extension/verify", {
+    platform: platformId,
+    loggedInAs,
+    manual,
+  });
 }

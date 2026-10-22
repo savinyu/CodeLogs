@@ -71,6 +71,8 @@ export const extensionUploadSchema = z.object({
       }),
     )
     .max(4000),
+  /** The user clicked this platform in the extension; only then is a removed one connected. */
+  manual: z.boolean().optional(),
 });
 
 export type ExtensionUpload = z.infer<typeof extensionUploadSchema>;

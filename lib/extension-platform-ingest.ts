@@ -1,9 +1,15 @@
 // Writes an extension upload for CodeChef, Code360, HackerRank, InterviewBit or GFG
 // (POST /api/extension/platform). The caller has authenticated the user. A logged-in-as match
-// connects the handle if needed and verifies it (PLAN-v2.md §9).
+// connects the handle if needed and verifies it (PLAN-v2.md §9), unless the user removed the
+// platform and this upload isn't from a click on it.
 
 import "server-only";
 import { and, count, eq, sql } from "drizzle-orm";
+import {
+  insertLoggedInAccount,
+  mayConnectFromExtension,
+  removedPlatformError,
+} from "@/lib/accounts";
 import { checkHandleFormat } from "@/lib/adapters/handle-format";
 import type { ExtensionPlatformId } from "@/lib/adapters/types";
 import { invalidateUser } from "@/lib/cache";
@@ -63,14 +69,14 @@ export async function ingestExtensionUpload(
     let account = await find();
     let created = false;
     if (!account) {
-      // The unique (user_id, platform) index settles a double click: the loser re-reads.
-      const inserted = await db
-        .insert(platformAccounts)
-        .values({ userId, platform, handle: canonical, verified: true })
-        .onConflictDoNothing()
-        .returning({ id: platformAccounts.id, handle: platformAccounts.handle });
-      created = inserted.length > 0;
-      account = inserted[0] ?? (await find());
+      const manual = upload.manual === true;
+      if (!(await mayConnectFromExtension(userId, platform, manual))) {
+        return { ok: false, status: 409, error: removedPlatformError(platform) };
+      }
+      // A double click inserts once: the loser re-reads.
+      const inserted = await insertLoggedInAccount(userId, platform, canonical, manual);
+      created = inserted !== null;
+      account = inserted ?? (await find());
       if (!account) return { ok: false, status: 500, error: SAVE_FAILED };
     }
 

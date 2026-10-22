@@ -4,7 +4,8 @@
 //   - the extension has just connected to LogN (every platform, once),
 //   - the user loads a page on a platform whose last sync is older than 6 hours (that tab only),
 //   - the hourly timer finds LeetCode's last sync older than a day.
-// The automatic ones can be turned off in the popup. LeetCode is fetched from here; CodeChef,
+// The automatic ones can be turned off in the popup, and they skip a platform the user removed on
+// LogN: only a click on it in the popup connects it again. LeetCode is fetched from here; CodeChef,
 // Code360, HackerRank, InterviewBit and GFG are read inside a tab of the platform's own site.
 // Codeforces and AtCoder are not synced here (the server reads their public APIs): the extension
 // only reads who the browser is logged in as, to verify the connected handle or connect it when
@@ -22,6 +23,7 @@ import {
 import {
   describeLeetcodeResult,
   describePlatformResult,
+  describeSkipped,
   describeVerifyResult,
 } from "./lib/describe.js";
 import { basePermission, LOGN_ORIGIN, normalizeBaseUrl, OLD_ORIGIN } from "./lib/leetcode.js";
@@ -29,6 +31,7 @@ import { runLeetcodeJob } from "./lib/leetcode-job.js";
 import { runPlatformJob } from "./lib/platform-job.js";
 import { runVerifyJob } from "./lib/verify-job.js";
 import {
+  ALL_PLATFORMS,
   SYNC_PLATFORMS,
   VERIFY_PLATFORMS,
   isSyncPlatform,
@@ -97,7 +100,7 @@ async function readRuns() {
 
 /**
  * @param {string} platform
- * @param {{ ok: boolean, loggedOut?: boolean, auto: boolean, text: string }} r
+ * @param {{ ok: boolean, loggedOut?: boolean, auto: boolean, text: string, datesDone?: boolean, skipped?: boolean }} r
  */
 async function saveRun(platform, r) {
   const runs = await readRuns();
@@ -127,10 +130,11 @@ async function exclusive(job) {
 
 /**
  * Syncs one platform and records the outcome under `runs`. Only a revoked token is thrown, since
- * nothing else can run without one.
+ * nothing else can run without one. `manual` is a click on this platform in the popup: only then is
+ * a platform the user removed on LogN connected again.
  * @param {string} platform
  * @param {Connection} conn
- * @param {{ auto: boolean, tabId?: number, includeDates: boolean }} opts
+ * @param {{ auto: boolean, manual: boolean, tabId?: number, includeDates: boolean }} opts
  * @returns {Promise<{ ok: boolean, text: string }>}
  */
 async function syncOne(platform, conn, opts) {
@@ -144,14 +148,18 @@ async function syncOne(platform, conn, opts) {
   try {
     let text;
     let datesDone = false;
-    if (isVerifyPlatform(platform)) {
+    let skipped = false;
+    const verify = isVerifyPlatform(platform);
+    if (verify) {
       const out = await runVerifyJob({
         platformId: platform,
         base: conn.base,
         token: conn.token,
         tabId: opts.tabId,
+        manual: opts.manual,
         setStatus,
       });
+      skipped = out.skipped === true;
       text = describeVerifyResult(out);
     } else if (platform === "leetcode") {
       const runs = await readRuns();
@@ -160,8 +168,10 @@ async function syncOne(platform, conn, opts) {
         token: conn.token,
         includeDates: opts.includeDates,
         datesSince: opts.auto ? leetcodeDatesSince(runs.leetcode) : null,
+        manual: opts.manual,
         setStatus,
       });
+      skipped = out.skipped === true;
       text = describeLeetcodeResult(out);
       datesDone = out.datesDone;
     } else {
@@ -170,11 +180,17 @@ async function syncOne(platform, conn, opts) {
         base: conn.base,
         token: conn.token,
         tabId: opts.tabId,
+        manual: opts.manual,
         setStatus,
       });
+      skipped = out.skipped === true;
       text = describePlatformResult(out);
     }
-    await saveRun(platform, { ok: true, auto: opts.auto, text, datesDone });
+    if (skipped) {
+      const name = ALL_PLATFORMS.find((p) => p.id === platform)?.name ?? platform;
+      text = describeSkipped(name, verify);
+    }
+    await saveRun(platform, { ok: true, auto: opts.auto, text, datesDone, skipped });
     return { ok: true, text };
   } catch (e) {
     if (e instanceof TokenRevokedError) {
@@ -238,12 +254,13 @@ function syncAll() {
       if (!(await chrome.permissions.contains({ origins: p.permissions }))) {
         continue;
       }
-      await syncOne(p.id, conn, { auto: false, includeDates: conn.includeDates });
+      // Not `manual`: connecting the browser doesn't bring back a platform the user removed.
+      await syncOne(p.id, conn, { auto: false, manual: false, includeDates: conn.includeDates });
     }
     // Codeforces and AtCoder: connect or verify only (no tab is opened when already verified).
     for (const p of VERIFY_PLATFORMS) {
       if (!(await chrome.permissions.contains({ origins: p.permissions }))) continue;
-      await syncOne(p.id, conn, { auto: true, includeDates: false });
+      await syncOne(p.id, conn, { auto: true, manual: false, includeDates: false });
     }
   });
 }
@@ -297,6 +314,7 @@ async function onVisit(tabId, url) {
   await runJob((c) =>
     syncOne(p.id, c, {
       auto: true,
+      manual: false,
       tabId: p.kind === "leetcode" ? undefined : tabId,
       includeDates: c.includeDates,
     }).then(() => {}),
@@ -309,7 +327,9 @@ async function onAlarm() {
   if (!conn?.autoSync) return;
   if (!isDue((await readRuns()).leetcode, Date.now(), DAILY_INTERVAL_MS, DAILY_RETRY_MS)) return;
   await runJob((c) =>
-    syncOne("leetcode", c, { auto: true, includeDates: c.includeDates }).then(() => {}),
+    syncOne("leetcode", c, { auto: true, manual: false, includeDates: c.includeDates }).then(
+      () => {},
+    ),
   );
 }
 
@@ -337,7 +357,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   sendResponse({ started: true });
   void runJob(async (conn) => {
-    await syncOne(platform, conn, { auto: false, includeDates: msg.includeDates !== false });
+    await syncOne(platform, conn, {
+      auto: false,
+      manual: true,
+      includeDates: msg.includeDates !== false,
+    });
   });
   return false;
 });

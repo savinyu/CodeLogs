@@ -57,6 +57,10 @@ account you are logged in to is the proof that the handle is yours. A sync of a 
 verifies it when the username the site reports matches. A different connected handle is never
 replaced; remove it on the LogN Connect page first.
 
+A platform you removed on the LogN Connect page stays removed: automatic syncs (including the
+first one after connecting) skip it without opening a tab, and its row says **Removed**. Click its
+Sync (or Connect) button, or add the handle on the Connect page, to bring it back.
+
 ## Verifying Codeforces and AtCoder
 
 LogN syncs Codeforces and AtCoder itself from their public APIs, so the extension does not sync

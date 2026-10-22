@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LogN",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Syncs the problems you solve on coding sites to your LogN dashboard, from the browser you are already logged in with.",
   "icons": {
     "16": "icons/icon-16.png",

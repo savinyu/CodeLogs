@@ -17,9 +17,22 @@ export const DAILY_RETRY_MS = HOUR_MS;
 /**
  * The last run of one platform, kept in chrome.storage.local under `runs`.
  * `at` is the last attempt and `okAt` the last success (epoch ms). `datesAt` is the last run whose
- * LeetCode date walk completed; absent in records from 0.3.3, which means "never".
- * @typedef {{ at: number, okAt: number | null, datesAt?: number | null, ok: boolean, loggedOut: boolean, auto: boolean, text: string }} RunRecord
+ * LeetCode date walk completed; absent in records from 0.3.3, which means "never". `skipped` is an
+ * automatic run that left a removed platform alone (it counts as a success).
+ * @typedef {{ at: number, okAt: number | null, datesAt?: number | null, ok: boolean, loggedOut: boolean, auto: boolean, text: string, skipped?: boolean }} RunRecord
  */
+
+/**
+ * An automatic sync leaves a platform the user removed on LogN alone: only a click on it in the
+ * popup (`manual`) connects it again. The server enforces this too.
+ * @param {{ handles?: Record<string, unknown>, removed?: string[] } | null | undefined} me  /api/extension/me
+ * @param {string} platformId
+ * @param {boolean} manual
+ */
+export function skipsRemoved(me, platformId, manual) {
+  if (manual || me?.handles?.[platformId]) return false;
+  return (me?.removed ?? []).includes(platformId);
+}
 
 /**
  * Due when the last success is older than `intervalMs` and the last attempt older than `retryMs`
@@ -51,7 +64,7 @@ export function platformForUrl(url, platforms) {
  * The record after a run. A failure keeps the previous success time, and a run whose date walk
  * didn't complete (`datesDone` false) keeps the previous `datesAt`.
  * @param {RunRecord | undefined} prev
- * @param {{ now: number, ok: boolean, loggedOut?: boolean, auto: boolean, text: string, datesDone?: boolean }} r
+ * @param {{ now: number, ok: boolean, loggedOut?: boolean, auto: boolean, text: string, datesDone?: boolean, skipped?: boolean }} r
  * @returns {RunRecord}
  */
 export function nextRun(prev, r) {
@@ -63,6 +76,7 @@ export function nextRun(prev, r) {
     loggedOut: r.loggedOut ?? false,
     auto: r.auto,
     text: r.text,
+    skipped: r.skipped ?? false,
   };
 }
 

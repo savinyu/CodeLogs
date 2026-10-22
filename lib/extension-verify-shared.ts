@@ -16,6 +16,8 @@ export const extensionVerifySchema = z.object({
     .string()
     .trim()
     .regex(/^[A-Za-z0-9_.-]{1,64}$/),
+  /** The user clicked this platform in the extension; only then is a removed one connected. */
+  manual: z.boolean().optional(),
 });
 
 export type ExtensionVerifyBody = z.infer<typeof extensionVerifySchema>;

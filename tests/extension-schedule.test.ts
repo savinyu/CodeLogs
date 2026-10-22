@@ -9,6 +9,7 @@ import {
   leetcodeDatesSince,
   nextRun,
   platformForUrl,
+  skipsRemoved,
   type RunRecord,
 } from "../extension/lib/schedule.js";
 import { loadFixture } from "./helpers/mock-http";
@@ -58,6 +59,32 @@ describe("nextRun", () => {
       okAt: NOW,
       loggedOut: false,
     });
+  });
+});
+
+describe("skipsRemoved", () => {
+  const me = { handles: { codeforces: { handle: "savinyu" } }, removed: ["leetcode", "gfg"] };
+
+  it("skips a removed platform on an automatic run only", () => {
+    expect(skipsRemoved(me, "leetcode", false)).toBe(true);
+    expect(skipsRemoved(me, "gfg", false)).toBe(true);
+    expect(skipsRemoved(me, "leetcode", true)).toBe(false);
+  });
+
+  it("runs platforms that weren't removed, or are connected again", () => {
+    expect(skipsRemoved(me, "codechef", false)).toBe(false);
+    expect(skipsRemoved({ ...me, removed: ["codeforces"] }, "codeforces", false)).toBe(false);
+  });
+
+  it("runs everything when LogN doesn't send `removed` (an older server)", () => {
+    expect(skipsRemoved({ handles: {} }, "leetcode", false)).toBe(false);
+    expect(skipsRemoved(null, "leetcode", false)).toBe(false);
+  });
+
+  it("records a skip as a success, so visits wait the full interval", () => {
+    const next = nextRun(undefined, { now: NOW, ok: true, auto: true, text: "x", skipped: true });
+    expect(next).toMatchObject({ ok: true, okAt: NOW, skipped: true });
+    expect(isDue(next, NOW + HOUR, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(false);
   });
 });
 

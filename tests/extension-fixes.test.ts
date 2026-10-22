@@ -27,21 +27,26 @@ declare global {
 type Sub = { status_display: string; title_slug: string; timestamp: number };
 type SubsReply = { status: number; body?: unknown };
 
-/** Stubs fetch for LogN and leetcode.com; `subs(n)` answers the n-th submissions request. */
-function stubLeetcode(subs: (n: number) => SubsReply) {
+/**
+ * Stubs fetch for LogN and leetcode.com; `subs(n)` answers the n-th submissions request and `me`
+ * is /api/extension/me.
+ */
+function stubLeetcode(subs: (n: number) => SubsReply, me: unknown = { username: "u" }) {
   let n = 0;
-  let uploaded: { solves: Array<{ solvedAt: number | null }> } | null = null;
+  let uploaded: { solves: Array<{ solvedAt: number | null }>; manual?: boolean } | null = null;
+  let leetcodeRequests = 0;
   vi.stubGlobal("chrome", { permissions: { contains: async () => true } });
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: { body?: string }) => {
       const json = (status: number, body: unknown) =>
         ({ ok: status >= 200 && status < 300, status, json: async () => body }) as Response;
-      if (url.endsWith("/api/extension/me")) return json(200, { username: "u" });
+      if (url.endsWith("/api/extension/me")) return json(200, me);
       if (url.endsWith("/api/extension/leetcode")) {
         uploaded = JSON.parse(String(init?.body));
         return json(200, { ok: true, imported: 1, alreadyKnown: 0, complete: true });
       }
+      leetcodeRequests++;
       if (url.includes("/api/problems/all/")) {
         return json(200, {
           user_name: "me",
@@ -52,7 +57,11 @@ function stubLeetcode(subs: (n: number) => SubsReply) {
       return json(r.status, r.body);
     }),
   );
-  return { uploaded: () => uploaded, submissionRequests: () => n };
+  return {
+    uploaded: () => uploaded,
+    submissionRequests: () => n,
+    leetcodeRequests: () => leetcodeRequests,
+  };
 }
 
 const page = (hasNext: boolean, ts: number): SubsReply => ({
@@ -66,14 +75,39 @@ const page = (hasNext: boolean, ts: number): SubsReply => ({
   },
 });
 
-const run = (datesSince: number | null = null) =>
+const run = (datesSince: number | null = null, manual = true) =>
   runLeetcodeJob({
     base: "https://x.test",
     token: "t",
     includeDates: true,
     datesSince,
+    manual,
     setStatus: async () => {},
   });
+
+describe("LeetCode removed on LogN", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const removed = { username: "u", handles: {}, removed: ["leetcode"] };
+
+  it("an automatic run reads nothing from leetcode.com", async () => {
+    const lc = stubLeetcode(() => page(false, 1700000000), removed);
+    expect(await run(null, false)).toMatchObject({ skipped: true });
+    expect(lc.leetcodeRequests()).toBe(0);
+    expect(lc.uploaded()).toBeNull();
+  });
+
+  it("a click syncs it and tells LogN it was a click", async () => {
+    const lc = stubLeetcode(() => page(false, 1700000000), removed);
+    await run(null, true);
+    expect(lc.uploaded()?.manual).toBe(true);
+  });
+
+  it("an automatic run of a platform that wasn't removed says so too", async () => {
+    const lc = stubLeetcode(() => page(false, 1700000000));
+    await run(null, false);
+    expect(lc.uploaded()?.manual).toBe(false);
+  });
+});
 
 describe("LeetCode date walk", () => {
   beforeEach(() => {

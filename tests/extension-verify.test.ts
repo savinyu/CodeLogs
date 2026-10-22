@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import manifest from "../extension/manifest.json";
-import { describeLeetcodeResult, describeVerifyResult } from "../extension/lib/describe.js";
+import {
+  describeLeetcodeResult,
+  describeSkipped,
+  describeVerifyResult,
+} from "../extension/lib/describe.js";
 import { INJECTED } from "../extension/lib/inject.js";
 import { ALL_PLATFORMS, SYNC_PLATFORMS, VERIFY_PLATFORMS } from "../extension/lib/registry.js";
 import { planVerify } from "../extension/lib/verify-plan.js";
@@ -94,6 +98,12 @@ describe("describers", () => {
     expect(describeVerifyResult({ handle: "savinyu", created: true })).toBe(
       "Connected and verified @savinyu.",
     );
+  });
+  it("describeSkipped names the button that brings the platform back", () => {
+    expect(describeSkipped("Codeforces", true)).toBe(
+      "You removed Codeforces on LogN, so it isn't connected automatically. Click Connect to add it back.",
+    );
+    expect(describeSkipped("GeeksforGeeks", false)).toContain("Click Sync to add it back.");
   });
   it("describeLeetcodeResult mentions a handle only when this sync verified it", () => {
     expect(describeLeetcodeResult({ imported: 1, complete: true, newlyVerified: true })).toContain(

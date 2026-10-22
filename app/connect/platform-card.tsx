@@ -51,6 +51,8 @@ export interface PlatformCardProps {
     lastSyncedAt: string | null;
     lastError: string | null;
   } | null;
+  /** The user removed this platform: the extension won't connect it on its own. */
+  removed: boolean;
 }
 
 const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
@@ -68,7 +70,14 @@ function formatRelative(iso: string): string {
   return "just now";
 }
 
-export function PlatformCard({ platform, name, handleHint, note, account }: PlatformCardProps) {
+export function PlatformCard({
+  platform,
+  name,
+  handleHint,
+  note,
+  account,
+  removed,
+}: PlatformCardProps) {
   return (
     <Panel aria-label={name}>
       <PanelHeader
@@ -84,7 +93,7 @@ export function PlatformCard({ platform, name, handleHint, note, account }: Plat
       {account ? (
         <ConnectedView platform={platform} name={name} account={account} />
       ) : (
-        <ConnectForm platform={platform} name={name} handleHint={handleHint} />
+        <ConnectForm platform={platform} name={name} handleHint={handleHint} removed={removed} />
       )}
     </Panel>
   );
@@ -196,7 +205,8 @@ function ConnectedView({
           : ""}
       </p>
       <p className="basis-full text-sm text-muted-foreground">
-        Removing a handle also deletes its synced solves.
+        Removing a handle also deletes its synced solves, and the browser extension stops adding it
+        back on its own.
       </p>
     </div>
   );
@@ -206,12 +216,15 @@ function ConnectForm({
   platform,
   name,
   handleHint,
+  removed,
 }: {
   platform: PlatformId;
   name: string;
   handleHint: string;
+  removed: boolean;
 }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(connectPlatform, null);
+  const viaVerify = platform === "codeforces" || platform === "atcoder";
   const lastToasted = useRef<ActionState>(null);
   const inputId = `handle-${platform}`;
 
@@ -250,9 +263,11 @@ function ConnectForm({
       </div>
       {!error ? (
         <p className="text-sm text-muted-foreground">
-          {platform === "codeforces" || platform === "atcoder"
-            ? `Or click Connect on its ${name} row in the browser extension, while logged in to ${name}.`
-            : `Syncing ${name} in the browser extension connects it too.`}
+          {removed
+            ? `You removed ${name}, so the browser extension won't add it back on its own. To connect it again, type your handle or click ${viaVerify ? "Connect" : "Sync"} on its ${name} row in the extension.`
+            : viaVerify
+              ? `Or click Connect on its ${name} row in the browser extension, while logged in to ${name}.`
+              : `Syncing ${name} in the browser extension connects it too.`}
         </p>
       ) : null}
       {error && (

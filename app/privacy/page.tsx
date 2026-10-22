@@ -127,7 +127,10 @@ export default function PrivacyPage() {
 
         <Section title="Your choices">
           <List>
-            <li>Remove a platform handle on the Connect page; its solves are removed with it.</li>
+            <li>
+              Remove a platform handle on the Connect page; its solves are removed with it, and the
+              extension doesn&apos;t add it back unless you click it there.
+            </li>
             <li>
               Download all your data, or delete your account and everything in it, in Settings.
             </li>

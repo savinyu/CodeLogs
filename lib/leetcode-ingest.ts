@@ -38,6 +38,8 @@ export interface IngestInput {
   solves: { slug: string; solvedAt: number | null }[];
   /** LeetCode's own solved count from the same response, if the caller has it. */
   numSolved?: number | null;
+  /** Extension: the user clicked LeetCode, so a handle they removed is connected again. */
+  manual?: boolean;
 }
 
 const lcStatsSchema = z.object({ solved: z.object({ all: z.number().optional() }) });
@@ -71,7 +73,12 @@ export async function ingestLeetcodeSolves(
   }
   let created = false;
   if (!account) {
-    const connected = await connectLoggedInHandle(userId, "leetcode", userName).catch((err) => {
+    const connected = await connectLoggedInHandle(
+      userId,
+      "leetcode",
+      userName,
+      input.manual === true,
+    ).catch((err) => {
       console.error("LeetCode connect failed", err);
       return null;
     });
