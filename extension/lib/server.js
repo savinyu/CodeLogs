@@ -8,7 +8,7 @@ export class TokenRevokedError extends ReaderError {}
 /**
  * @param {string} base
  * @param {string} token
- * @returns {Promise<{ username: string, leetcodeHandle: string | null, handles?: Record<string, { handle: string, verified: boolean, lastSyncedAt: string | number | null }> }>}
+ * @returns {Promise<{ username: string, leetcodeHandle: string | null, handles?: Record<string, { handle: string, verified: boolean, lastSyncedAt: string | number | null }>, removed?: string[] }>}
  */
 export async function checkMe(base, token) {
   let res;

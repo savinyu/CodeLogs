@@ -9,6 +9,7 @@ import {
   buildUpload,
   oldestSubmissionTime,
 } from "./leetcode.js";
+import { skipsRemoved } from "./schedule.js";
 import { checkMe, postUpload } from "./server.js";
 
 const SUBMISSION_DELAY_MS = 1500;
@@ -75,9 +76,18 @@ async function fetchDates(since, onPage) {
 
 /**
  * `datesSince` (epoch seconds) limits the date walk to recent submissions; null walks them all.
- * @param {{ base: string, token: string, includeDates: boolean, datesSince?: number | null, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ * `manual`: the user clicked LeetCode, so a handle they removed on LogN is connected again;
+ * otherwise nothing is read.
+ * @param {{ base: string, token: string, includeDates: boolean, datesSince?: number | null, manual: boolean, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
  */
-export async function runLeetcodeJob({ base, token, includeDates, datesSince = null, setStatus }) {
+export async function runLeetcodeJob({
+  base,
+  token,
+  includeDates,
+  datesSince = null,
+  manual,
+  setStatus,
+}) {
   // Without host access (withheld by the user's site-access setting) the fetches below fail CORS.
   if (!(await chrome.permissions.contains({ origins: LEETCODE_ORIGINS }))) {
     throw new ReaderError(
@@ -86,7 +96,9 @@ export async function runLeetcodeJob({ base, token, includeDates, datesSince = n
   }
 
   await setStatus({ step: "connect", message: "Checking your LogN connection..." });
-  await checkMe(base, token);
+  const me = await checkMe(base, token);
+  if (skipsRemoved(me, "leetcode", manual))
+    return { skipped: true, datesNote: "", datesDone: false };
 
   await setStatus({ step: "solved", message: "Reading your solved list from LeetCode..." });
   let res;
@@ -128,6 +140,6 @@ export async function runLeetcodeJob({ base, token, includeDates, datesSince = n
   if (body.solves.length === 0) {
     throw new ReaderError("No solved problems found on your LeetCode account.");
   }
-  const out = await postUpload(base, token, "/api/extension/leetcode", body);
+  const out = await postUpload(base, token, "/api/extension/leetcode", { ...body, manual });
   return { ...out, datesNote, datesDone };
 }

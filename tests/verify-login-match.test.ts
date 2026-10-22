@@ -11,6 +11,16 @@ describe("extensionVerifySchema", () => {
     ).toBe(true);
   });
 
+  it("passes `manual` through, and rejects a non-boolean", () => {
+    expect(
+      extensionVerifySchema.parse({ platform: "atcoder", loggedInAs: "chokudai", manual: true }),
+    ).toEqual({ platform: "atcoder", loggedInAs: "chokudai", manual: true });
+    expect(
+      extensionVerifySchema.safeParse({ platform: "atcoder", loggedInAs: "x", manual: "yes" })
+        .success,
+    ).toBe(false);
+  });
+
   it("rejects other platforms and odd usernames", () => {
     for (const body of [
       { platform: "leetcode", loggedInAs: "x" },

@@ -10,7 +10,8 @@ import { requestFirstSync } from "@/lib/sync/request";
 // The browser extension says which Codeforces or AtCoder user this browser is logged in as. When
 // it is the connected handle, the handle becomes verified: a login match, as for the extension
 // platforms (PLAN-v2.md §9). With no handle connected yet, it connects that user, verified, and
-// queues the server's first sync. Authenticated by the extension's token, never by cookies.
+// queues the server's first sync, unless the user removed the platform and didn't click it in
+// the extension. Authenticated by the extension's token, never by cookies.
 export async function POST(request: Request) {
   const user = await authenticateBearer(request.headers.get("authorization"));
   if (!user) {
@@ -43,7 +44,12 @@ export async function POST(request: Request) {
     if (decision.kind === "error") return error(decision.status, decision.error);
 
     if (decision.kind === "create") {
-      const connected = await connectLoggedInHandle(user.userId, platform, parsed.data.loggedInAs);
+      const connected = await connectLoggedInHandle(
+        user.userId,
+        platform,
+        parsed.data.loggedInAs,
+        parsed.data.manual === true,
+      );
       if (!connected.ok) return error(connected.status, connected.error);
       await requestFirstSync(user.userId, platform);
       invalidateUser(user.userId);

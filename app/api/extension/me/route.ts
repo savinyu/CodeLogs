@@ -1,23 +1,28 @@
 import { eq } from "drizzle-orm";
+import { listRemovedPlatforms } from "@/lib/accounts";
 import { authenticateBearer } from "@/lib/api-tokens";
 import type { PlatformId } from "@/lib/adapters/types";
 import { db } from "@/lib/db/client";
 import { platformAccounts } from "@/lib/db/schema";
 
 // The browser extension's connection check: who the token belongs to, their LeetCode handle
-// (the current extension reads it) and every connected handle.
+// (the current extension reads it), every connected handle, and the platforms the user removed
+// (its automatic syncs skip those).
 export async function GET(request: Request) {
   const user = await authenticateBearer(request.headers.get("authorization"));
   if (!user) return unauthorized();
-  const accounts = await db
-    .select({
-      platform: platformAccounts.platform,
-      handle: platformAccounts.handle,
-      verified: platformAccounts.verified,
-      lastSyncedAt: platformAccounts.lastSyncedAt,
-    })
-    .from(platformAccounts)
-    .where(eq(platformAccounts.userId, user.userId));
+  const [accounts, removed] = await Promise.all([
+    db
+      .select({
+        platform: platformAccounts.platform,
+        handle: platformAccounts.handle,
+        verified: platformAccounts.verified,
+        lastSyncedAt: platformAccounts.lastSyncedAt,
+      })
+      .from(platformAccounts)
+      .where(eq(platformAccounts.userId, user.userId)),
+    listRemovedPlatforms(user.userId),
+  ]);
 
   const handles: Partial<
     Record<PlatformId, { handle: string; verified: boolean; lastSyncedAt: string | null }>
@@ -30,7 +35,7 @@ export async function GET(request: Request) {
     };
   }
   return Response.json(
-    { username: user.username, leetcodeHandle: handles.leetcode?.handle ?? null, handles },
+    { username: user.username, leetcodeHandle: handles.leetcode?.handle ?? null, handles, removed },
     { headers: noStore },
   );
 }

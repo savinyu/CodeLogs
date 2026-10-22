@@ -72,6 +72,8 @@ export const extensionLeetcodeSchema = z.object({
     )
     .min(1)
     .max(5000),
+  /** The user clicked LeetCode in the extension; only then is a removed handle connected. */
+  manual: z.boolean().optional(),
 });
 
 export type ExtensionLeetcodeBody = z.infer<typeof extensionLeetcodeSchema>;

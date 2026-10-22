@@ -3,7 +3,7 @@ import { LOGN_ORIGIN, basePermission, isAllowedBase, normalizeBaseUrl } from "./
 import { ALL_PLATFORMS } from "./lib/registry.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
-/** @typedef {{ username: string, leetcodeHandle?: string | null, handles?: Record<string, HandleInfo> }} Me */
+/** @typedef {{ username: string, leetcodeHandle?: string | null, handles?: Record<string, HandleInfo>, removed?: string[] }} Me */
 /** @typedef {import("./lib/schedule.js").RunRecord} RunRecord */
 
 const STALE_MS = 90_000;
@@ -126,8 +126,12 @@ function renderConnection() {
       : "Connected";
 }
 
-/** The last run's outcome under a row: green when it worked, quiet when logged out, red otherwise. */
+/**
+ * The last run's outcome under a row: green when it worked, quiet when logged out or skipped (a
+ * platform removed on LogN), red otherwise.
+ */
 function lastRunLine(/** @type {RunRecord} */ run, /** @type {string} */ name) {
+  if (run.skipped) return h("div", "last quiet", run.text);
   if (run.ok) return h("div", "last", run.text);
   if (run.loggedOut) return h("div", "last quiet", `Not logged in to ${name} in this browser.`);
   return h("div", "last error", run.text);
@@ -161,11 +165,13 @@ function renderRows() {
         );
       }
     } else {
-      meta.append(h("span", "chip", "Not connected"));
+      // Removed on LogN: automatic syncs leave it alone until the user clicks it here.
+      meta.append(h("span", "chip", me?.removed?.includes(p.id) ? "Removed" : "Not connected"));
     }
     body.append(meta);
     if (mine) body.append(h("div", "step", status.message));
-    else if (run) body.append(lastRunLine(run, p.name));
+    // A skip is stale once the platform is connected again (on the Connect page).
+    else if (run && !(run.skipped && info)) body.append(lastRunLine(run, p.name));
     if (p.id === "leetcode") {
       const label = h("label", "check");
       const box = document.createElement("input");

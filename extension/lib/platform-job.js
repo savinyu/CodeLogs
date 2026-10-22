@@ -6,6 +6,7 @@ import { NotLoggedInError, ReaderError, sleep, buildPlatformUpload } from "./com
 import { createContext } from "./job.js";
 import { INJECTED } from "./inject.js";
 import { READERS } from "./registry.js";
+import { skipsRemoved } from "./schedule.js";
 import { checkMe, postUpload } from "./server.js";
 
 const TAB_LOAD_TIMEOUT_MS = 30_000;
@@ -122,10 +123,12 @@ export async function withVisitedTab(reader, tabId, fn) {
 
 /**
  * Without `tabId` it uses an open tab or a background one (a sync the user asked for); with it,
- * only that tab (an automatic sync while the user is on the site).
- * @param {{ platformId: string, base: string, token: string, tabId?: number, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ * only that tab (an automatic sync while the user is on the site). `manual`: the user clicked
+ * this platform, so a platform they removed on LogN is connected again; otherwise it is skipped
+ * before any tab is opened.
+ * @param {{ platformId: string, base: string, token: string, tabId?: number, manual: boolean, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
  */
-export async function runPlatformJob({ platformId, base, token, tabId, setStatus }) {
+export async function runPlatformJob({ platformId, base, token, tabId, manual, setStatus }) {
   const reader = /** @type {Record<string, (typeof READERS)[keyof typeof READERS]>} */ (READERS)[
     platformId
   ];
@@ -138,7 +141,8 @@ export async function runPlatformJob({ platformId, base, token, tabId, setStatus
   }
 
   await setStatus({ step: "connect", message: "Checking your LogN connection..." });
-  await checkMe(base, token);
+  const me = await checkMe(base, token);
+  if (skipsRemoved(me, platformId, manual)) return { skipped: true };
 
   await setStatus({ step: "read", message: `Opening ${reader.name}...` });
   /** @param {number} id */
@@ -157,5 +161,5 @@ export async function runPlatformJob({ platformId, base, token, tabId, setStatus
   // Whatever a reader produced is cleaned once more before it leaves the browser.
   const body = buildPlatformUpload(upload);
   await setStatus({ step: "upload", message: "Uploading to LogN..." });
-  return postUpload(base, token, "/api/extension/platform", body);
+  return postUpload(base, token, "/api/extension/platform", { ...body, manual });
 }

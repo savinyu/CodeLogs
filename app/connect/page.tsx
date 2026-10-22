@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { cn } from "cn";
 import Link from "next/link";
 import { ExternalLinkIcon } from "lucide-react";
-import { listPlatformAccounts } from "@/lib/accounts";
+import { listPlatformAccounts, listRemovedPlatforms } from "@/lib/accounts";
+import type { PlatformId } from "@/lib/adapters/types";
 import { listApiTokens } from "@/lib/api-tokens";
 import { EXTENSION_STORE_URL } from "@/lib/extension";
 import { PLATFORM_META, PLATFORM_ORDER, isSyncedPlatform } from "@/lib/platforms";
@@ -60,7 +61,7 @@ export default function ConnectPage() {
 
 type Account = Awaited<ReturnType<typeof listPlatformAccounts>>[number];
 
-function cardFor(id: (typeof PLATFORM_ORDER)[number], accounts: Account[]) {
+function cardFor(id: (typeof PLATFORM_ORDER)[number], accounts: Account[], removed: PlatformId[]) {
   const meta = PLATFORM_META[id];
   const account = accounts.find((a) => a.platform === id) ?? null;
   const props: PlatformCardProps["account"] = account && {
@@ -81,13 +82,17 @@ function cardFor(id: (typeof PLATFORM_ORDER)[number], accounts: Account[]) {
       handleHint={meta.handleHint}
       note={meta.note ?? null}
       account={props}
+      removed={removed.includes(id)}
     />
   );
 }
 
 async function PlatformCards() {
   const user = await requireUser();
-  const accounts = await listPlatformAccounts(user.id);
+  const [accounts, removed] = await Promise.all([
+    listPlatformAccounts(user.id),
+    listRemovedPlatforms(user.id),
+  ]);
   const synced = accounts.filter((a) => isSyncedPlatform(a.platform));
   const anySyncing = synced.some((a) => a.status === "syncing");
   return (
@@ -98,7 +103,7 @@ async function PlatformCards() {
           <SyncButton label="Sync all" disabled={anySyncing} />
         </div>
       )}
-      <div className="grid gap-4">{SYNCED_IDS.map((id) => cardFor(id, accounts))}</div>
+      <div className="grid gap-4">{SYNCED_IDS.map((id) => cardFor(id, accounts, removed))}</div>
     </>
   );
 }
@@ -106,14 +111,17 @@ async function PlatformCards() {
 /** The extension panel (install and connected browsers) heads the five extension-only platforms. */
 async function ExtensionSection() {
   const user = await requireUser();
-  const [tokens, accounts] = await Promise.all([
+  const [tokens, accounts, removed] = await Promise.all([
     listApiTokens(user.id),
     listPlatformAccounts(user.id),
+    listRemovedPlatforms(user.id),
   ]);
   return (
     <>
       <ExtensionPanel tokens={tokens} />
-      <div className="mt-4 grid gap-4">{EXTENSION_IDS.map((id) => cardFor(id, accounts))}</div>
+      <div className="mt-4 grid gap-4">
+        {EXTENSION_IDS.map((id) => cardFor(id, accounts, removed))}
+      </div>
     </>
   );
 }

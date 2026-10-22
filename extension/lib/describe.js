@@ -40,6 +40,16 @@ export function describeLeetcodeResult(r) {
 }
 
 /**
+ * An automatic run skipped a platform the user removed on LogN.
+ * @param {string} name
+ * @param {boolean} verify  Codeforces or AtCoder (the button says Connect, not Sync)
+ * @returns {string}
+ */
+export function describeSkipped(name, verify) {
+  return `You removed ${name} on LogN, so it isn't ${verify ? "connected" : "synced"} automatically. Click ${verify ? "Connect" : "Sync"} to add it back.`;
+}
+
+/**
  * @param {{ handle?: string, already?: boolean, created?: boolean }} out  response of POST /api/extension/verify
  * @returns {string}
  */
