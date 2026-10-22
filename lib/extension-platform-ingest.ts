@@ -75,8 +75,11 @@ export async function ingestExtensionUpload(
       }
       // A double click inserts once: the loser re-reads.
       const inserted = await insertLoggedInAccount(userId, platform, canonical, manual);
-      created = inserted !== null;
-      account = inserted ?? (await find());
+      if (inserted === "removed") {
+        return { ok: false, status: 409, error: removedPlatformError(platform) };
+      }
+      created = inserted !== "exists";
+      account = inserted !== "exists" ? inserted : await find();
       if (!account) return { ok: false, status: 500, error: SAVE_FAILED };
     }
 

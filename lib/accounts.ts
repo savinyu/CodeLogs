@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { platformAccounts, platformOptOuts } from "@/lib/db/schema";
 import { validateHandle } from "@/lib/adapters/validate";
@@ -41,8 +41,10 @@ export async function listPlatformAccounts(userId: string): Promise<PlatformAcco
     .orderBy(asc(platformAccounts.createdAt));
 }
 
-/** Connected handles not verified yet: the public profile hides them. */
-/** The user's connected platforms whose handles aren't verified, in PLATFORM_ORDER. */
+/**
+ * The user's connected platforms whose handles aren't verified, in PLATFORM_ORDER. The public
+ * profile hides them.
+ */
 export async function listUnverifiedPlatforms(userId: string): Promise<PlatformId[]> {
   const rows = await db
     .select({ platform: platformAccounts.platform })
@@ -117,32 +119,44 @@ export async function addPlatformAccount(
 
 /**
  * Inserts the verified handle the extension saw this browser logged in as. A `manual` connect
- * (the user clicked the platform in the extension) also undoes a removal; the caller has
- * checked that an automatic one isn't for a removed platform. Null when a handle is already
- * connected (the unique (user_id, platform) index settles a race).
+ * (the user clicked the platform in the extension) also undoes a removal. An automatic one checks
+ * for a removal in the insert itself, so a Remove that commits while the upload is in flight
+ * still wins. "exists" when a handle is already connected (the unique (user_id, platform) index
+ * settles a race).
  */
 export async function insertLoggedInAccount(
   userId: string,
   platform: PlatformId,
   handle: string,
   manual: boolean,
-): Promise<{ id: string; handle: string } | null> {
-  const insert = db
-    .insert(platformAccounts)
-    .values({ userId, platform, handle, verified: true })
-    .onConflictDoNothing()
-    .returning({ id: platformAccounts.id, handle: platformAccounts.handle });
-  if (!manual) return (await insert)[0] ?? null;
-  const [rows] = await db.batch([
-    insert,
-    db.delete(platformOptOuts).where(optOutWhere(userId, platform)),
-  ]);
-  return rows[0] ?? null;
+): Promise<{ id: string; handle: string } | "exists" | "removed"> {
+  if (manual) {
+    const [rows] = await db.batch([
+      db
+        .insert(platformAccounts)
+        .values({ userId, platform, handle, verified: true })
+        .onConflictDoNothing()
+        .returning({ id: platformAccounts.id, handle: platformAccounts.handle }),
+      db.delete(platformOptOuts).where(optOutWhere(userId, platform)),
+    ]);
+    return rows[0] ?? "exists";
+  }
+  const { rows } = await db.execute<{ id: string; handle: string }>(sql`
+    insert into ${platformAccounts} (user_id, platform, handle, verified)
+    select ${userId}::text, ${platform}::platform, ${handle}::text, true
+    where not exists (
+      select 1 from ${platformOptOuts} where user_id = ${userId} and platform = ${platform}::platform
+    )
+    on conflict do nothing
+    returning id, handle`);
+  if (rows[0]) return rows[0];
+  return (await isPlatformRemoved(userId, platform)) ? "removed" : "exists";
 }
 
 /**
  * Whether an extension upload may connect `platform`: always when the user clicked it
- * (`manual`), otherwise only when they didn't remove it on Connect.
+ * (`manual`), otherwise only when they didn't remove it on Connect. An early check, so a removed
+ * platform isn't looked up on its site; insertLoggedInAccount checks again atomically.
  */
 export async function mayConnectFromExtension(
   userId: string,
@@ -188,7 +202,8 @@ export async function connectLoggedInHandle(
   }
 
   const row = await insertLoggedInAccount(userId, platform, validation.canonicalHandle, manual);
-  if (!row) {
+  if (row === "removed") return { ok: false, status: 409, error: removedPlatformError(platform) };
+  if (row === "exists") {
     return {
       ok: false,
       status: 409,

@@ -18,7 +18,8 @@ export const DAILY_RETRY_MS = HOUR_MS;
  * The last run of one platform, kept in chrome.storage.local under `runs`.
  * `at` is the last attempt and `okAt` the last success (epoch ms). `datesAt` is the last run whose
  * LeetCode date walk completed; absent in records from 0.3.3, which means "never". `skipped` is an
- * automatic run that left a removed platform alone (it counts as a success).
+ * automatic run that left a removed platform alone: not a failure, but not a sync either, so it
+ * keeps the previous `okAt` and a handle added back on Connect syncs on the next due visit.
  * @typedef {{ at: number, okAt: number | null, datesAt?: number | null, ok: boolean, loggedOut: boolean, auto: boolean, text: string, skipped?: boolean }} RunRecord
  */
 
@@ -70,7 +71,7 @@ export function platformForUrl(url, platforms) {
 export function nextRun(prev, r) {
   return {
     at: r.now,
-    okAt: r.ok ? r.now : (prev?.okAt ?? null),
+    okAt: r.ok && !r.skipped ? r.now : (prev?.okAt ?? null),
     datesAt: r.ok && r.datesDone ? r.now : (prev?.datesAt ?? null),
     ok: r.ok,
     loggedOut: r.loggedOut ?? false,

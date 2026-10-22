@@ -81,10 +81,13 @@ describe("skipsRemoved", () => {
     expect(skipsRemoved(null, "leetcode", false)).toBe(false);
   });
 
-  it("records a skip as a success, so visits wait the full interval", () => {
-    const next = nextRun(undefined, { now: NOW, ok: true, auto: true, text: "x", skipped: true });
-    expect(next).toMatchObject({ ok: true, okAt: NOW, skipped: true });
-    expect(isDue(next, NOW + HOUR, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(false);
+  it("records a skip without counting it as a sync, so a handle added back syncs soon", () => {
+    const prev = run({ okAt: NOW - 30 * HOUR });
+    const next = nextRun(prev, { now: NOW, ok: true, auto: true, text: "x", skipped: true });
+    expect(next).toMatchObject({ ok: true, okAt: NOW - 30 * HOUR, skipped: true });
+    // Not checked again on every visit, but due after the retry delay, not 6 hours.
+    expect(isDue(next, NOW + 60_000, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(false);
+    expect(isDue(next, NOW + VISIT_RETRY_MS, VISIT_INTERVAL_MS, VISIT_RETRY_MS)).toBe(true);
   });
 });
 
