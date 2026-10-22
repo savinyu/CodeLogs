@@ -126,8 +126,6 @@ function renderConnection() {
       : "Connected";
 }
 
-const NOT_ADDED = "Add your handle on LogN first.";
-
 /** The last run's outcome under a row: green when it worked, quiet when logged out, red otherwise. */
 function lastRunLine(/** @type {RunRecord} */ run, /** @type {string} */ name) {
   if (run.ok) return h("div", "last", run.text);
@@ -156,7 +154,7 @@ function renderRows() {
         h("span", info.verified ? "chip good" : "chip", info.verified ? "Verified" : "Unverified"),
         h("span", "handle", `@${info.handle}`),
       );
-      // The server syncs Codeforces and AtCoder itself; the extension only verifies them.
+      // The server syncs Codeforces and AtCoder; the extension only connects and verifies them.
       if (p.kind !== "verify") {
         meta.append(
           h("span", "", info.lastSyncedAt ? `Synced ${ago(info.lastSyncedAt)}` : "Never synced"),
@@ -167,7 +165,6 @@ function renderRows() {
     }
     body.append(meta);
     if (mine) body.append(h("div", "step", status.message));
-    else if (p.kind === "verify" && !info) body.append(h("div", "last quiet", NOT_ADDED));
     else if (run) body.append(lastRunLine(run, p.name));
     if (p.id === "leetcode") {
       const label = h("label", "check");
@@ -184,18 +181,23 @@ function renderRows() {
     row.append(body);
 
     const verify = p.kind === "verify";
+    // Without a handle on LogN, Connect adds the user this browser is logged in as.
     const label = verify
-      ? mine
-        ? "Verifying"
-        : info?.verified
-          ? "Verified"
-          : "Verify"
+      ? !info
+        ? mine
+          ? "Connecting"
+          : "Connect"
+        : mine
+          ? "Verifying"
+          : info.verified
+            ? "Verified"
+            : "Verify"
       : mine
         ? "Syncing"
         : "Sync";
     const btn = /** @type {HTMLButtonElement} */ (h("button", "btn sm", label));
     btn.type = "button";
-    btn.disabled = running || !conn || (verify && (!info || info.verified));
+    btn.disabled = running || !conn || (verify && info?.verified === true);
     btn.addEventListener("click", () => void startSync(p));
     row.append(btn);
     list.append(row);

@@ -32,3 +32,16 @@ export async function requestSync(
   }
   return { ok: true, queued: claimed.length };
 }
+
+/**
+ * The first sync of a handle the extension just connected. Best effort, as on Connect: on a
+ * failure the handle stays connected and the daily stale-account sync picks it up.
+ */
+export async function requestFirstSync(userId: string, platform: SyncedPlatformId): Promise<void> {
+  try {
+    const result = await requestSync(userId, { platforms: [platform], ignoreCooldown: true });
+    if (!result.ok) console.error(`First ${platform} sync not queued: ${result.error}`);
+  } catch (err) {
+    console.error(`First ${platform} sync not queued`, err);
+  }
+}

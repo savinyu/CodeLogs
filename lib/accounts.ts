@@ -2,8 +2,9 @@ import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { platformAccounts } from "@/lib/db/schema";
+import { validateHandle } from "@/lib/adapters/validate";
 import { PLATFORM_META, PLATFORM_ORDER } from "@/lib/platforms";
-import type { PlatformId } from "@/lib/adapters/types";
+import type { PlatformId, SyncedPlatformId } from "@/lib/adapters/types";
 
 export type PlatformAccountRow = {
   platform: PlatformId;
@@ -77,6 +78,53 @@ export async function addPlatformAccount(
     .returning({ id: platformAccounts.id });
   if (inserted.length === 0) return { ok: false, error: alreadyThere };
   return { ok: true };
+}
+
+export type ConnectLoggedInResult =
+  { ok: true; id: string; handle: string } | { ok: false; status: 400 | 409 | 503; error: string };
+
+/**
+ * Connects the Codeforces, AtCoder or LeetCode user the extension saw this browser logged in as,
+ * for a user with no handle there yet. It is verified from the start: the login is the proof
+ * (PLAN-v2.md §9). The platform confirms the handle exists and gives its casing, as on Connect.
+ * The caller queues the first sync.
+ */
+export async function connectLoggedInHandle(
+  userId: string,
+  platform: SyncedPlatformId,
+  loggedInAs: string,
+): Promise<ConnectLoggedInResult> {
+  const name = PLATFORM_META[platform].name;
+  const validation = await validateHandle(platform, loggedInAs);
+  if (validation.result === "retry") {
+    return {
+      ok: false,
+      status: 503,
+      error: `Couldn't reach ${name} to check your handle. Try again later.`,
+    };
+  }
+  if (validation.result === "invalid") {
+    return {
+      ok: false,
+      status: 400,
+      error: `The extension read an unexpected ${name} username (${loggedInAs}).`,
+    };
+  }
+
+  // The unique (user_id, platform) index settles a race with Connect or a second request.
+  const [row] = await db
+    .insert(platformAccounts)
+    .values({ userId, platform, handle: validation.canonicalHandle, verified: true })
+    .onConflictDoNothing()
+    .returning({ id: platformAccounts.id, handle: platformAccounts.handle });
+  if (!row) {
+    return {
+      ok: false,
+      status: 409,
+      error: `A ${name} handle was just connected to your account. Try again.`,
+    };
+  }
+  return { ok: true, ...row };
 }
 
 export async function removePlatformAccount(

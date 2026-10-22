@@ -7,9 +7,9 @@
 // The automatic ones can be turned off in the popup. LeetCode is fetched from here; CodeChef,
 // Code360, HackerRank, InterviewBit and GFG are read inside a tab of the platform's own site.
 // Codeforces and AtCoder are not synced here (the server reads their public APIs): the extension
-// only reads who the browser is logged in as and verifies the connected handle. Cookies stay in
-// the browser: LogN only receives handles, problem ids, titles, URLs, difficulty labels,
-// dates and counts.
+// only reads who the browser is logged in as, to verify the connected handle or connect it when
+// none is connected yet. Cookies stay in the browser: LogN only receives handles, problem ids,
+// titles, URLs, difficulty labels, dates and counts.
 import { NotLoggedInError, ReaderError } from "./lib/common.js";
 import {
   clearPendingConnect,
@@ -150,10 +150,9 @@ async function syncOne(platform, conn, opts) {
         base: conn.base,
         token: conn.token,
         tabId: opts.tabId,
-        auto: opts.auto,
         setStatus,
       });
-      text = out.notConnected ? "Add your handle on LogN first." : describeVerifyResult(out);
+      text = describeVerifyResult(out);
     } else if (platform === "leetcode") {
       const runs = await readRuns();
       const out = await runLeetcodeJob({
@@ -241,7 +240,7 @@ function syncAll() {
       }
       await syncOne(p.id, conn, { auto: false, includeDates: conn.includeDates });
     }
-    // Codeforces and AtCoder: verify only (no tab is opened when not connected or already verified).
+    // Codeforces and AtCoder: connect or verify only (no tab is opened when already verified).
     for (const p of VERIFY_PLATFORMS) {
       if (!(await chrome.permissions.contains({ origins: p.permissions }))) continue;
       await syncOne(p.id, conn, { auto: true, includeDates: false });

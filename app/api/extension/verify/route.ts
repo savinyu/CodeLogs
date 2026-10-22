@@ -1,13 +1,16 @@
 import { and, eq } from "drizzle-orm";
+import { connectLoggedInHandle } from "@/lib/accounts";
 import { authenticateBearer } from "@/lib/api-tokens";
 import { invalidateUser } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { platformAccounts } from "@/lib/db/schema";
 import { decideVerify, extensionVerifySchema } from "@/lib/extension-verify-shared";
+import { requestFirstSync } from "@/lib/sync/request";
 
 // The browser extension says which Codeforces or AtCoder user this browser is logged in as. When
 // it is the connected handle, the handle becomes verified: a login match, as for the extension
-// platforms (PLAN-v2.md §9). Authenticated by the extension's token, never by cookies.
+// platforms (PLAN-v2.md §9). With no handle connected yet, it connects that user, verified, and
+// queues the server's first sync. Authenticated by the extension's token, never by cookies.
 export async function POST(request: Request) {
   const user = await authenticateBearer(request.headers.get("authorization"));
   if (!user) {
@@ -39,6 +42,24 @@ export async function POST(request: Request) {
     const decision = decideVerify(account ?? null, parsed.data);
     if (decision.kind === "error") return error(decision.status, decision.error);
 
+    if (decision.kind === "create") {
+      const connected = await connectLoggedInHandle(user.userId, platform, parsed.data.loggedInAs);
+      if (!connected.ok) return error(connected.status, connected.error);
+      await requestFirstSync(user.userId, platform);
+      invalidateUser(user.userId);
+      return Response.json(
+        {
+          ok: true,
+          platform,
+          handle: connected.handle,
+          verified: true,
+          already: false,
+          created: true,
+        },
+        { headers: noStore },
+      );
+    }
+
     if (decision.kind === "verify") {
       // Matching the handle too, so a handle replaced mid-request can't inherit the result.
       await db
@@ -54,6 +75,7 @@ export async function POST(request: Request) {
         handle: decision.handle,
         verified: true,
         already: decision.kind === "already",
+        created: false,
       },
       { headers: noStore },
     );

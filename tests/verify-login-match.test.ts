@@ -29,10 +29,8 @@ describe("extensionVerifySchema", () => {
 describe("decideVerify", () => {
   const body = { platform: "codeforces", loggedInAs: "Savinyu" } as const;
 
-  it("asks to connect the handle first when there is none", () => {
-    const d = decideVerify(null, body);
-    expect(d).toMatchObject({ kind: "error", status: 404 });
-    expect(d.kind === "error" && d.error).toContain("Codeforces");
+  it("connects the logged-in user when no handle is connected", () => {
+    expect(decideVerify(null, body)).toEqual({ kind: "create" });
   });
 
   it("verifies a case-insensitive match and keeps the stored handle", () => {
@@ -53,7 +51,7 @@ describe("decideVerify", () => {
     const d = decideVerify({ handle: "tourist", verified: false }, body);
     expect(d).toMatchObject({ kind: "error", status: 409 });
     expect(d.kind === "error" && d.error).toBe(
-      "This browser is logged in to Codeforces as Savinyu, but your connected Codeforces handle is tourist.",
+      "This browser is logged in to Codeforces as Savinyu, but your connected Codeforces handle is tourist. Remove it on the Connect page to switch.",
     );
   });
 });

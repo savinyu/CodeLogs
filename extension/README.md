@@ -52,23 +52,24 @@ On by default; the **Sync automatically** switch in the popup turns it off.
 - One sync at a time; an automatic one is skipped while another runs. Each row in the popup shows
   its last outcome.
 
-For CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks the first sync also connects the
-handle in LogN if you haven't added it, and verifies it: the account you are logged in to is the
-proof that the handle is yours. A LeetCode sync likewise verifies the LeetCode handle when the
-username LeetCode reports matches the connected one.
+The first sync also connects the handle in LogN if you haven't added it, and verifies it: the
+account you are logged in to is the proof that the handle is yours. A sync of a handle you did add
+verifies it when the username the site reports matches. A different connected handle is never
+replaced; remove it on the LogN Connect page first.
 
 ## Verifying Codeforces and AtCoder
 
 LogN syncs Codeforces and AtCoder itself from their public APIs, so the extension does not sync
-them. It only verifies the handle you connected on LogN: the **Verify** button (also once after
-connecting, and on a visit to the site, at most every 6 hours) reads which user this browser is
-logged in as and sends that username to `POST /api/extension/verify`. LogN marks the handle
-verified when it matches. Nothing else is read or sent.
+them. It only reads which user this browser is logged in as and sends that username to
+`POST /api/extension/verify`: with the **Verify** button (**Connect** when you haven't added a
+handle), once after connecting, and on a visit to the site, at most every 6 hours. LogN marks
+the connected handle verified when it matches, or, with none connected, connects that user
+(verified) and starts syncing it. Nothing else is read or sent.
 
 - Codeforces is behind a Cloudflare check, so it is read inside a codeforces.com tab, from the
   header's profile link (`.lang-chooser a[href^='/profile/']`).
 - AtCoder: the `userScreenName` global that every atcoder.jp page defines (empty when logged out).
-- No tab is opened when the handle isn't connected on LogN yet, or is already verified.
+- No tab is opened when the handle is already verified.
 
 ## How it reads these sites
 

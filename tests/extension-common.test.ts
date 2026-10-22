@@ -20,10 +20,10 @@ import { PLATFORM_ORDER } from "@/lib/platforms";
 import manifest from "../extension/manifest.json";
 
 describe("extension manifest", () => {
-  it("is MV3 LogN 0.4.0 with scripting, alarms and the platform hosts optional", () => {
+  it("is MV3 LogN 0.4.1 with scripting, alarms and the platform hosts optional", () => {
     expect(manifest.manifest_version).toBe(3);
     expect(manifest.name).toBe("LogN");
-    expect(manifest.version).toBe("0.4.0");
+    expect(manifest.version).toBe("0.4.1");
     expect(manifest.permissions).toEqual(
       expect.arrayContaining(["storage", "scripting", "alarms"]),
     );

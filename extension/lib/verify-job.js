@@ -1,7 +1,7 @@
 // @ts-check
-// Verifies a Codeforces or AtCoder handle: reads which user this browser is logged in as, in a
-// tab on the platform's own site, and tells LogN. Nothing is synced here (the server reads
-// both from their public APIs).
+// Verifies a Codeforces or AtCoder handle, or connects one when none is connected yet: reads which
+// user this browser is logged in as, in a tab on the platform's own site, and tells LogN.
+// Nothing is synced here (the server reads both from their public APIs).
 import { NotLoggedInError, ReaderError } from "./common.js";
 import { createContext } from "./job.js";
 import { pageRunner, withPlatformTab, withVisitedTab } from "./platform-job.js";
@@ -11,10 +11,10 @@ import { VERIFIERS } from "./verifiers.js";
 
 /**
  * Without `tabId` it uses an open tab or a background one; with it, only that tab (a visit).
- * @param {{ platformId: string, base: string, token: string, tabId?: number, auto: boolean, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
- * @returns {Promise<{ ok?: boolean, handle?: string, verified?: boolean, already?: boolean, notConnected?: boolean }>}
+ * @param {{ platformId: string, base: string, token: string, tabId?: number, setStatus: (patch: Record<string, unknown>) => Promise<void> }} job
+ * @returns {Promise<{ ok?: boolean, handle?: string, verified?: boolean, already?: boolean, created?: boolean }>}
  */
-export async function runVerifyJob({ platformId, base, token, tabId, auto, setStatus }) {
+export async function runVerifyJob({ platformId, base, token, tabId, setStatus }) {
   const v = /** @type {Record<string, (typeof VERIFIERS)[keyof typeof VERIFIERS]>} */ (VERIFIERS)[
     platformId
   ];
@@ -28,7 +28,7 @@ export async function runVerifyJob({ platformId, base, token, tabId, auto, setSt
 
   await setStatus({ step: "connect", message: "Checking your LogN connection..." });
   const me = await checkMe(base, token);
-  const plan = planVerify(me.handles, platformId, v.name, auto);
+  const plan = planVerify(me.handles, platformId);
   if (plan.action === "done") return plan.result;
 
   await setStatus({ step: "read", message: `Opening ${v.name}...` });
