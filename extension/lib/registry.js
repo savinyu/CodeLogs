@@ -1,6 +1,6 @@
 // @ts-check
 // The platforms the extension syncs (LeetCode, then the five that are read inside the platform's
-// own tab) and the two it only verifies (Codeforces, AtCoder).
+// own tab) and the two it only connects and verifies (Codeforces, AtCoder).
 import { codechef } from "./platforms/codechef.js";
 import { code360 } from "./platforms/code360.js";
 import { hackerrank } from "./platforms/hackerrank.js";
@@ -39,8 +39,8 @@ export function isSyncPlatform(id) {
 }
 
 /**
- * Codeforces and AtCoder: the server syncs them; the extension only verifies the handle by
- * reading who this browser is logged in as.
+ * Codeforces and AtCoder: the server syncs them; the extension only verifies the handle, or
+ * connects one, by reading who this browser is logged in as.
  * @type {Array<{ id: "codeforces" | "atcoder", name: string, kind: "verify", permissions: string[], visitPrefix: string }>}
  */
 export const VERIFY_PLATFORMS = [codeforces, atcoder].map((v) => ({

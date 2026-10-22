@@ -5,7 +5,6 @@ import { INJECTED } from "../extension/lib/inject.js";
 import { ALL_PLATFORMS, SYNC_PLATFORMS, VERIFY_PLATFORMS } from "../extension/lib/registry.js";
 import { planVerify } from "../extension/lib/verify-plan.js";
 import { atcoder, codeforces } from "../extension/lib/verifiers.js";
-import { ReaderError } from "../extension/lib/common.js";
 import { fakePage } from "./extension-helpers";
 
 describe("verifier identity", () => {
@@ -70,24 +69,18 @@ describe("planVerify", () => {
     codeforces: { handle: "tourist", verified: false },
     atcoder: { handle: "chokudai", verified: true },
   };
-  it("reads the tab only for an unverified, connected handle", () => {
-    expect(planVerify(handles, "codeforces", "Codeforces", false)).toEqual({ action: "read" });
+  it("reads the tab for an unverified handle", () => {
+    expect(planVerify(handles, "codeforces")).toEqual({ action: "read" });
   });
   it("skips the tab when already verified", () => {
-    expect(planVerify(handles, "atcoder", "AtCoder", true)).toEqual({
+    expect(planVerify(handles, "atcoder")).toEqual({
       action: "done",
       result: { already: true, handle: "chokudai" },
     });
   });
-  it("not connected: quiet when automatic, an error when asked for", () => {
-    expect(planVerify({}, "atcoder", "AtCoder", true)).toEqual({
-      action: "done",
-      result: { notConnected: true },
-    });
-    expect(() => planVerify(undefined, "atcoder", "AtCoder", false)).toThrow(ReaderError);
-    expect(() => planVerify({}, "codeforces", "Codeforces", false)).toThrow(
-      "Add your Codeforces handle on the LogN Connect page first.",
-    );
+  it("reads the tab when no handle is connected, so LogN can connect it", () => {
+    expect(planVerify({}, "atcoder")).toEqual({ action: "read" });
+    expect(planVerify(undefined, "codeforces")).toEqual({ action: "read" });
   });
 });
 
@@ -98,6 +91,9 @@ describe("describers", () => {
       "Already verified as @savinyu.",
     );
     expect(describeVerifyResult({ already: true })).toBe("Already verified.");
+    expect(describeVerifyResult({ handle: "savinyu", created: true })).toBe(
+      "Connected and verified @savinyu.",
+    );
   });
   it("describeLeetcodeResult mentions a handle only when this sync verified it", () => {
     expect(describeLeetcodeResult({ imported: 1, complete: true, newlyVerified: true })).toContain(
@@ -106,5 +102,8 @@ describe("describers", () => {
     expect(
       describeLeetcodeResult({ imported: 1, complete: true, newlyVerified: false }),
     ).not.toContain("verified");
+    expect(describeLeetcodeResult({ imported: 1, complete: true, created: true })).toContain(
+      "Connected and verified your LeetCode handle.",
+    );
   });
 });

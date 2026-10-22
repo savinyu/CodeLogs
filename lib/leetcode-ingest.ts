@@ -1,12 +1,16 @@
 // Writes a user's full LeetCode solved list, from the JSON import (Connect page) or the browser
-// extension (/api/extension/leetcode). The caller has already authenticated the user.
+// extension (/api/extension/leetcode). The caller has already authenticated the user. An extension
+// upload with no LeetCode handle connected yet connects the logged-in one.
 
 import "server-only";
 import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
+import { connectLoggedInHandle } from "@/lib/accounts";
+import { invalidateUser } from "@/lib/cache";
 import { db } from "@/lib/db/client";
 import { platformAccounts, platformStats, solves } from "@/lib/db/schema";
 import { slugFallback } from "@/lib/leetcode-import";
+import { requestFirstSync } from "@/lib/sync/request";
 import { refreshHistoryComplete } from "@/lib/sync/runs";
 import { applySnapshot } from "@/lib/sync/upsert";
 
@@ -23,8 +27,10 @@ export type IngestResult =
       lifetime: number | null;
       /** This upload verified the handle (an extension upload is a login match). */
       newlyVerified: boolean;
+      /** This upload connected the handle (verified), with no handle connected before. */
+      created: boolean;
     }
-  | { ok: false; error: string; status: 400 | 404 | 409 | 500 };
+  | { ok: false; error: string; status: 400 | 404 | 409 | 500 | 503 };
 
 export interface IngestInput {
   /** The leetcode.com user the list belongs to; must match the connected handle. */
@@ -35,18 +41,20 @@ export interface IngestInput {
 }
 
 const lcStatsSchema = z.object({ solved: z.object({ all: z.number().optional() }) });
+const SAVE_FAILED = "Something went wrong while importing. Try again.";
 
 export async function ingestLeetcodeSolves(
   userId: string,
   input: IngestInput,
   source: "import" | "extension",
 ): Promise<IngestResult> {
-  const [account] = await db
+  let [account] = await db
     .select({ id: platformAccounts.id, handle: platformAccounts.handle })
     .from(platformAccounts)
     .where(and(eq(platformAccounts.userId, userId), eq(platformAccounts.platform, "leetcode")))
     .limit(1);
-  if (!account) {
+  // A JSON file proves nothing about who saved it, so an import needs the handle connected first.
+  if (!account && source === "import") {
     return { ok: false, status: 404, error: "Connect your LeetCode handle first." };
   }
 
@@ -60,6 +68,17 @@ export async function ingestLeetcodeSolves(
           ? "You weren't logged in on leetcode.com when you saved the file."
           : "You aren't logged in on leetcode.com in this browser.",
     };
+  }
+  let created = false;
+  if (!account) {
+    const connected = await connectLoggedInHandle(userId, "leetcode", userName).catch((err) => {
+      console.error("LeetCode connect failed", err);
+      return null;
+    });
+    if (!connected) return { ok: false, status: 500, error: SAVE_FAILED };
+    if (!connected.ok) return connected;
+    account = connected;
+    created = true;
   }
   if (userName.toLowerCase() !== account.handle.toLowerCase()) {
     const what =
@@ -107,6 +126,11 @@ export async function ingestLeetcodeSolves(
       { source },
     );
     const complete = await refreshHistoryComplete(account.id);
+    if (created) {
+      // The server's own sync adds what the extension doesn't read: difficulty counts, contests.
+      await requestFirstSync(userId, "leetcode");
+      invalidateUser(userId);
+    }
 
     const [[stat], [known]] = await Promise.all([
       db
@@ -138,9 +162,10 @@ export async function ingestLeetcodeSolves(
       known: known?.n ?? 0,
       lifetime,
       newlyVerified,
+      created,
     };
   } catch (err) {
     console.error(`LeetCode ${source} failed`, err);
-    return { ok: false, status: 500, error: "Something went wrong while importing. Try again." };
+    return { ok: false, status: 500, error: SAVE_FAILED };
   }
 }

@@ -248,9 +248,11 @@ function ConnectForm({
           {pending ? "Connecting..." : "Connect"}
         </Button>
       </div>
-      {isExtensionPlatform(platform) && !error ? (
+      {!error ? (
         <p className="text-sm text-muted-foreground">
-          Syncing {name} in the browser extension connects it too.
+          {platform === "codeforces" || platform === "atcoder"
+            ? `Or click Connect on its ${name} row in the browser extension, while logged in to ${name}.`
+            : `Syncing ${name} in the browser extension connects it too.`}
         </p>
       ) : null}
       {error && (

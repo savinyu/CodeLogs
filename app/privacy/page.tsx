@@ -83,9 +83,10 @@ export default function PrivacyPage() {
           </p>
           <p className="text-muted-foreground">
             On Codeforces and AtCoder, which LogN reads from their public APIs, the extension only
-            checks which username you are logged in as, to verify your connected handle. It does
-            that when you connect it, when you click Verify, and while you browse those sites until
-            the handle is verified.
+            checks which username you are logged in as, to verify your connected handle, or to
+            connect that username if you haven&apos;t added one. It does that when you connect it,
+            when you click Verify or Connect, and while you browse those sites until the handle is
+            verified.
           </p>
           <p className="text-muted-foreground">It sends to LogN, and nowhere else:</p>
           <List>
