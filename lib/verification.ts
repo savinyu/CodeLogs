@@ -25,24 +25,32 @@ export function fieldContainsToken(field: string | null, token: string): boolean
   return field.toLowerCase().includes(token.toLowerCase());
 }
 
-/** The bio-code check, for server-synced platforms. Extension platforms verify by login match. */
+/**
+ * The bio-code check, for server-synced platforms. Extension platforms verify by login match, and
+ * so can these through the extension (`extensionHint`).
+ */
 export const VERIFY_FIELD: Record<
   SyncedPlatformId,
-  { label: string; settingsUrl: string; hint: string }
+  { label: string; settingsUrl: string; hint: string; extensionHint: string }
 > = {
   codeforces: {
     label: "Organization",
     settingsUrl: "https://codeforces.com/settings/social",
     hint: "Paste it into the Organization field on your Codeforces social settings.",
+    extensionHint:
+      "Or, with the LogN browser extension, click Verify on its Codeforces row while logged in to Codeforces.",
   },
   atcoder: {
     label: "Affiliation",
     settingsUrl: "https://atcoder.jp/settings",
     hint: "Paste it into the Affiliation field in your AtCoder settings.",
+    extensionHint:
+      "Or, with the LogN browser extension, click Verify on its AtCoder row while logged in to AtCoder.",
   },
   leetcode: {
     label: "Summary",
     settingsUrl: "https://leetcode.com/profile/",
     hint: "Paste it into the ReadMe field (Edit profile, then ReadMe) on your LeetCode profile.",
+    extensionHint: "Or sync LeetCode in the LogN browser extension while logged in as this handle.",
   },
 };

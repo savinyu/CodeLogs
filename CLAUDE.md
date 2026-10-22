@@ -1,6 +1,6 @@
 # LogN
 
-A cross-platform tracker for DSA and competitive programming progress. It pulls solved problems from **Codeforces, AtCoder and LeetCode** into one dashboard: totals, a heatmap, difficulty and topic breakdowns. Its differentiators are **one shared topic list, weak-topic scoring and "solve next" recommendations**. Side and portfolio project, no deadline. Renamed from "CodeLogs" on 22 Oct 2026 (site `logn.techsavy.space`, repo `savinyu/LogN`). The header wordmark is written "Logん"; everywhere else it is "LogN". `OLD_ORIGIN` in `extension/lib/leetcode.js` and the reserved username `codelogs` are the only deliberate leftovers of the old name.
+A cross-platform tracker for DSA and competitive programming progress. It pulls solved problems from **Codeforces, AtCoder and LeetCode** into one dashboard: totals, a heatmap, difficulty and topic breakdowns. Its differentiators are **one shared topic list, weak-topic scoring and "solve next" recommendations**. Side and portfolio project, no deadline. Renamed from "LogN" on 22 Oct 2026 (site `logn.techsavy.space`, repo `savinyu/LogN`). The header wordmark is written "Logん"; everywhere else it is "LogN". `OLD_ORIGIN` in `extension/lib/leetcode.js` and the reserved username `codelogs` are the only deliberate leftovers of the old name.
 
 @AGENTS.md
 

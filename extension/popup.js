@@ -1,6 +1,6 @@
 // @ts-check
 import { LOGN_ORIGIN, basePermission, isAllowedBase, normalizeBaseUrl } from "./lib/leetcode.js";
-import { SYNC_PLATFORMS } from "./lib/registry.js";
+import { ALL_PLATFORMS } from "./lib/registry.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
 /** @typedef {{ username: string, leetcodeHandle?: string | null, handles?: Record<string, HandleInfo> }} Me */
@@ -126,6 +126,8 @@ function renderConnection() {
       : "Connected";
 }
 
+const NOT_ADDED = "Add your handle on LogN first.";
+
 /** The last run's outcome under a row: green when it worked, quiet when logged out, red otherwise. */
 function lastRunLine(/** @type {RunRecord} */ run, /** @type {string} */ name) {
   if (run.ok) return h("div", "last", run.text);
@@ -137,7 +139,7 @@ function renderRows() {
   const list = el("platforms");
   list.replaceChildren();
   const running = isRunning();
-  for (const p of SYNC_PLATFORMS) {
+  for (const p of ALL_PLATFORMS) {
     const info = handleFor(p.id);
     const mine = running && status.platform === p.id;
     const run = runs[p.id];
@@ -153,13 +155,19 @@ function renderRows() {
       meta.append(
         h("span", info.verified ? "chip good" : "chip", info.verified ? "Verified" : "Unverified"),
         h("span", "handle", `@${info.handle}`),
-        h("span", "", info.lastSyncedAt ? `Synced ${ago(info.lastSyncedAt)}` : "Never synced"),
       );
+      // The server syncs Codeforces and AtCoder itself; the extension only verifies them.
+      if (p.kind !== "verify") {
+        meta.append(
+          h("span", "", info.lastSyncedAt ? `Synced ${ago(info.lastSyncedAt)}` : "Never synced"),
+        );
+      }
     } else {
       meta.append(h("span", "chip", "Not connected"));
     }
     body.append(meta);
     if (mine) body.append(h("div", "step", status.message));
+    else if (p.kind === "verify" && !info) body.append(h("div", "last quiet", NOT_ADDED));
     else if (run) body.append(lastRunLine(run, p.name));
     if (p.id === "leetcode") {
       const label = h("label", "check");
@@ -175,9 +183,19 @@ function renderRows() {
     }
     row.append(body);
 
-    const btn = /** @type {HTMLButtonElement} */ (h("button", "btn sm", mine ? "Syncing" : "Sync"));
+    const verify = p.kind === "verify";
+    const label = verify
+      ? mine
+        ? "Verifying"
+        : info?.verified
+          ? "Verified"
+          : "Verify"
+      : mine
+        ? "Syncing"
+        : "Sync";
+    const btn = /** @type {HTMLButtonElement} */ (h("button", "btn sm", label));
     btn.type = "button";
-    btn.disabled = running || !conn;
+    btn.disabled = running || !conn || (verify && (!info || info.verified));
     btn.addEventListener("click", () => void startSync(p));
     row.append(btn);
     list.append(row);
@@ -217,7 +235,7 @@ async function connect() {
   // extension's site access; asking grants them again (no prompt when they're already granted).
   const logn = basePermission(base);
   await chrome.permissions.request({
-    origins: [logn, ...SYNC_PLATFORMS.flatMap((p) => p.permissions)],
+    origins: [logn, ...ALL_PLATFORMS.flatMap((p) => p.permissions)],
   });
   // Declining the platforms still connects; each one asks again on its first Sync. Without
   // LogN itself the connect tab can't be read and every upload fails.
@@ -264,7 +282,7 @@ async function refreshMe(c) {
 
 // ---- Sync ----
 
-/** @param {(typeof SYNC_PLATFORMS)[number]} p */
+/** @param {(typeof ALL_PLATFORMS)[number]} p */
 async function startSync(p) {
   show(el("conn"), "");
   // Host access for a platform is asked here, inside the click, if it wasn't granted at Connect
@@ -281,12 +299,19 @@ async function startSync(p) {
         ok: false,
         loggedOut: false,
         auto: false,
-        text: `Allow access to ${p.name} to sync it. LogN only reads your solved problems there.`,
+        text:
+          p.kind === "verify"
+            ? `Allow access to ${p.name} to verify it. LogN only reads which user you are logged in as.`
+            : `Allow access to ${p.name} to sync it. LogN only reads your solved problems there.`,
       },
     };
     return render();
   }
-  await chrome.runtime.sendMessage({ type: "sync", platform: p.id, includeDates });
+  await chrome.runtime.sendMessage({
+    type: p.kind === "verify" ? "verify" : "sync",
+    platform: p.id,
+    includeDates,
+  });
 }
 
 /** @param {any} st */

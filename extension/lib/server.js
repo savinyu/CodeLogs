@@ -30,7 +30,7 @@ export async function checkMe(base, token) {
  * POSTs JSON with the token and returns the server's `{ ok: true, ... }` body.
  * @param {string} base
  * @param {string} token
- * @param {string} path  "/api/extension/platform" or "/api/extension/leetcode"
+ * @param {string} path  "/api/extension/platform", "/api/extension/leetcode" or "/api/extension/verify"
  * @param {unknown} body
  * @returns {Promise<any>}
  */

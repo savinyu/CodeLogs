@@ -1,12 +1,15 @@
 // @ts-check
 // Sync jobs, run in the service worker. A sync starts when:
-//   - the popup sends { type: "sync", platform } (the Sync button),
+//   - the popup sends { type: "sync", platform } (the Sync button) or { type: "verify", platform },
 //   - the extension has just connected to LogN (every platform, once),
 //   - the user loads a page on a platform whose last sync is older than 6 hours (that tab only),
 //   - the hourly timer finds LeetCode's last sync older than a day.
-// The automatic ones can be turned off in the popup. LeetCode is fetched from here; the other five
-// are read inside a tab of the platform's own site. Cookies stay in the browser: LogN only
-// receives handles, problem ids, titles, URLs, difficulty labels, dates and counts.
+// The automatic ones can be turned off in the popup. LeetCode is fetched from here; CodeChef,
+// Code360, HackerRank, InterviewBit and GFG are read inside a tab of the platform's own site.
+// Codeforces and AtCoder are not synced here (the server reads their public APIs): the extension
+// only reads who the browser is logged in as and verifies the connected handle. Cookies stay in
+// the browser: LogN only receives handles, problem ids, titles, URLs, difficulty labels,
+// dates and counts.
 import { NotLoggedInError, ReaderError } from "./lib/common.js";
 import {
   clearPendingConnect,
@@ -16,11 +19,21 @@ import {
   pendingConnectFor,
   startConnect,
 } from "./lib/connect.js";
-import { describeLeetcodeResult, describePlatformResult } from "./lib/describe.js";
+import {
+  describeLeetcodeResult,
+  describePlatformResult,
+  describeVerifyResult,
+} from "./lib/describe.js";
 import { basePermission, LOGN_ORIGIN, normalizeBaseUrl, OLD_ORIGIN } from "./lib/leetcode.js";
 import { runLeetcodeJob } from "./lib/leetcode-job.js";
 import { runPlatformJob } from "./lib/platform-job.js";
-import { SYNC_PLATFORMS, isSyncPlatform } from "./lib/registry.js";
+import { runVerifyJob } from "./lib/verify-job.js";
+import {
+  SYNC_PLATFORMS,
+  VERIFY_PLATFORMS,
+  isSyncPlatform,
+  isVerifyPlatform,
+} from "./lib/registry.js";
 import {
   DAILY_INTERVAL_MS,
   DAILY_RETRY_MS,
@@ -131,7 +144,17 @@ async function syncOne(platform, conn, opts) {
   try {
     let text;
     let datesDone = false;
-    if (platform === "leetcode") {
+    if (isVerifyPlatform(platform)) {
+      const out = await runVerifyJob({
+        platformId: platform,
+        base: conn.base,
+        token: conn.token,
+        tabId: opts.tabId,
+        auto: opts.auto,
+        setStatus,
+      });
+      text = out.notConnected ? "Add your handle on LogN first." : describeVerifyResult(out);
+    } else if (platform === "leetcode") {
       const runs = await readRuns();
       const out = await runLeetcodeJob({
         base: conn.base,
@@ -218,6 +241,11 @@ function syncAll() {
       }
       await syncOne(p.id, conn, { auto: false, includeDates: conn.includeDates });
     }
+    // Codeforces and AtCoder: verify only (no tab is opened when not connected or already verified).
+    for (const p of VERIFY_PLATFORMS) {
+      if (!(await chrome.permissions.contains({ origins: p.permissions }))) continue;
+      await syncOne(p.id, conn, { auto: true, includeDates: false });
+    }
   });
 }
 
@@ -261,7 +289,7 @@ async function finishConnect(tabId, base) {
  * @param {string} url
  */
 async function onVisit(tabId, url) {
-  const p = platformForUrl(url, SYNC_PLATFORMS);
+  const p = platformForUrl(url, [...SYNC_PLATFORMS, ...VERIFY_PLATFORMS]);
   if (!p || running) return;
   const conn = await connection();
   if (!conn?.autoSync) return;
@@ -270,7 +298,7 @@ async function onVisit(tabId, url) {
   await runJob((c) =>
     syncOne(p.id, c, {
       auto: true,
-      tabId: p.kind === "page" ? tabId : undefined,
+      tabId: p.kind === "leetcode" ? undefined : tabId,
       includeDates: c.includeDates,
     }).then(() => {}),
   );
@@ -301,9 +329,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ started: Boolean(base) });
     return false;
   }
-  if (msg?.type !== "sync") return false;
+  if (msg?.type !== "sync" && msg?.type !== "verify") return false;
   const platform = msg.platform ?? "leetcode";
-  if (running || !isSyncPlatform(platform)) {
+  const known = msg.type === "verify" ? isVerifyPlatform(platform) : isSyncPlatform(platform);
+  if (running || !known) {
     sendResponse({ started: false });
     return false;
   }

@@ -25,7 +25,7 @@ export function describePlatformResult(out) {
 }
 
 /**
- * @param {{ imported?: number, alreadyKnown?: number, skipped?: number, datesFilled?: number, complete?: boolean, datesNote?: string }} r  response of POST /api/extension/leetcode
+ * @param {{ imported?: number, alreadyKnown?: number, skipped?: number, datesFilled?: number, complete?: boolean, datesNote?: string, newlyVerified?: boolean }} r  response of POST /api/extension/leetcode
  * @returns {string}
  */
 export function describeLeetcodeResult(r) {
@@ -34,5 +34,15 @@ export function describeLeetcodeResult(r) {
   if (typeof r.datesFilled === "number") parts.push(`dates filled for ${r.datesFilled}`);
   let text = `${parts.join(", ")}. ${r.complete ? "History complete." : "History incomplete."}`;
   if (r.datesNote) text += ` ${r.datesNote}`;
+  if (r.newlyVerified) text += " Your LeetCode handle is now verified.";
   return text;
+}
+
+/**
+ * @param {{ handle?: string, already?: boolean }} out  response of POST /api/extension/verify
+ * @returns {string}
+ */
+export function describeVerifyResult(out) {
+  if (out.already) return out.handle ? `Already verified as @${out.handle}.` : "Already verified.";
+  return out.handle ? `Verified @${out.handle}.` : "Verified.";
 }

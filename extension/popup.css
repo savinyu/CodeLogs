@@ -54,6 +54,8 @@
   --destructive: #c4321f;
   --border: #e3d6da;
   --ring: #c01f4a;
+  --platform-codeforces: #2563eb;
+  --platform-atcoder: #0d8a7e;
   --platform-leetcode: #d97706;
   --platform-codechef: #8a5a35;
   --platform-code360: #a21caf;
@@ -81,6 +83,8 @@
     --destructive: #ff8a7a;
     --border: #3a2e33;
     --ring: #ff6f8e;
+    --platform-codeforces: #6aa0ff;
+    --platform-atcoder: #2dd4bf;
     --platform-leetcode: #fbbf24;
     --platform-codechef: #d4a373;
     --platform-code360: #e879f9;
@@ -106,6 +110,8 @@
   --destructive: #ff8a7a;
   --border: #3a2e33;
   --ring: #ff6f8e;
+  --platform-codeforces: #6aa0ff;
+  --platform-atcoder: #2dd4bf;
   --platform-leetcode: #fbbf24;
   --platform-codechef: #d4a373;
   --platform-code360: #e879f9;
@@ -477,4 +483,10 @@ input[type="url"]:focus-visible {
   margin-right: 6px;
   color: var(--muted-foreground);
   font-weight: 600;
+}
+.dot.codeforces {
+  background: var(--platform-codeforces);
+}
+.dot.atcoder {
+  background: var(--platform-atcoder);
 }
