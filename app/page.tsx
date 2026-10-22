@@ -65,8 +65,8 @@ export default function Home({ searchParams }: PageProps<"/">) {
           Every solve, one place.
         </h1>
         <p className="max-w-[56ch] text-lg text-muted-foreground">
-          CodeLogs tracks Codeforces, AtCoder, LeetCode, CodeChef, Code360, HackerRank, InterviewBit
-          and GeeksforGeeks together, finds the topics you are behind on, and hands you today&apos;s
+          LogN tracks Codeforces, AtCoder, LeetCode, CodeChef, Code360, HackerRank, InterviewBit and
+          GeeksforGeeks together, finds the topics you are behind on, and hands you today&apos;s
           problems.
         </p>
         <Suspense>

@@ -84,7 +84,7 @@ describe("platformForUrl", () => {
     expect(id("https://www.naukri.com/code360/problems/x")).toBe("code360");
   });
 
-  it("ignores naukri.com outside Code360, look-alike hosts and CodeLogs itself", () => {
+  it("ignores naukri.com outside Code360, look-alike hosts and LogN itself", () => {
     expect(id("https://www.naukri.com/jobs-in-pune")).toBeNull();
     expect(id("https://leetcode.com.evil.example/")).toBeNull();
     expect(id("http://localhost:3000/extension/connect")).toBeNull();

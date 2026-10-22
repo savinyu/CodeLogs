@@ -73,8 +73,8 @@ describe("extension upload schema", () => {
 });
 
 describe("isExtensionConnectRequest", () => {
-  const url = "https://codelogs.example/api/extension/connect";
-  const good = { "x-codelogs-extension": "connect", origin: "https://codelogs.example" };
+  const url = "https://logn.example/api/extension/connect";
+  const good = { "x-logn-extension": "connect", origin: "https://logn.example" };
   const check = (h: Record<string, string>) => isExtensionConnectRequest(new Headers(h), url);
 
   it("accepts the extension header from our own origin", () => {
@@ -84,10 +84,10 @@ describe("isExtensionConnectRequest", () => {
     expect(check({ origin: good.origin })).toBe(false);
   });
   it("rejects a wrong header value", () => {
-    expect(check({ ...good, "x-codelogs-extension": "other" })).toBe(false);
+    expect(check({ ...good, "x-logn-extension": "other" })).toBe(false);
   });
   it("rejects a missing origin", () => {
-    expect(check({ "x-codelogs-extension": "connect" })).toBe(false);
+    expect(check({ "x-logn-extension": "connect" })).toBe(false);
   });
   it("rejects a cross-site origin", () => {
     expect(check({ ...good, origin: "https://evil.example" })).toBe(false);

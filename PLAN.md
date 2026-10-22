@@ -2,7 +2,7 @@
 
 > Approved 12 Oct 2026. Open choices are listed in §4; progress is tracked in §12.
 
-Status: building (M5 in progress) · Working name: **CodeLogs** (can change later) · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links merged; M6 contests + badges built, PR open)
+Status: building (M5 in progress) · Name: **LogN** (renamed from the working name CodeLogs on 22 Oct 2026; wordmark "Logん") · Type: side project / portfolio showcase (no deadline) · Last updated: 15 Oct 2026 (M7 social links merged; M6 contests + badges built, PR open)
 
 ---
 

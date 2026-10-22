@@ -22,10 +22,10 @@ describe("delete confirmation", () => {
 describe("exportFilename", () => {
   const now = new Date("2026-10-13T10:00:00Z");
   it("prefers the username", () => {
-    expect(exportFilename("savinyu", "u1", now)).toBe("codelogs-savinyu-2026-10-13.json");
+    expect(exportFilename("savinyu", "u1", now)).toBe("logn-savinyu-2026-10-13.json");
   });
   it("falls back to the id and sanitizes", () => {
-    expect(exportFilename(null, 'a"b/c', now)).toBe("codelogs-a_b_c-2026-10-13.json");
+    expect(exportFilename(null, 'a"b/c', now)).toBe("logn-a_b_c-2026-10-13.json");
   });
 });
 

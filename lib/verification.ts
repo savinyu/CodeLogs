@@ -3,7 +3,7 @@
 import type { SyncedPlatformId } from "@/lib/adapters/types";
 
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
-const TOKEN_PREFIX = "codelogs-";
+const TOKEN_PREFIX = "logn-";
 const TOKEN_LENGTH = 6;
 
 function randomChar(): string {
@@ -38,20 +38,19 @@ export const VERIFY_FIELD: Record<
     settingsUrl: "https://codeforces.com/settings/social",
     hint: "Paste it into the Organization field on your Codeforces social settings.",
     extensionHint:
-      "Or, with the CodeLogs browser extension, click Verify on its Codeforces row while logged in to Codeforces.",
+      "Or, with the LogN browser extension, click Verify on its Codeforces row while logged in to Codeforces.",
   },
   atcoder: {
     label: "Affiliation",
     settingsUrl: "https://atcoder.jp/settings",
     hint: "Paste it into the Affiliation field in your AtCoder settings.",
     extensionHint:
-      "Or, with the CodeLogs browser extension, click Verify on its AtCoder row while logged in to AtCoder.",
+      "Or, with the LogN browser extension, click Verify on its AtCoder row while logged in to AtCoder.",
   },
   leetcode: {
     label: "Summary",
     settingsUrl: "https://leetcode.com/profile/",
     hint: "Paste it into the ReadMe field (Edit profile, then ReadMe) on your LeetCode profile.",
-    extensionHint:
-      "Or sync LeetCode in the CodeLogs browser extension while logged in as this handle.",
+    extensionHint: "Or sync LeetCode in the LogN browser extension while logged in as this handle.",
   },
 };

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CodeLogs",
+  "name": "LogN",
   "version": "0.4.0",
-  "description": "Syncs the problems you solve on coding sites to your CodeLogs dashboard, from the browser you are already logged in with.",
+  "description": "Syncs the problems you solve on coding sites to your LogN dashboard, from the browser you are already logged in with.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -10,7 +10,7 @@
     "128": "icons/icon-128.png"
   },
   "permissions": ["storage", "scripting", "alarms"],
-  "host_permissions": ["https://leetcode.com/*", "https://codelogs.techsavy.space/*"],
+  "host_permissions": ["https://leetcode.com/*", "https://logn.techsavy.space/*"],
   "optional_host_permissions": [
     "https://codeforces.com/*",
     "https://atcoder.jp/*",
@@ -24,7 +24,7 @@
   "background": { "service_worker": "background.js", "type": "module" },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "CodeLogs",
+    "default_title": "LogN",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png"

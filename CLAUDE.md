@@ -1,6 +1,6 @@
-# CodeLogs
+# LogN
 
-A cross-platform tracker for DSA and competitive programming progress. It pulls solved problems from **Codeforces, AtCoder and LeetCode** into one dashboard: totals, a heatmap, difficulty and topic breakdowns. Its differentiators are **one shared topic list, weak-topic scoring and "solve next" recommendations**. Side and portfolio project, no deadline. "CodeLogs" is a working name.
+A cross-platform tracker for DSA and competitive programming progress. It pulls solved problems from **Codeforces, AtCoder and LeetCode** into one dashboard: totals, a heatmap, difficulty and topic breakdowns. Its differentiators are **one shared topic list, weak-topic scoring and "solve next" recommendations**. Side and portfolio project, no deadline. Renamed from "LogN" on 22 Oct 2026 (site `logn.techsavy.space`, repo `savinyu/LogN`). The header wordmark is written "Logん"; everywhere else it is "LogN". `OLD_ORIGIN` in `extension/lib/leetcode.js` and the reserved username `codelogs` are the only deliberate leftovers of the old name.
 
 @AGENTS.md
 
@@ -89,7 +89,7 @@ scripts/spike/          M0 probes + FINDINGS.md
 - **Secrets:** only in `.env.local` (gitignored). Keep `.env.example` in sync with `lib/env.ts`. Never print secret values.
 
 ## Git and GitHub
-- This Mac has two GitHub accounts. **This repo uses the personal account `savinyu`** (remote `savinyu/CodeLogs`), never `savinyu-7u`.
+- This Mac has two GitHub accounts. **This repo uses the personal account `savinyu`** (remote `savinyu/LogN`), never `savinyu-7u`.
 - The repo-local git identity is already set: `Savinyu <100479891+savinyu@users.noreply.github.com>`.
 - Push over HTTPS with the repo-local credential helper, which uses `gh auth token --user savinyu`. Run `gh` commands for this repo as `GH_TOKEN=$(gh auth token --user savinyu) gh …`, which leaves the globally active gh account alone.
 - One branch per milestone → PR. v2 work: `v2-*` branches (not `v2/…`, which clashes with the `v2` branch) → PR into `v2`; the captain merges into `v2` once CI and review pass. Never push to or merge into `main`. Commits and PRs are pre-approved by the owner.

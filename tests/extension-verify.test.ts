@@ -86,7 +86,7 @@ describe("planVerify", () => {
     });
     expect(() => planVerify(undefined, "atcoder", "AtCoder", false)).toThrow(ReaderError);
     expect(() => planVerify({}, "codeforces", "Codeforces", false)).toThrow(
-      "Add your Codeforces handle on the CodeLogs Connect page first.",
+      "Add your Codeforces handle on the LogN Connect page first.",
     );
   });
 });

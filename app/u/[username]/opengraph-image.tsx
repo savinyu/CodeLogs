@@ -5,7 +5,7 @@ import { PLATFORM_META } from "@/lib/platforms";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "CodeLogs profile";
+export const alt = "LogN profile";
 
 // Literal colors on purpose: ImageResponse can't read CSS variables, and the image is rendered for
 // social previews outside any theme. These are the v2 light-theme tokens from app/globals.css.
@@ -50,7 +50,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
       }}
     >
       <div style={{ display: "flex", fontSize: 32, fontWeight: 700, color: COLOR.primary }}>
-        CodeLogs
+        LogN
       </div>
       {profile && data ? (
         <div style={{ display: "flex", alignItems: "center", gap: 48 }}>

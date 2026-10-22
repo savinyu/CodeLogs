@@ -24,7 +24,7 @@ export async function fetchGithubLogin(
   const res = await fetch(url, {
     headers: {
       Accept: "application/vnd.github+json",
-      "User-Agent": "CodeLogs",
+      "User-Agent": "LogN",
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     signal: AbortSignal.timeout(10_000),

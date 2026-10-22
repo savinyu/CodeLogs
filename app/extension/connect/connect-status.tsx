@@ -56,7 +56,7 @@ export function ConnectStatus({ username }: { username: string }) {
         )}
         {state.kind === "waiting" && slow && (
           <p className="text-sm text-muted-foreground">
-            Nothing happening? Open the CodeLogs extension and click Connect to CodeLogs.
+            Nothing happening? Open the LogN extension and click Connect to LogN.
           </p>
         )}
       </div>

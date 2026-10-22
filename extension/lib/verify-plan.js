@@ -14,7 +14,7 @@ export function planVerify(handles, platformId, name, auto) {
   const info = handles?.[platformId];
   if (!info) {
     if (auto) return { action: "done", result: { notConnected: true } };
-    throw new ReaderError(`Add your ${name} handle on the CodeLogs Connect page first.`);
+    throw new ReaderError(`Add your ${name} handle on the LogN Connect page first.`);
   }
   if (info.verified) return { action: "done", result: { already: true, handle: info.handle } };
   return { action: "read" };

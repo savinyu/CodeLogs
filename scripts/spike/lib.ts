@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export const ROOT = new URL("../../", import.meta.url).pathname;
-const UA = "CodeLogs-spike/0.1 (+personal project; low volume)";
+const UA = "LogN-spike/0.1 (+personal project; low volume)";
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

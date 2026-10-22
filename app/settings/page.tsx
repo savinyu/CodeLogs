@@ -112,8 +112,8 @@ async function DeletePanel() {
         title={<span className="text-destructive">Delete account</span>}
         titleId="delete-title"
       >
-        This permanently deletes your CodeLogs account, your connected handles, your synced solves
-        and stats, and your public profile. It cannot be undone. It does not touch your accounts on
+        This permanently deletes your LogN account, your connected handles, your synced solves and
+        stats, and your public profile. It cannot be undone. It does not touch your accounts on
         Codeforces, AtCoder, LeetCode, GitHub or Google.
       </PanelHeader>
       <DeleteAccountForm username={username} />

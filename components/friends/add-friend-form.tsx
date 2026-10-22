@@ -22,7 +22,7 @@ export function AddFriendForm() {
     <div>
       <form ref={formRef} action={action} className="flex gap-2">
         <label htmlFor="add-user" className="sr-only">
-          CodeLogs username to add
+          LogN username to add
         </label>
         <input
           id="add-user"

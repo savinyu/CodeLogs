@@ -27,7 +27,7 @@ const wait = opt("wait", 2500);
 const cookieIndex = process.argv.indexOf("--cookie");
 const cookieFile = cookieIndex > 0 ? process.argv[cookieIndex + 1] : undefined;
 
-const profile = mkdtempSync(join(tmpdir(), "codelogs-shot-"));
+const profile = mkdtempSync(join(tmpdir(), "logn-shot-"));
 const chrome = spawn(CHROME, [
   "--headless=new",
   "--disable-gpu",

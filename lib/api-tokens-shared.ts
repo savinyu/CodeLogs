@@ -43,7 +43,7 @@ export function parseTokenName(raw: unknown): string | null {
  * the route never answers), and the Origin must be this site's own page.
  */
 export function isExtensionConnectRequest(headers: Headers, requestUrl: string): boolean {
-  if (headers.get("x-codelogs-extension") !== "connect") return false;
+  if (headers.get("x-logn-extension") !== "connect") return false;
   const origin = headers.get("origin");
   if (!origin) return false;
   try {

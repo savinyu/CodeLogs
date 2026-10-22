@@ -110,7 +110,7 @@ export function buildUpload(userName, slugs, dates = new Map()) {
 }
 
 /**
- * Returns the origin of a CodeLogs URL, or null unless it is https:// or http://localhost.
+ * Returns the origin of a LogN URL, or null unless it is https:// or http://localhost.
  * @param {string} input
  * @returns {string | null}
  */
@@ -127,21 +127,24 @@ export function normalizeBaseUrl(input) {
   return null;
 }
 
-/** The hosted CodeLogs: the default URL, and the only https one the manifest grants access to. */
-export const CODELOGS_ORIGIN = "https://codelogs.techsavy.space";
+/** The hosted LogN: the default URL, and the only https one the manifest grants access to. */
+export const LOGN_ORIGIN = "https://logn.techsavy.space";
+
+/** The site before the rename to LogN (extension 0.3.x saved it as the URL). */
+export const OLD_ORIGIN = "https://codelogs.techsavy.space";
 
 /**
- * Whether the extension may connect to this normalized origin: the hosted CodeLogs, or a local
+ * Whether the extension may connect to this normalized origin: the hosted LogN, or a local
  * dev server (any port, behind the optional `http://localhost/*` permission).
  * @param {string} base
  */
 export function isAllowedBase(base) {
-  return base === CODELOGS_ORIGIN || base.startsWith("http://localhost");
+  return base === LOGN_ORIGIN || base.startsWith("http://localhost");
 }
 
 /**
- * The host permission that lets the extension call this CodeLogs origin. It is granted at install
- * for the hosted CodeLogs, but Chrome withholds it when the user limits the extension's site
+ * The host permission that lets the extension call this LogN origin. It is granted at install
+ * for the hosted LogN, but Chrome withholds it when the user limits the extension's site
  * access, and the API sends no CORS headers, so it has to be asked for again like LeetCode.
  * `http://localhost/*` covers every port.
  * @param {string} base  normalized origin

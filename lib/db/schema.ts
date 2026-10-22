@@ -118,7 +118,7 @@ export const verifications = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// CodeLogs tables
+// LogN tables
 // ---------------------------------------------------------------------------
 
 /** Links shown on the profile, one per kind. GitHub isn't stored: it's users.username. */

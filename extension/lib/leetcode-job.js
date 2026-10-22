@@ -1,7 +1,7 @@
 // @ts-check
 // LeetCode sync. Unlike the other platforms it runs its requests from the service worker (the
 // browser sends the leetcode.com cookies because the extension has host access to it).
-// Cookies stay in the browser: only problem slugs and timestamps go to CodeLogs.
+// Cookies stay in the browser: only problem slugs and timestamps go to LogN.
 import { NotLoggedInError, ReaderError, sleep } from "./common.js";
 import {
   parseProblemsAll,
@@ -20,7 +20,7 @@ const LEETCODE_ORIGINS = ["https://leetcode.com/*"];
  * Walks /api/submissions/, newest first. Returns null if nothing could be read. `complete` is
  * false when the walk ended early (throttled, a network or page error, or the page cap): the
  * dates read so far are still returned. With `since` (epoch seconds) it stops at the first page
- * reaching back past it: CodeLogs keeps the dates it already has, so an automatic sync only needs
+ * reaching back past it: LogN keeps the dates it already has, so an automatic sync only needs
  * the submissions since the last one.
  * @param {number | null} since
  * @param {(n: number) => Promise<void>} onPage
@@ -81,11 +81,11 @@ export async function runLeetcodeJob({ base, token, includeDates, datesSince = n
   // Without host access (withheld by the user's site-access setting) the fetches below fail CORS.
   if (!(await chrome.permissions.contains({ origins: LEETCODE_ORIGINS }))) {
     throw new ReaderError(
-      "CodeLogs needs permission to read LeetCode. Click Sync again and allow access.",
+      "LogN needs permission to read LeetCode. Click Sync again and allow access.",
     );
   }
 
-  await setStatus({ step: "connect", message: "Checking your CodeLogs connection..." });
+  await setStatus({ step: "connect", message: "Checking your LogN connection..." });
   await checkMe(base, token);
 
   await setStatus({ step: "solved", message: "Reading your solved list from LeetCode..." });
@@ -123,7 +123,7 @@ export async function runLeetcodeJob({ base, token, includeDates, datesSince = n
     } else datesNote = "Solve dates were unavailable, so they were not included.";
   }
 
-  await setStatus({ step: "upload", message: "Uploading to CodeLogs..." });
+  await setStatus({ step: "upload", message: "Uploading to LogN..." });
   const body = buildUpload(parsed.userName, parsed.slugs, dates);
   if (body.solves.length === 0) {
     throw new ReaderError("No solved problems found on your LeetCode account.");

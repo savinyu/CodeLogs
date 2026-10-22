@@ -94,7 +94,7 @@ export async function connectExtensionToken(
   if (!oldest) {
     return {
       ok: false,
-      error: `You have ${MAX_TOKENS_PER_USER} tokens. Revoke one on the CodeLogs Connect page, then connect again.`,
+      error: `You have ${MAX_TOKENS_PER_USER} tokens. Revoke one on the LogN Connect page, then connect again.`,
     };
   }
   await db.batch([

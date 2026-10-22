@@ -1,16 +1,16 @@
-# CodeLogs
+# LogN
 
-![CodeLogs: all your solved problems, synced. Progress, weak topics and what to solve next.](docs/screenshots/banner.png)
+![LogN: all your solved problems, synced. Progress, weak topics and what to solve next.](docs/screenshots/banner.png)
 
-**All your solved problems in one place.** CodeLogs pulls your solves from **Codeforces, AtCoder and LeetCode**, plus **CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks** through its browser extension. It maps them onto one topic list, shows where you're behind, and picks what to solve next.
+**All your solved problems in one place.** LogN pulls your solves from **Codeforces, AtCoder and LeetCode**, plus **CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks** through its browser extension. It maps them onto one topic list, shows where you're behind, and picks what to solve next.
 
-**Live at [codelogs.techsavy.space](https://codelogs.techsavy.space)**: sign in with GitHub or Google.
+**Live at [logn.techsavy.space](https://logn.techsavy.space)**: sign in with GitHub or Google.
 
 ## Why
 
 If you practise on more than one site, your progress is split across profiles that don't agree on anything. Codeforces tags a problem `dp`, LeetCode says `dynamic-programming`, AtCoder has no tags at all, and each site has its own difficulty scale. Most trackers add up totals and ratings, but they don't tell you which topics you're behind on.
 
-CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subtopics), scores each topic against what someone at your level would be expected to have solved, and recommends **unsolved** problems at the right difficulty for your weakest topics.
+LogN maps every platform's tags onto **one topic list** (10 topics, 40 subtopics), scores each topic against what someone at your level would be expected to have solved, and recommends **unsolved** problems at the right difficulty for your weakest topics.
 
 ## A tour
 
@@ -31,15 +31,15 @@ CodeLogs maps every platform's tags onto **one topic list** (10 topics, 40 subto
 
 ## Browser extension
 
-![The CodeLogs extension popup showing verified LeetCode and CodeChef handles with Sync buttons](docs/screenshots/extension.png)
+![The LogN extension popup showing verified LeetCode and CodeChef handles with Sync buttons](docs/screenshots/extension.png)
 
 LeetCode keeps your full solved list private, and CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks don't allow server-side access. The Chrome extension (`extension/`, Manifest V3) reads them **from your own logged-in browser** instead:
 
-- **One-click connect:** sign in to CodeLogs and the extension links itself, with no token to copy.
+- **One-click connect:** sign in to LogN and the extension links itself, with no token to copy.
 - **Syncs on its own:** once when you connect, then when you visit a platform (at most every 6 hours, in that same tab) and LeetCode daily. A switch turns this off, and **Sync** runs it now.
 - **Sends only what's needed:** handles, problem ids, titles, difficulty, dates and counts. It never sends passwords, cookies or your code.
 
-Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/codelogs/cnhphpfejpffijadknkhiaifgmpgmmch). To run it from source, load it unpacked: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder. See [`extension/README.md`](extension/README.md) for details.
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/logn/cnhphpfejpffijadknkhiaifgmpgmmch). To run it from source, load it unpacked: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder. See [`extension/README.md`](extension/README.md) for details.
 
 ## How it works
 
@@ -97,10 +97,10 @@ pnpm dev                       # http://localhost:3000
 pnpm inngest:dev               # second terminal: Inngest dev server on http://localhost:8288
 ```
 
-Run a catalog sync once from the Inngest dev server (send `catalog/sync` with `{"platform": "codeforces"}`, and the same for `atcoder` and `leetcode`) so problems have titles, tags and difficulty. To point the extension at your dev server, set its CodeLogs URL to `http://localhost:3000` under **Advanced**.
+Run a catalog sync once from the Inngest dev server (send `catalog/sync` with `{"platform": "codeforces"}`, and the same for `atcoder` and `leetcode`) so problems have titles, tags and difficulty. To point the extension at your dev server, set its LogN URL to `http://localhost:3000` under **Advanced**.
 
 Checks (CI runs the same): `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test`.
 
 ## Status
 
-A side project, in active development. [`PLAN-v2.md`](PLAN-v2.md) covers the current interface and the extension platforms, [`PLAN.md`](PLAN.md) the original decisions and milestones, and [`scripts/spike/FINDINGS.md`](scripts/spike/FINDINGS.md) what each platform's API actually returns. Found a bug or have an idea? Use the [feedback form](https://codelogs.techsavy.space/feedback).
+A side project, in active development. [`PLAN-v2.md`](PLAN-v2.md) covers the current interface and the extension platforms, [`PLAN.md`](PLAN.md) the original decisions and milestones, and [`scripts/spike/FINDINGS.md`](scripts/spike/FINDINGS.md) what each platform's API actually returns. Found a bug or have an idea? Use the [feedback form](https://logn.techsavy.space/feedback).

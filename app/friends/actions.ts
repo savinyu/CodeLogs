@@ -111,7 +111,7 @@ export async function sendFriendRequest(username: unknown): Promise<FriendAction
   const parsed = usernameSchema.safeParse(username);
   const target = parsed.success ? normalizeUsername(parsed.data) : "";
   if (!isValidUsername(target)) {
-    return { ok: false, error: "Enter a CodeLogs username, like anvi_k." };
+    return { ok: false, error: "Enter a LogN username, like anvi_k." };
   }
   let other: Person | null;
   try {
@@ -119,7 +119,7 @@ export async function sendFriendRequest(username: unknown): Promise<FriendAction
   } catch {
     return { ok: false, error: FAILED };
   }
-  if (!other) return { ok: false, error: "No CodeLogs user with that username." };
+  if (!other) return { ok: false, error: "No LogN user with that username." };
   // By id: the session's username can lag a username change by a few minutes.
   if (other.id === user.id) return { ok: false, error: "That is your own username." };
   return requestFriendship(user.id, other);

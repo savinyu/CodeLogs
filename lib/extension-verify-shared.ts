@@ -37,7 +37,7 @@ export function decideVerify(
     return {
       kind: "error",
       status: 404,
-      error: `Add your ${name} handle on the CodeLogs Connect page first.`,
+      error: `Add your ${name} handle on the LogN Connect page first.`,
     };
   }
   if (account.handle.toLowerCase() !== body.loggedInAs.toLowerCase()) {

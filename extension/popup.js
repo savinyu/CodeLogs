@@ -1,10 +1,5 @@
 // @ts-check
-import {
-  CODELOGS_ORIGIN,
-  basePermission,
-  isAllowedBase,
-  normalizeBaseUrl,
-} from "./lib/leetcode.js";
+import { LOGN_ORIGIN, basePermission, isAllowedBase, normalizeBaseUrl } from "./lib/leetcode.js";
 import { ALL_PLATFORMS } from "./lib/registry.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
@@ -131,7 +126,7 @@ function renderConnection() {
       : "Connected";
 }
 
-const NOT_ADDED = "Add your handle on CodeLogs first.";
+const NOT_ADDED = "Add your handle on LogN first.";
 
 /** The last run's outcome under a row: green when it worked, quiet when logged out, red otherwise. */
 function lastRunLine(/** @type {RunRecord} */ run, /** @type {string} */ name) {
@@ -232,37 +227,34 @@ function render() {
 async function connect() {
   const base = normalizeBaseUrl(input("baseUrl").value);
   if (!base || !isAllowedBase(base)) {
-    show(el("conn"), `Use ${CODELOGS_ORIGIN} (or http://localhost).`, "error");
+    show(el("conn"), `Use ${LOGN_ORIGIN} (or http://localhost).`, "error");
     return;
   }
-  // Inside the click (a user gesture), one prompt asks for CodeLogs and every platform. CodeLogs and
+  // Inside the click (a user gesture), one prompt asks for LogN and every platform. LogN and
   // LeetCode are install-time host permissions, but Chrome withholds them when the user limits the
   // extension's site access; asking grants them again (no prompt when they're already granted).
-  const codelogs = basePermission(base);
+  const logn = basePermission(base);
   await chrome.permissions.request({
-    origins: [codelogs, ...ALL_PLATFORMS.flatMap((p) => p.permissions)],
+    origins: [logn, ...ALL_PLATFORMS.flatMap((p) => p.permissions)],
   });
   // Declining the platforms still connects; each one asks again on its first Sync. Without
-  // CodeLogs itself the connect tab can't be read and every upload fails.
-  if (!(await chrome.permissions.contains({ origins: [codelogs] }))) {
+  // LogN itself the connect tab can't be read and every upload fails.
+  if (!(await chrome.permissions.contains({ origins: [logn] }))) {
     show(
       el("conn"),
-      `CodeLogs needs access to ${new URL(base).host} to connect. Click Connect and allow it.`,
+      `LogN needs access to ${new URL(base).host} to connect. Click Connect and allow it.`,
       "error",
     );
     return;
   }
   await chrome.storage.local.set({ baseUrl: base });
   await chrome.runtime.sendMessage({ type: "connect", base });
-  show(el("conn"), "Finish in the CodeLogs tab. Sign in there if it asks.");
+  show(el("conn"), "Finish in the LogN tab. Sign in there if it asks.");
 }
 
 async function disconnect() {
   await chrome.storage.local.remove(["token", "meCache", "runs"]);
-  show(
-    el("conn"),
-    "Disconnected. Revoke it under Connected browsers on the CodeLogs Connect page.",
-  );
+  show(el("conn"), "Disconnected. Revoke it under Connected browsers on the LogN Connect page.");
 }
 
 /**
@@ -277,18 +269,14 @@ async function refreshMe(c) {
     });
     if (res.status === 401) {
       await chrome.storage.local.remove(["token", "meCache"]);
-      return show(
-        el("conn"),
-        "This browser was disconnected from CodeLogs. Connect again.",
-        "error",
-      );
+      return show(el("conn"), "This browser was disconnected from LogN. Connect again.", "error");
     }
     if (!res.ok) return;
     me = await res.json();
     await chrome.storage.local.set({ meCache: me });
     render();
   } catch {
-    // offline or CodeLogs down: keep the cached view
+    // offline or LogN down: keep the cached view
   }
 }
 
@@ -298,7 +286,7 @@ async function refreshMe(c) {
 async function startSync(p) {
   show(el("conn"), "");
   // Host access for a platform is asked here, inside the click, if it wasn't granted at Connect
-  // (or, for LeetCode and CodeLogs, was withheld by the user's site-access setting).
+  // (or, for LeetCode and LogN, was withheld by the user's site-access setting).
   const origins = conn ? [basePermission(conn.base), ...p.permissions] : p.permissions;
   const granted = await chrome.permissions.request({ origins });
   if (!granted) {
@@ -313,8 +301,8 @@ async function startSync(p) {
         auto: false,
         text:
           p.kind === "verify"
-            ? `Allow access to ${p.name} to verify it. CodeLogs only reads which user you are logged in as.`
-            : `Allow access to ${p.name} to sync it. CodeLogs only reads your solved problems there.`,
+            ? `Allow access to ${p.name} to verify it. LogN only reads which user you are logged in as.`
+            : `Allow access to ${p.name} to sync it. LogN only reads your solved problems there.`,
       },
     };
     return render();

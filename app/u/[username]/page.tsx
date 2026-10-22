@@ -28,9 +28,9 @@ import { topicViews } from "@/lib/topics/view";
 export async function generateMetadata({ params }: PageProps<"/u/[username]">): Promise<Metadata> {
   const { username } = await params;
   const profile = await getPublicProfile(username);
-  if (!profile) return { title: "Profile not found · CodeLogs" };
+  if (!profile) return { title: "Profile not found · LogN" };
   return {
-    title: `${profile.name} (@${profile.username}) · CodeLogs`,
+    title: `${profile.name} (@${profile.username}) · LogN`,
     description: `${profile.name}'s solved problems across Codeforces, AtCoder and LeetCode.`,
   };
 }

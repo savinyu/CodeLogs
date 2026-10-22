@@ -76,7 +76,7 @@ export function FeedbackForm() {
           maxLength={MESSAGE_MAX}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="What went wrong, or what would make CodeLogs better?"
+          placeholder="What went wrong, or what would make LogN better?"
           aria-invalid={errors.message ? true : undefined}
           aria-describedby="feedback-message-hint"
           className="min-h-36 w-full resize-y rounded-[20px] bg-raised px-4 py-3 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:ring-3 aria-invalid:ring-destructive/20"

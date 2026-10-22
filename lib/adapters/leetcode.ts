@@ -55,7 +55,7 @@ const PAGE_CONTEST_HISTORY = 5;
 const PAGE_BADGES = 6;
 const SITE_ORIGIN = "https://leetcode.com";
 
-// The default CodeLogs User-Agent from http.ts is accepted by leetcode.com (verified live in M2),
+// The default LogN User-Agent from http.ts is accepted by leetcode.com (verified live in M2 and 22 Oct 2026),
 // so no override is needed here.
 const HEADERS = { Referer: "https://leetcode.com" };
 

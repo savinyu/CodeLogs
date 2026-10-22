@@ -1,14 +1,14 @@
 // @ts-check
 // Sync jobs, run in the service worker. A sync starts when:
 //   - the popup sends { type: "sync", platform } (the Sync button) or { type: "verify", platform },
-//   - the extension has just connected to CodeLogs (every platform, once),
+//   - the extension has just connected to LogN (every platform, once),
 //   - the user loads a page on a platform whose last sync is older than 6 hours (that tab only),
 //   - the hourly timer finds LeetCode's last sync older than a day.
 // The automatic ones can be turned off in the popup. LeetCode is fetched from here; CodeChef,
 // Code360, HackerRank, InterviewBit and GFG are read inside a tab of the platform's own site.
 // Codeforces and AtCoder are not synced here (the server reads their public APIs): the extension
 // only reads who the browser is logged in as and verifies the connected handle. Cookies stay in
-// the browser: CodeLogs only receives handles, problem ids, titles, URLs, difficulty labels,
+// the browser: LogN only receives handles, problem ids, titles, URLs, difficulty labels,
 // dates and counts.
 import { NotLoggedInError, ReaderError } from "./lib/common.js";
 import {
@@ -24,7 +24,7 @@ import {
   describePlatformResult,
   describeVerifyResult,
 } from "./lib/describe.js";
-import { basePermission, normalizeBaseUrl } from "./lib/leetcode.js";
+import { basePermission, LOGN_ORIGIN, normalizeBaseUrl, OLD_ORIGIN } from "./lib/leetcode.js";
 import { runLeetcodeJob } from "./lib/leetcode-job.js";
 import { runPlatformJob } from "./lib/platform-job.js";
 import { runVerifyJob } from "./lib/verify-job.js";
@@ -105,7 +105,7 @@ async function saveRun(platform, r) {
   await chrome.storage.local.set({ [RUNS_KEY]: runs });
 }
 
-/** CodeLogs rejected the token: forget it, so the popup offers Connect again. */
+/** LogN rejected the token: forget it, so the popup offers Connect again. */
 async function disconnect() {
   await chrome.storage.local.remove(["token", "meCache"]);
 }
@@ -153,7 +153,7 @@ async function syncOne(platform, conn, opts) {
         auto: opts.auto,
         setStatus,
       });
-      text = out.notConnected ? "Add your handle on CodeLogs first." : describeVerifyResult(out);
+      text = out.notConnected ? "Add your handle on LogN first." : describeVerifyResult(out);
     } else if (platform === "leetcode") {
       const runs = await readRuns();
       const out = await runLeetcodeJob({
@@ -200,17 +200,17 @@ async function runJob(work) {
       await setStatus({
         state: "error",
         platform: null,
-        message: "Connect to CodeLogs first.",
+        message: "Connect to LogN first.",
         finishedAt: Date.now(),
       });
       return;
     }
-    // Withheld by the user's site-access setting: every call to CodeLogs would fail CORS.
+    // Withheld by the user's site-access setting: every call to LogN would fail CORS.
     if (!(await chrome.permissions.contains({ origins: [basePermission(conn.base)] }))) {
       await setStatus({
         state: "error",
         platform: null,
-        message: "CodeLogs needs access to its own site. Click Sync and allow it.",
+        message: "LogN needs access to its own site. Click Sync and allow it.",
         finishedAt: Date.now(),
       });
       return;
@@ -370,4 +370,13 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     void chrome.tabs.create({ url: chrome.runtime.getURL("popup.html?tab") });
   }
+  if (details.reason === "update") void moveOffOldOrigin();
 });
+
+/** 0.3.x saved the pre-rename URL: point it at LogN. Same database, so the token still works. */
+async function moveOffOldOrigin() {
+  const { baseUrl } = await chrome.storage.local.get("baseUrl");
+  if (normalizeBaseUrl(String(baseUrl ?? "")) === OLD_ORIGIN) {
+    await chrome.storage.local.set({ baseUrl: LOGN_ORIGIN });
+  }
+}

@@ -618,11 +618,11 @@ describe("readVerificationField", () => {
       {
         ...PROFILE,
         json: {
-          data: { matchedUser: { username: HANDLE, profile: { aboutMe: "  codelogs-abc123 \n" } } },
+          data: { matchedUser: { username: HANDLE, profile: { aboutMe: "  logn-abc123 \n" } } },
         },
       },
     ]);
-    await expect(leetcodeAdapter.readVerificationField(HANDLE)).resolves.toBe("codelogs-abc123");
+    await expect(leetcodeAdapter.readVerificationField(HANDLE)).resolves.toBe("logn-abc123");
   });
 
   it("returns null for whitespace-only aboutMe", async () => {

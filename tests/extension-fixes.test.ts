@@ -27,7 +27,7 @@ declare global {
 type Sub = { status_display: string; title_slug: string; timestamp: number };
 type SubsReply = { status: number; body?: unknown };
 
-/** Stubs fetch for CodeLogs and leetcode.com; `subs(n)` answers the n-th submissions request. */
+/** Stubs fetch for LogN and leetcode.com; `subs(n)` answers the n-th submissions request. */
 function stubLeetcode(subs: (n: number) => SubsReply) {
   let n = 0;
   let uploaded: { solves: Array<{ solvedAt: number | null }> } | null = null;

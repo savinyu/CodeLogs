@@ -1,6 +1,6 @@
 // @ts-check
 // Verifies a Codeforces or AtCoder handle: reads which user this browser is logged in as, in a
-// tab on the platform's own site, and tells CodeLogs. Nothing is synced here (the server reads
+// tab on the platform's own site, and tells LogN. Nothing is synced here (the server reads
 // both from their public APIs).
 import { NotLoggedInError, ReaderError } from "./common.js";
 import { createContext } from "./job.js";
@@ -22,11 +22,11 @@ export async function runVerifyJob({ platformId, base, token, tabId, auto, setSt
 
   if (!(await chrome.permissions.contains({ origins: v.permissions }))) {
     throw new ReaderError(
-      `CodeLogs needs permission to read ${v.name}. Click Verify again and allow access.`,
+      `LogN needs permission to read ${v.name}. Click Verify again and allow access.`,
     );
   }
 
-  await setStatus({ step: "connect", message: "Checking your CodeLogs connection..." });
+  await setStatus({ step: "connect", message: "Checking your LogN connection..." });
   const me = await checkMe(base, token);
   const plan = planVerify(me.handles, platformId, v.name, auto);
   if (plan.action === "done") return plan.result;
@@ -46,6 +46,6 @@ export async function runVerifyJob({ platformId, base, token, tabId, auto, setSt
   const loggedInAs =
     tabId === undefined ? await withPlatformTab(v, readIn) : await withVisitedTab(v, tabId, readIn);
 
-  await setStatus({ step: "upload", message: "Verifying with CodeLogs..." });
+  await setStatus({ step: "upload", message: "Verifying with LogN..." });
   return postUpload(base, token, "/api/extension/verify", { platform: platformId, loggedInAs });
 }
