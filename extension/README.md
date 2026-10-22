@@ -7,7 +7,7 @@ use those sites, and whenever you click **Sync**.
 
 ## Install
 
-Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/codelogs/cnhphpfejpffijadknkhiaifgmpgmmch). To run this folder instead (for development):
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/logn/cnhphpfejpffijadknkhiaifgmpgmmch). To run this folder instead (for development):
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick this `extension/` folder.
@@ -15,7 +15,7 @@ Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/code
    access to the platform sites (and LogN itself, if your site-access setting withheld it);
    declining the platforms still connects, and each one asks again on its first Sync. A LogN
    tab opens at `/extension/connect`: sign in there if it asks, and the extension links itself.
-   There is no token to copy. The LogN URL (default `https://codelogs.techsavy.space`) is under
+   There is no token to copy. The LogN URL (default `https://logn.techsavy.space`) is under
    **Advanced**. The only other URL it accepts is `http://localhost` on any port, for a dev server,
    which is asked for in the same prompt.
 4. It then syncs every platform once, opening a background tab for each of the five it has access to
@@ -29,12 +29,12 @@ no dotfiles or README) in the Chrome Web Store developer dashboard.
 
 ## Connecting
 
-The connect tab's page carries `data-codelogs-connect="signed-out"` or `"ready"`. Once it says
+The connect tab's page carries `data-logn-connect="signed-out"` or `"ready"`. Once it says
 "ready", the extension runs a small script in that tab that calls `POST /api/extension/connect` as a
-same-origin request with the user's own LogN session, plus an `X-CodeLogs-Extension: connect`
+same-origin request with the user's own LogN session, plus an `X-LogN-Extension: connect`
 header (the route also checks `Origin`, so another site can't trigger it). LogN answers with a
 new token, named "Browser extension". The extension keeps it in `chrome.storage.local` and tells the
-page (`codelogs:extension-connect` event, and the same result in `sessionStorage`). Only the tab the
+page (`logn:extension-connect` event, and the same result in `sessionStorage`). Only the tab the
 extension opened is read, within 30 minutes. At the 5-token cap the least recently used "Browser
 extension" token is replaced. Connect lists them under **Connected browsers**, where each can be
 revoked; a revoked token disconnects the extension on its next request.
@@ -96,7 +96,7 @@ the upload is dropped if the account changed.
 - `scripting`: runs the read functions inside the platform's tab, and the connect script in the
   LogN tab.
 - `alarms`: the hourly check for LeetCode's daily sync.
-- Host access to `leetcode.com` and `codelogs.techsavy.space` (always). If you limit the
+- Host access to `leetcode.com` and `logn.techsavy.space` (always). If you limit the
   extension's site access in Chrome (for example "On click"), Chrome withholds both; Connect and
   Sync ask for them again, and a sync without them says so instead of failing. LogN' API sends
   no CORS headers, so without its host access neither connecting nor uploading works.
@@ -105,7 +105,7 @@ the upload is dropped if the account changed.
   `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the LogN URL is a dev
   server. No wildcard hosts: `tests/extension.test.ts` checks the manifest for them.
 
-Privacy policy: <https://codelogs.techsavy.space/privacy> (`app/privacy/page.tsx`).
+Privacy policy: <https://logn.techsavy.space/privacy> (`app/privacy/page.tsx`).
 
 ## Caveats
 

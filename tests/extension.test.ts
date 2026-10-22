@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   basePermission,
   buildUpload,
-  CODELOGS_ORIGIN,
+  LOGN_ORIGIN,
   collectAcceptedDates,
   isAllowedBase,
   normalizeBaseUrl,
@@ -95,17 +95,17 @@ describe("normalizeBaseUrl", () => {
 
 describe("isAllowedBase", () => {
   it("allows the hosted LogN and localhost on any port, nothing else", () => {
-    expect(isAllowedBase(CODELOGS_ORIGIN)).toBe(true);
+    expect(isAllowedBase(LOGN_ORIGIN)).toBe(true);
     expect(isAllowedBase("http://localhost:3000")).toBe(true);
     expect(isAllowedBase("http://localhost:4000")).toBe(true);
     expect(isAllowedBase("https://x.vercel.app")).toBe(false);
-    expect(isAllowedBase("https://codelogs.techsavy.space.evil.com")).toBe(false);
+    expect(isAllowedBase("https://logn.techsavy.space.evil.com")).toBe(false);
   });
 });
 
 describe("basePermission", () => {
   it("asks for the hosted origin, or every localhost port", () => {
-    expect(basePermission(CODELOGS_ORIGIN)).toBe(`${CODELOGS_ORIGIN}/*`);
+    expect(basePermission(LOGN_ORIGIN)).toBe(`${LOGN_ORIGIN}/*`);
     expect(basePermission("http://localhost:3000")).toBe("http://localhost/*");
   });
 });
@@ -116,7 +116,7 @@ describe("manifest", () => {
   ) as { host_permissions: string[]; optional_host_permissions: string[] };
 
   it("grants the hosted LogN and no wildcard hosts", () => {
-    expect(manifest.host_permissions).toContain(basePermission(CODELOGS_ORIGIN));
+    expect(manifest.host_permissions).toContain(basePermission(LOGN_ORIGIN));
     expect(manifest.optional_host_permissions).toContain(basePermission("http://localhost:3000"));
     for (const p of [...manifest.host_permissions, ...manifest.optional_host_permissions]) {
       expect(p).not.toMatch(/^\w+:\/\/\*|<all_urls>/);

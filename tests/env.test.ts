@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const VALID_ENV = {
-  DATABASE_URL: "postgres://user:pass@localhost:5432/codelogs",
+  DATABASE_URL: "postgres://user:pass@localhost:5432/logn",
   GITHUB_CLIENT_ID: "client-id",
   GITHUB_CLIENT_SECRET: "client-secret",
   BETTER_AUTH_SECRET: "a".repeat(32),

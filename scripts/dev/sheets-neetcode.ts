@@ -15,7 +15,7 @@ interface Raw {
   premium?: boolean;
 }
 
-const res = await fetch(SOURCE, { headers: { "User-Agent": "CodeLogs/0.1" } });
+const res = await fetch(SOURCE, { headers: { "User-Agent": "LogN/0.1" } });
 if (!res.ok) throw new Error(`HTTP ${res.status} from ${SOURCE}`);
 const raw = (await res.json()) as Raw[];
 const rows = raw

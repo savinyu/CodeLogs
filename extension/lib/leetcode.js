@@ -128,7 +128,10 @@ export function normalizeBaseUrl(input) {
 }
 
 /** The hosted LogN: the default URL, and the only https one the manifest grants access to. */
-export const CODELOGS_ORIGIN = "https://codelogs.techsavy.space";
+export const LOGN_ORIGIN = "https://logn.techsavy.space";
+
+/** The site before the rename to LogN (extension 0.3.x saved it as the URL). */
+export const OLD_ORIGIN = "https://codelogs.techsavy.space";
 
 /**
  * Whether the extension may connect to this normalized origin: the hosted LogN, or a local
@@ -136,7 +139,7 @@ export const CODELOGS_ORIGIN = "https://codelogs.techsavy.space";
  * @param {string} base
  */
 export function isAllowedBase(base) {
-  return base === CODELOGS_ORIGIN || base.startsWith("http://localhost");
+  return base === LOGN_ORIGIN || base.startsWith("http://localhost");
 }
 
 /**

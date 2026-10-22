@@ -35,7 +35,7 @@ describe("emailUsernameBase", () => {
     expect(emailUsernameBase("Savinyu.Pant@gmail.com")).toBe("savinyu.pant");
   });
   it("drops +tags", () => {
-    expect(emailUsernameBase("sam+codelogs@example.com")).toBe("sam");
+    expect(emailUsernameBase("sam+logn@example.com")).toBe("sam");
   });
   it("returns null for an unusable local part", () => {
     expect(emailUsernameBase("a@example.com")).toBeNull();

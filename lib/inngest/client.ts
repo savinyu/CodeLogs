@@ -4,7 +4,7 @@
 import { Inngest, eventType, staticSchema } from "inngest";
 import type { SyncedPlatformId } from "@/lib/adapters/types";
 
-export const inngest = new Inngest({ id: "codelogs" });
+export const inngest = new Inngest({ id: "logn" });
 
 /** Sync one connected platform account. */
 export const accountSyncEvent = eventType("account/sync", {

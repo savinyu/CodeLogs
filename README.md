@@ -4,7 +4,7 @@
 
 **All your solved problems in one place.** LogN pulls your solves from **Codeforces, AtCoder and LeetCode**, plus **CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks** through its browser extension. It maps them onto one topic list, shows where you're behind, and picks what to solve next.
 
-**Live at [codelogs.techsavy.space](https://codelogs.techsavy.space)**: sign in with GitHub or Google.
+**Live at [logn.techsavy.space](https://logn.techsavy.space)**: sign in with GitHub or Google.
 
 ## Why
 
@@ -39,7 +39,7 @@ LeetCode keeps your full solved list private, and CodeChef, Code360, HackerRank,
 - **Syncs on its own:** once when you connect, then when you visit a platform (at most every 6 hours, in that same tab) and LeetCode daily. A switch turns this off, and **Sync** runs it now.
 - **Sends only what's needed:** handles, problem ids, titles, difficulty, dates and counts. It never sends passwords, cookies or your code.
 
-Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/codelogs/cnhphpfejpffijadknkhiaifgmpgmmch). To run it from source, load it unpacked: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder. See [`extension/README.md`](extension/README.md) for details.
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/logn/cnhphpfejpffijadknkhiaifgmpgmmch). To run it from source, load it unpacked: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder. See [`extension/README.md`](extension/README.md) for details.
 
 ## How it works
 
@@ -103,4 +103,4 @@ Checks (CI runs the same): `pnpm typecheck && pnpm lint && pnpm format:check && 
 
 ## Status
 
-A side project, in active development. [`PLAN-v2.md`](PLAN-v2.md) covers the current interface and the extension platforms, [`PLAN.md`](PLAN.md) the original decisions and milestones, and [`scripts/spike/FINDINGS.md`](scripts/spike/FINDINGS.md) what each platform's API actually returns. Found a bug or have an idea? Use the [feedback form](https://codelogs.techsavy.space/feedback).
+A side project, in active development. [`PLAN-v2.md`](PLAN-v2.md) covers the current interface and the extension platforms, [`PLAN.md`](PLAN.md) the original decisions and milestones, and [`scripts/spike/FINDINGS.md`](scripts/spike/FINDINGS.md) what each platform's API actually returns. Found a bug or have an idea? Use the [feedback form](https://logn.techsavy.space/feedback).

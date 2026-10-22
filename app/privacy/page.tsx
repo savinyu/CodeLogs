@@ -8,7 +8,7 @@ export const metadata = {
   description: "What LogN and its browser extension collect, and what they do with it.",
 };
 
-const ISSUES_URL = "https://github.com/savinyu/CodeLogs/issues";
+const ISSUES_URL = "https://github.com/savinyu/LogN/issues";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

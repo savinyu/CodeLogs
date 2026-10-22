@@ -15,9 +15,9 @@ const PENDING_MAX_AGE_MS = 30 * 60_000;
  * @returns {Promise<{ state: "ok", token: string } | { state: "signed-out" | "missing" } | { state: "error", error: string }>}
  */
 export async function connectInPage() {
-  const ATTR = "data-codelogs-connect";
+  const ATTR = "data-logn-connect";
   try {
-    sessionStorage.removeItem("codelogs:extension-connect");
+    sessionStorage.removeItem("logn:extension-connect");
   } catch {
     // storage blocked: the page still gets the event
   }
@@ -33,7 +33,7 @@ export async function connectInPage() {
     const res = await fetch("/api/extension/connect", {
       method: "POST",
       credentials: "include",
-      headers: { "X-CodeLogs-Extension": "connect" },
+      headers: { "X-LogN-Extension": "connect" },
     });
     /** @type {any} */
     const out = await res.json().catch(() => ({}));
@@ -52,11 +52,11 @@ export async function connectInPage() {
  */
 export function notifyConnectPage(detail) {
   try {
-    sessionStorage.setItem("codelogs:extension-connect", detail);
+    sessionStorage.setItem("logn:extension-connect", detail);
   } catch {
     // storage blocked: the event alone has to do
   }
-  document.dispatchEvent(new CustomEvent("codelogs:extension-connect", { detail }));
+  document.dispatchEvent(new CustomEvent("logn:extension-connect", { detail }));
 }
 
 /**

@@ -41,6 +41,7 @@ describe("parseNewUsername", () => {
       error: "That username is reserved.",
     });
     expect(parseNewUsername("codelogs", null).ok).toBe(false);
+    expect(parseNewUsername("logn", null).ok).toBe(false);
   });
   it("rejects the current username", () => {
     expect(parseNewUsername("@Savinyu", "savinyu")).toEqual({

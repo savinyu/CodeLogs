@@ -36,7 +36,7 @@ interface Item {
 
 async function fetchSyllabus(): Promise<Syllabus> {
   const res = await fetch(SOURCE, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; CodeLogs sheet generator)" },
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; LogN sheet generator)" },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} from ${SOURCE}`);
   const html = await res.text();

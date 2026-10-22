@@ -1,10 +1,5 @@
 // @ts-check
-import {
-  CODELOGS_ORIGIN,
-  basePermission,
-  isAllowedBase,
-  normalizeBaseUrl,
-} from "./lib/leetcode.js";
+import { LOGN_ORIGIN, basePermission, isAllowedBase, normalizeBaseUrl } from "./lib/leetcode.js";
 import { SYNC_PLATFORMS } from "./lib/registry.js";
 
 /** @typedef {{ handle: string, verified: boolean, lastSyncedAt: string | number | null }} HandleInfo */
@@ -214,19 +209,19 @@ function render() {
 async function connect() {
   const base = normalizeBaseUrl(input("baseUrl").value);
   if (!base || !isAllowedBase(base)) {
-    show(el("conn"), `Use ${CODELOGS_ORIGIN} (or http://localhost).`, "error");
+    show(el("conn"), `Use ${LOGN_ORIGIN} (or http://localhost).`, "error");
     return;
   }
   // Inside the click (a user gesture), one prompt asks for LogN and every platform. LogN and
   // LeetCode are install-time host permissions, but Chrome withholds them when the user limits the
   // extension's site access; asking grants them again (no prompt when they're already granted).
-  const codelogs = basePermission(base);
+  const logn = basePermission(base);
   await chrome.permissions.request({
-    origins: [codelogs, ...SYNC_PLATFORMS.flatMap((p) => p.permissions)],
+    origins: [logn, ...SYNC_PLATFORMS.flatMap((p) => p.permissions)],
   });
   // Declining the platforms still connects; each one asks again on its first Sync. Without
   // LogN itself the connect tab can't be read and every upload fails.
-  if (!(await chrome.permissions.contains({ origins: [codelogs] }))) {
+  if (!(await chrome.permissions.contains({ origins: [logn] }))) {
     show(
       el("conn"),
       `LogN needs access to ${new URL(base).host} to connect. Click Connect and allow it.`,

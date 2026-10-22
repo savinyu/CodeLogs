@@ -3,7 +3,7 @@
 import type { SyncedPlatformId } from "@/lib/adapters/types";
 
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
-const TOKEN_PREFIX = "codelogs-";
+const TOKEN_PREFIX = "logn-";
 const TOKEN_LENGTH = 6;
 
 function randomChar(): string {

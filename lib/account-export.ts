@@ -161,7 +161,7 @@ export async function buildAccountExport(userId: string) {
   }));
 
   return {
-    format: "codelogs-export" as const,
+    format: "logn-export" as const,
     version: 1 as const,
     exportedAt: new Date(),
     user: {

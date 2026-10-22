@@ -17,7 +17,7 @@ import {
   startConnect,
 } from "./lib/connect.js";
 import { describeLeetcodeResult, describePlatformResult } from "./lib/describe.js";
-import { basePermission, normalizeBaseUrl } from "./lib/leetcode.js";
+import { basePermission, LOGN_ORIGIN, normalizeBaseUrl, OLD_ORIGIN } from "./lib/leetcode.js";
 import { runLeetcodeJob } from "./lib/leetcode-job.js";
 import { runPlatformJob } from "./lib/platform-job.js";
 import { SYNC_PLATFORMS, isSyncPlatform } from "./lib/registry.js";
@@ -341,4 +341,13 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     void chrome.tabs.create({ url: chrome.runtime.getURL("popup.html?tab") });
   }
+  if (details.reason === "update") void moveOffOldOrigin();
 });
+
+/** 0.3.x saved the pre-rename URL: point it at LogN. Same database, so the token still works. */
+async function moveOffOldOrigin() {
+  const { baseUrl } = await chrome.storage.local.get("baseUrl");
+  if (normalizeBaseUrl(String(baseUrl ?? "")) === OLD_ORIGIN) {
+    await chrome.storage.local.set({ baseUrl: LOGN_ORIGIN });
+  }
+}

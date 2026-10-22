@@ -3,7 +3,7 @@
 // step.sleep(minDelayMs) in the sync job, since each step may run in a different invocation.
 // Pure: no DB or env imports, so adapter fixture tests run offline.
 
-const USER_AGENT = "CodeLogs/0.1 (+https://github.com/savinyu/CodeLogs; low volume)";
+const USER_AGENT = "LogN/0.1 (+https://github.com/savinyu/LogN; low volume)";
 
 /** Swappable in tests: vi.spyOn(httpRuntime, "fetch") / vi.spyOn(httpRuntime, "sleep"). */
 export const httpRuntime = {
