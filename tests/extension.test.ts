@@ -94,7 +94,7 @@ describe("normalizeBaseUrl", () => {
 });
 
 describe("isAllowedBase", () => {
-  it("allows the hosted CodeLogs and localhost on any port, nothing else", () => {
+  it("allows the hosted LogN and localhost on any port, nothing else", () => {
     expect(isAllowedBase(CODELOGS_ORIGIN)).toBe(true);
     expect(isAllowedBase("http://localhost:3000")).toBe(true);
     expect(isAllowedBase("http://localhost:4000")).toBe(true);
@@ -115,7 +115,7 @@ describe("manifest", () => {
     readFileSync(fileURLToPath(new URL("../extension/manifest.json", import.meta.url)), "utf8"),
   ) as { host_permissions: string[]; optional_host_permissions: string[] };
 
-  it("grants the hosted CodeLogs and no wildcard hosts", () => {
+  it("grants the hosted LogN and no wildcard hosts", () => {
     expect(manifest.host_permissions).toContain(basePermission(CODELOGS_ORIGIN));
     expect(manifest.optional_host_permissions).toContain(basePermission("http://localhost:3000"));
     for (const p of [...manifest.host_permissions, ...manifest.optional_host_permissions]) {

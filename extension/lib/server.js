@@ -1,8 +1,8 @@
 // @ts-check
-// Calls to the CodeLogs server (not the platforms). Plain fetch; no `chrome`.
+// Calls to the LogN server (not the platforms). Plain fetch; no `chrome`.
 import { ReaderError } from "./common.js";
 
-/** CodeLogs rejected the token (revoked on Connect): this browser has to connect again. */
+/** LogN rejected the token (revoked on Connect): this browser has to connect again. */
 export class TokenRevokedError extends ReaderError {}
 
 /**
@@ -17,12 +17,12 @@ export async function checkMe(base, token) {
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch {
-    throw new ReaderError("Could not reach CodeLogs.");
+    throw new ReaderError("Could not reach LogN.");
   }
   if (res.status === 401) {
-    throw new TokenRevokedError("This browser was disconnected from CodeLogs. Connect again.");
+    throw new TokenRevokedError("This browser was disconnected from LogN. Connect again.");
   }
-  if (!res.ok) throw new ReaderError(`CodeLogs returned HTTP ${res.status}.`);
+  if (!res.ok) throw new ReaderError(`LogN returned HTTP ${res.status}.`);
   return await res.json();
 }
 
@@ -44,14 +44,13 @@ export async function postUpload(base, token, path, body) {
       body: JSON.stringify(body),
     });
   } catch {
-    throw new ReaderError("Could not reach CodeLogs.");
+    throw new ReaderError("Could not reach LogN.");
   }
   if (res.status === 401) {
-    throw new TokenRevokedError("This browser was disconnected from CodeLogs. Connect again.");
+    throw new TokenRevokedError("This browser was disconnected from LogN. Connect again.");
   }
   /** @type {any} */
   const out = await res.json().catch(() => ({}));
-  if (!res.ok || !out.ok)
-    throw new ReaderError(out.error || `CodeLogs returned HTTP ${res.status}.`);
+  if (!res.ok || !out.ok) throw new ReaderError(out.error || `LogN returned HTTP ${res.status}.`);
   return out;
 }

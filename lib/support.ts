@@ -8,5 +8,5 @@ export const UPI_PAYEE = "Savinyu";
  * are only letters, digits, `.`, `-`, `_` and one `@`, and some apps reject `%40`.
  */
 export function upiPayUrl(): string {
-  return `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_PAYEE)}&cu=INR&tn=${encodeURIComponent("Support CodeLogs")}`;
+  return `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_PAYEE)}&cu=INR&tn=${encodeURIComponent("Support LogN")}`;
 }

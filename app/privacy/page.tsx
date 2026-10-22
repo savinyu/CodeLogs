@@ -5,7 +5,7 @@ import { Panel } from "@/components/kit/panel";
 
 export const metadata = {
   title: "Privacy policy",
-  description: "What CodeLogs and its browser extension collect, and what they do with it.",
+  description: "What LogN and its browser extension collect, and what they do with it.",
 };
 
 const ISSUES_URL = "https://github.com/savinyu/CodeLogs/issues";
@@ -30,22 +30,22 @@ export default function PrivacyPage() {
     <Page className="max-w-3xl">
       <PageHead
         title="Privacy policy"
-        description="What CodeLogs and the CodeLogs browser extension collect, and what they do with it. Last updated 19 October 2026."
+        description="What LogN and the LogN browser extension collect, and what they do with it. Last updated 19 October 2026."
       />
       <div className="grid gap-3.5">
         <Section title="Who we are">
           <p className="text-muted-foreground">
-            CodeLogs is a free, non-commercial project that tracks your competitive programming and
-            DSA practice. It is not affiliated with Codeforces, AtCoder, LeetCode, CodeChef, Coding
+            LogN is a free, non-commercial project that tracks your competitive programming and DSA
+            practice. It is not affiliated with Codeforces, AtCoder, LeetCode, CodeChef, Coding
             Ninjas (Code360), HackerRank, InterviewBit or GeeksforGeeks.
           </p>
         </Section>
 
-        <Section title="What CodeLogs stores">
+        <Section title="What LogN stores">
           <List>
             <li>
               Your account: the name, email address and avatar GitHub or Google share when you sign
-              in, and your CodeLogs username.
+              in, and your LogN username.
             </li>
             <li>
               Sign-in sessions: the IP address and browser user agent of each session, used only to
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
               extension.
             </li>
             <li>
-              What you do in CodeLogs: settings, daily goal, sheet ticks, daily marks, friends and
+              What you do in LogN: settings, daily goal, sheet ticks, daily marks, friends and
               social links you add.
             </li>
             <li>Extension tokens, stored only as a hash, with the time each one was last used.</li>
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
             </li>
           </List>
           <p className="text-muted-foreground">
-            CodeLogs has no ads and no analytics or tracking scripts.
+            LogN has no ads and no analytics or tracking scripts.
           </p>
         </Section>
 
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
             browse those sites (at most every 6 hours per site, LeetCode also once a day), and
             whenever you click Sync. You can turn automatic sync off in its popup.
           </p>
-          <p className="text-muted-foreground">It sends to CodeLogs, and nowhere else:</p>
+          <p className="text-muted-foreground">It sends to LogN, and nowhere else:</p>
           <List>
             <li>your username on each platform;</li>
             <li>
@@ -97,9 +97,9 @@ export default function PrivacyPage() {
             in your browser&apos;s site-access settings for the extension.
           </p>
           <p className="text-muted-foreground">
-            In your browser it keeps the CodeLogs token it receives when you connect, its settings,
-            and the result of each platform&apos;s last sync. Removing the extension deletes them;
-            you can also revoke a connected browser on the Connect page.
+            In your browser it keeps the LogN token it receives when you connect, its settings, and
+            the result of each platform&apos;s last sync. Removing the extension deletes them; you
+            can also revoke a connected browser on the Connect page.
           </p>
         </Section>
 
@@ -112,8 +112,8 @@ export default function PrivacyPage() {
             <li>Friends you add see your activity and weekly points on their friends board.</li>
             <li>
               Your data is never sold or shared for advertising. It is processed only by the
-              services that run CodeLogs: Vercel (hosting), Neon (database), Inngest (background
-              sync), and GitHub or Google (sign-in).
+              services that run LogN: Vercel (hosting), Neon (database), Inngest (background sync),
+              and GitHub or Google (sign-in).
             </li>
           </List>
         </Section>

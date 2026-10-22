@@ -41,7 +41,7 @@ export default function ConnectPage() {
         </h2>
         <p className="mt-1.5 mb-5 max-w-[68ch] text-muted-foreground">
           The extension reads these platforms in your own logged-in browser and keeps them in sync.
-          CodeLogs never fetches them itself.
+          LogN never fetches them itself.
         </p>
         <Suspense
           fallback={
@@ -121,7 +121,7 @@ async function ExtensionSection() {
 function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiTokens>> }) {
   return (
     <Panel id="extension" aria-labelledby="extension-title">
-      <PanelHeader title="CodeLogs browser extension" titleId="extension-title">
+      <PanelHeader title="LogN browser extension" titleId="extension-title">
         The public API only shows your last 20 LeetCode solves. The extension syncs your full
         history, plus CodeChef, Code360, HackerRank, InterviewBit and GFG.
       </PanelHeader>
@@ -142,11 +142,11 @@ function ExtensionPanel({ tokens }: { tokens: Awaited<ReturnType<typeof listApiT
         ) : (
           <li>
             <strong>Install:</strong> chrome://extensions → Developer mode → Load unpacked → pick{" "}
-            <code>extension/</code> from the CodeLogs repo.
+            <code>extension/</code> from the LogN repo.
           </li>
         )}
         <li>
-          <strong>Connect:</strong> open the extension → <strong>Connect to CodeLogs</strong>.
+          <strong>Connect:</strong> open the extension → <strong>Connect to LogN</strong>.
         </li>
         <li>
           <strong>That&apos;s it.</strong> It syncs when you visit these sites (at most every 6 h)

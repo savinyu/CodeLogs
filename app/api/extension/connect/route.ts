@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   }
   try {
     const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) return respond({ ok: false, error: "Sign in to CodeLogs first." }, 401);
+    if (!session) return respond({ ok: false, error: "Sign in to LogN first." }, 401);
     const result = await connectExtensionToken(session.user.id);
     if (!result.ok) return respond({ ok: false, error: result.error }, 409);
     return respond({

@@ -1,7 +1,7 @@
-# CodeLogs browser extension
+# LogN browser extension
 
 Syncs your solved problems from **LeetCode, CodeChef, Code360, HackerRank, InterviewBit and
-GeeksforGeeks** to your CodeLogs account. These sites don't share your full history publicly, so the
+GeeksforGeeks** to your LogN account. These sites don't share your full history publicly, so the
 extension reads it from your own logged-in browser: once when you connect, then by itself while you
 use those sites, and whenever you click **Sync**.
 
@@ -11,11 +11,11 @@ Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/code
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick this `extension/` folder.
-3. A welcome tab opens (the popup's own page). Click **Connect to CodeLogs**. Chrome asks once for
-   access to the platform sites (and CodeLogs itself, if your site-access setting withheld it);
-   declining the platforms still connects, and each one asks again on its first Sync. A CodeLogs
+3. A welcome tab opens (the popup's own page). Click **Connect to LogN**. Chrome asks once for
+   access to the platform sites (and LogN itself, if your site-access setting withheld it);
+   declining the platforms still connects, and each one asks again on its first Sync. A LogN
    tab opens at `/extension/connect`: sign in there if it asks, and the extension links itself.
-   There is no token to copy. The CodeLogs URL (default `https://codelogs.techsavy.space`) is under
+   There is no token to copy. The LogN URL (default `https://codelogs.techsavy.space`) is under
    **Advanced**. The only other URL it accepts is `http://localhost` on any port, for a dev server,
    which is asked for in the same prompt.
 4. It then syncs every platform once, opening a background tab for each of the five it has access to
@@ -24,15 +24,15 @@ Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/code
 ## Publishing
 
 Bump `version` in the manifest first (the store rejects a version it already has), then run
-`pnpm extension:zip` at the repo root and upload `codelogs-extension.zip` (manifest at the top level,
+`pnpm extension:zip` at the repo root and upload `logn-extension.zip` (manifest at the top level,
 no dotfiles or README) in the Chrome Web Store developer dashboard.
 
 ## Connecting
 
 The connect tab's page carries `data-codelogs-connect="signed-out"` or `"ready"`. Once it says
 "ready", the extension runs a small script in that tab that calls `POST /api/extension/connect` as a
-same-origin request with the user's own CodeLogs session, plus an `X-CodeLogs-Extension: connect`
-header (the route also checks `Origin`, so another site can't trigger it). CodeLogs answers with a
+same-origin request with the user's own LogN session, plus an `X-CodeLogs-Extension: connect`
+header (the route also checks `Origin`, so another site can't trigger it). LogN answers with a
 new token, named "Browser extension". The extension keeps it in `chrome.storage.local` and tells the
 page (`codelogs:extension-connect` event, and the same result in `sessionStorage`). Only the tab the
 extension opened is read, within 30 minutes. At the 5-token cap the least recently used "Browser
@@ -48,12 +48,12 @@ On by default; the **Sync automatically** switch in the popup turns it off.
   its own for this. A logged-out or failed visit waits 10 minutes before trying again.
 - **LeetCode daily:** an hourly alarm syncs LeetCode when its last sync is older than a day (no tab
   needed). Automatic LeetCode syncs read submission dates only back to a day before the last
-  success; CodeLogs keeps the dates it already has.
+  success; LogN keeps the dates it already has.
 - One sync at a time; an automatic one is skipped while another runs. Each row in the popup shows
   its last outcome.
 
 For CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks the first sync also connects the
-handle in CodeLogs if you haven't added it, and verifies it: the account you are logged in to is the
+handle in LogN if you haven't added it, and verifies it: the account you are logged in to is the
 proof that the handle is yours.
 
 ## How it reads these sites
@@ -77,9 +77,9 @@ or id. The responses they look at contain emails and access tokens; those never 
 
 ## What it sends
 
-To CodeLogs only: the platform handle, problem ids, titles, URLs on the platform's own site,
+To LogN only: the platform handle, problem ids, titles, URLs on the platform's own site,
 difficulty labels, tags where the site gives them, solve dates, counts and daily activity, with your
-extension's CodeLogs token in an `Authorization` header. It **never sends cookies, passwords, tokens from the
+extension's LogN token in an `Authorization` header. It **never sends cookies, passwords, tokens from the
 platforms, emails or your code**, and it doesn't request submission sources.
 
 ## Politeness
@@ -92,17 +92,17 @@ the upload is dropped if the account changed.
 
 ## Permissions
 
-- `storage`: your CodeLogs URL, token, settings and theme; sync status and each platform's last run.
+- `storage`: your LogN URL, token, settings and theme; sync status and each platform's last run.
 - `scripting`: runs the read functions inside the platform's tab, and the connect script in the
-  CodeLogs tab.
+  LogN tab.
 - `alarms`: the hourly check for LeetCode's daily sync.
 - Host access to `leetcode.com` and `codelogs.techsavy.space` (always). If you limit the
   extension's site access in Chrome (for example "On click"), Chrome withholds both; Connect and
-  Sync ask for them again, and a sync without them says so instead of failing. CodeLogs' API sends
+  Sync ask for them again, and a sync without them says so instead of failing. LogN' API sends
   no CORS headers, so without its host access neither connecting nor uploading works.
 - Optional host access, asked when you click Connect (or on a platform's first Sync if declined),
   never at install: `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`,
-  `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the CodeLogs URL is a dev
+  `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the LogN URL is a dev
   server. No wildcard hosts: `tests/extension.test.ts` checks the manifest for them.
 
 Privacy policy: <https://codelogs.techsavy.space/privacy> (`app/privacy/page.tsx`).

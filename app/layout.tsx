@@ -18,7 +18,7 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "CodeLogs",
+  title: "LogN",
   description: "All your competitive programming progress in one place.",
 };
 

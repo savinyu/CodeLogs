@@ -133,11 +133,11 @@ export async function runPlatformJob({ platformId, base, token, tabId, setStatus
 
   if (!(await chrome.permissions.contains({ origins: reader.permissions }))) {
     throw new ReaderError(
-      `CodeLogs needs permission to read ${reader.name}. Click Sync again and allow access.`,
+      `LogN needs permission to read ${reader.name}. Click Sync again and allow access.`,
     );
   }
 
-  await setStatus({ step: "connect", message: "Checking your CodeLogs connection..." });
+  await setStatus({ step: "connect", message: "Checking your LogN connection..." });
   await checkMe(base, token);
 
   await setStatus({ step: "read", message: `Opening ${reader.name}...` });
@@ -156,6 +156,6 @@ export async function runPlatformJob({ platformId, base, token, tabId, setStatus
 
   // Whatever a reader produced is cleaned once more before it leaves the browser.
   const body = buildPlatformUpload(upload);
-  await setStatus({ step: "upload", message: "Uploading to CodeLogs..." });
+  await setStatus({ step: "upload", message: "Uploading to LogN..." });
   return postUpload(base, token, "/api/extension/platform", body);
 }

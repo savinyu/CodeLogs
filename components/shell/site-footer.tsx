@@ -15,7 +15,7 @@ export function SiteFooter() {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-5 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <HeartIcon aria-hidden="true" className="size-4 text-primary" />
-          CodeLogs is free. Tips keep the servers running. UPI:
+          LogN is free. Tips keep the servers running. UPI:
         </span>
         <UpiQrPopover>
           <UpiQr value={upiPayUrl()} className="size-44" />

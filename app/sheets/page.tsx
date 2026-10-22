@@ -54,7 +54,7 @@ export default function SheetsPage({ searchParams }: PageProps<"/sheets">) {
     <Page>
       <PageHead
         title="Sheets"
-        description="Follow a curated list and CodeLogs ticks off what you have already solved on LeetCode. Every section maps to a topic, so a sheet also shows which weak topic it trains."
+        description="Follow a curated list and LogN ticks off what you have already solved on LeetCode. Every section maps to a topic, so a sheet also shows which weak topic it trains."
       />
       <Suspense
         fallback={

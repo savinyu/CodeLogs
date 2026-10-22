@@ -21,7 +21,7 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-[70rem] flex-wrap items-center gap-3 px-4 py-3 max-[760px]:gap-y-2">
         <Link
           href="/"
-          aria-label="CodeLogs home"
+          aria-label="LogN home"
           className="flex items-center gap-2.5 rounded-full font-display text-xl font-bold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <span
@@ -39,7 +39,13 @@ export function SiteHeader() {
               />
             </svg>
           </span>
-          CodeLogs
+          {/* The wordmark: "LogN" with the n written as the Japanese ん. */}
+          <span>
+            Log
+            <span lang="ja" className="text-primary-ink">
+              ん
+            </span>
+          </span>
         </Link>
         <div className="flex flex-1 justify-center max-[760px]:order-5 max-[760px]:flex-[0_0_100%] max-[760px]:justify-start max-[760px]:overflow-x-auto max-[760px]:[scrollbar-width:none] max-[760px]:empty:hidden max-[760px]:[&::-webkit-scrollbar]:hidden">
           <Suspense fallback={null}>

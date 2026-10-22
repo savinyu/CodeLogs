@@ -1,6 +1,6 @@
-# CodeLogs
+# LogN
 
-A cross-platform tracker for DSA and competitive programming progress. It pulls solved problems from **Codeforces, AtCoder and LeetCode** into one dashboard: totals, a heatmap, difficulty and topic breakdowns. Its differentiators are **one shared topic list, weak-topic scoring and "solve next" recommendations**. Side and portfolio project, no deadline. "CodeLogs" is a working name.
+A cross-platform tracker for DSA and competitive programming progress. It pulls solved problems from **Codeforces, AtCoder and LeetCode** into one dashboard: totals, a heatmap, difficulty and topic breakdowns. Its differentiators are **one shared topic list, weak-topic scoring and "solve next" recommendations**. Side and portfolio project, no deadline. It was called "CodeLogs" until 22 Oct 2026. Identifiers outside the codebase keep the old name on purpose, so production and installed extensions keep working: the `codelogs-` verification prefix, the extension connect marker, event and `X-CodeLogs-Extension` header, the Inngest app id, the `codelogs-export` tag, the User-Agent, the `codelogs.techsavy.space` domain and the `savinyu/CodeLogs` repo. The header wordmark is written "Logん"; everywhere else it is "LogN".
 
 @AGENTS.md
 

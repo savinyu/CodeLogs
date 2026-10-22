@@ -16,7 +16,7 @@ export default function ExtensionConnectPage() {
     <Page className="max-w-3xl">
       <PageHead
         title="Connect the extension"
-        description="Link the CodeLogs browser extension to your account."
+        description="Link the LogN browser extension to your account."
       />
       <Suspense
         fallback={
@@ -39,7 +39,7 @@ async function ConnectBody() {
     return (
       <Panel {...marker}>
         <p className="mb-4 text-muted-foreground">
-          Sign in to connect the CodeLogs extension to your account.
+          Sign in to connect the LogN extension to your account.
         </p>
         <SignInButtons callbackURL="/extension/connect" />
       </Panel>

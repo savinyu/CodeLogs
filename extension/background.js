@@ -1,11 +1,11 @@
 // @ts-check
 // Sync jobs, run in the service worker. A sync starts when:
 //   - the popup sends { type: "sync", platform } (the Sync button),
-//   - the extension has just connected to CodeLogs (every platform, once),
+//   - the extension has just connected to LogN (every platform, once),
 //   - the user loads a page on a platform whose last sync is older than 6 hours (that tab only),
 //   - the hourly timer finds LeetCode's last sync older than a day.
 // The automatic ones can be turned off in the popup. LeetCode is fetched from here; the other five
-// are read inside a tab of the platform's own site. Cookies stay in the browser: CodeLogs only
+// are read inside a tab of the platform's own site. Cookies stay in the browser: LogN only
 // receives handles, problem ids, titles, URLs, difficulty labels, dates and counts.
 import { NotLoggedInError, ReaderError } from "./lib/common.js";
 import {
@@ -92,7 +92,7 @@ async function saveRun(platform, r) {
   await chrome.storage.local.set({ [RUNS_KEY]: runs });
 }
 
-/** CodeLogs rejected the token: forget it, so the popup offers Connect again. */
+/** LogN rejected the token: forget it, so the popup offers Connect again. */
 async function disconnect() {
   await chrome.storage.local.remove(["token", "meCache"]);
 }
@@ -177,17 +177,17 @@ async function runJob(work) {
       await setStatus({
         state: "error",
         platform: null,
-        message: "Connect to CodeLogs first.",
+        message: "Connect to LogN first.",
         finishedAt: Date.now(),
       });
       return;
     }
-    // Withheld by the user's site-access setting: every call to CodeLogs would fail CORS.
+    // Withheld by the user's site-access setting: every call to LogN would fail CORS.
     if (!(await chrome.permissions.contains({ origins: [basePermission(conn.base)] }))) {
       await setStatus({
         state: "error",
         platform: null,
-        message: "CodeLogs needs access to its own site. Click Sync and allow it.",
+        message: "LogN needs access to its own site. Click Sync and allow it.",
         finishedAt: Date.now(),
       });
       return;

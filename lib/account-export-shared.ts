@@ -7,10 +7,10 @@ export function isDeleteConfirmed(username: string | null, input: string): boole
   return input.trim() === deleteConfirmationPhrase(username);
 }
 
-/** codelogs-<username or user id>-<YYYY-MM-DD>.json, with anything unsafe for a header replaced. */
+/** logn-<username or user id>-<YYYY-MM-DD>.json, with anything unsafe for a header replaced. */
 export function exportFilename(username: string | null, userId: string, now: Date): string {
   const who = (username || userId).replace(/[^A-Za-z0-9._-]/g, "_");
-  return `codelogs-${who}-${now.toISOString().slice(0, 10)}.json`;
+  return `logn-${who}-${now.toISOString().slice(0, 10)}.json`;
 }
 
 export type FriendRelation = "friends" | "request sent" | "request received";

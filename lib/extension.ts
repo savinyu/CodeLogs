@@ -1,5 +1,5 @@
 /**
- * The CodeLogs extension's Chrome Web Store page. Set it to null to make Connect explain loading the
+ * The LogN extension's Chrome Web Store page. Set it to null to make Connect explain loading the
  * unpacked `extension/` folder instead.
  */
 export const EXTENSION_STORE_URL: string | null =

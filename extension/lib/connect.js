@@ -1,7 +1,7 @@
 // @ts-check
-// Links the extension to a CodeLogs account with no token to copy. The popup opens
-// <CodeLogs>/extension/connect in a tab. Once that page shows a signed-in user, a script in the tab
-// asks CodeLogs for a token with a same-origin request (the user's own session), and the token
+// Links the extension to a LogN account with no token to copy. The popup opens
+// <LogN>/extension/connect in a tab. Once that page shows a signed-in user, a script in the tab
+// asks LogN for a token with a same-origin request (the user's own session), and the token
 // goes straight into chrome.storage. Signing in on that page (GitHub or Google) loads it again,
 // which tries again. The marker attribute and event names mirror lib/extension.ts.
 
@@ -10,7 +10,7 @@ const PENDING_KEY = "pendingConnect";
 const PENDING_MAX_AGE_MS = 30 * 60_000;
 
 /**
- * Runs inside the CodeLogs tab (self-contained, see inject.js). Waits for the page's marker; when
+ * Runs inside the LogN tab (self-contained, see inject.js). Waits for the page's marker; when
  * it says "ready", asks /api/extension/connect for a token.
  * @returns {Promise<{ state: "ok", token: string } | { state: "signed-out" | "missing" } | { state: "error", error: string }>}
  */
@@ -38,16 +38,15 @@ export async function connectInPage() {
     /** @type {any} */
     const out = await res.json().catch(() => ({}));
     if (res.ok && out.ok && typeof out.token === "string") return { state: "ok", token: out.token };
-    const error =
-      typeof out.error === "string" ? out.error : `CodeLogs returned HTTP ${res.status}.`;
+    const error = typeof out.error === "string" ? out.error : `LogN returned HTTP ${res.status}.`;
     return { state: "error", error };
   } catch {
-    return { state: "error", error: "Could not reach CodeLogs." };
+    return { state: "error", error: "Could not reach LogN." };
   }
 }
 
 /**
- * Runs inside the CodeLogs tab: tells the page how it went, "ok" or an error message. The page may
+ * Runs inside the LogN tab: tells the page how it went, "ok" or an error message. The page may
  * not have hydrated yet, so the result is also left in sessionStorage for it to read on mount.
  * @param {string} detail
  */
@@ -62,7 +61,7 @@ export function notifyConnectPage(detail) {
 
 /**
  * Opens the connect page and remembers its tab, so its loads can be watched.
- * @param {string} base  normalized CodeLogs origin
+ * @param {string} base  normalized LogN origin
  */
 export async function startConnect(base) {
   const tab = await chrome.tabs.create({ url: `${base}${CONNECT_PATH}`, active: true });
@@ -113,12 +112,12 @@ export async function connectInTab(tabId) {
     });
     res = results[0]?.result ?? null;
   } catch {
-    return { ok: false, error: "Could not read the CodeLogs tab. Click Connect again." };
+    return { ok: false, error: "Could not read the LogN tab. Click Connect again." };
   }
   if (res?.state === "signed-out") return null;
   if (res?.state === "ok") return { ok: true, token: res.token };
   if (res?.state === "error") return { ok: false, error: res.error };
-  return { ok: false, error: "This CodeLogs site doesn't support connecting the extension." };
+  return { ok: false, error: "This LogN site doesn't support connecting the extension." };
 }
 
 /**

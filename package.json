@@ -1,5 +1,5 @@
 {
-  "name": "codelogs",
+  "name": "logn",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -28,7 +28,7 @@
     "dev:preview": "tsx scripts/dev/preview-user.ts",
     "dev:seed-ext": "tsx scripts/dev/seed-extension-platforms.ts",
     "dev:shot": "tsx scripts/dev/shot.ts",
-    "extension:zip": "rm -f codelogs-extension.zip && cd extension && zip -r -X ../codelogs-extension.zip . -x '.*' '*/.*' README.md"
+    "extension:zip": "rm -f logn-extension.zip && cd extension && zip -r -X ../logn-extension.zip . -x '.*' '*/.*' README.md"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

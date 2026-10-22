@@ -6,7 +6,7 @@ import { FeedbackForm } from "./feedback-form";
 
 export const metadata = {
   title: "Feedback",
-  description: "Report a bug or suggest an idea for CodeLogs.",
+  description: "Report a bug or suggest an idea for LogN.",
 };
 
 export default function FeedbackPage() {
@@ -14,7 +14,7 @@ export default function FeedbackPage() {
     <Page className="max-w-2xl">
       <PageHead
         title="Feedback"
-        description="Found a bug, or have an idea that would make CodeLogs better? Tell me here."
+        description="Found a bug, or have an idea that would make LogN better? Tell me here."
       />
       <Panel size="lg">
         <FeedbackForm />
