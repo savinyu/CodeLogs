@@ -96,6 +96,7 @@ export function VerifyPanel({
           </li>
         </ol>
       )}
+      <p className="text-muted-foreground">{field.extensionHint}</p>
       {error && (
         <Note className="bg-primary-soft text-primary-ink">
           <p role="alert">{error}</p>

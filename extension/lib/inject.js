@@ -129,6 +129,28 @@ export function readLinkHandle(patternSource) {
 }
 
 /**
+ * Finds the first anchor matching `selector` whose link pathname matches `patternSource` and
+ * returns the handle in its first capture group.
+ * @param {string} selector
+ * @param {string} patternSource
+ * @returns {string | null}
+ */
+export function readSelectorLinkHandle(selector, patternSource) {
+  try {
+    const re = new RegExp(patternSource);
+    for (const a of document.querySelectorAll(selector)) {
+      const href = a.getAttribute("href");
+      if (!href) continue;
+      const m = re.exec(new URL(href, location.origin).pathname);
+      if (m && m[1]) return decodeURIComponent(m[1]).slice(0, 200);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * HackerRank embeds its redux state in <script id="initialData"> (URL-encoded JSON); returns
  * the string at `path` in it.
  * @param {string[]} path
@@ -163,5 +185,6 @@ export const INJECTED = {
   readCookie,
   readGlobal,
   readLinkHandle,
+  readSelectorLinkHandle,
   readInitialData,
 };

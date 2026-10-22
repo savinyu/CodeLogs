@@ -54,7 +54,21 @@ On by default; the **Sync automatically** switch in the popup turns it off.
 
 For CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks the first sync also connects the
 handle in CodeLogs if you haven't added it, and verifies it: the account you are logged in to is the
-proof that the handle is yours.
+proof that the handle is yours. A LeetCode sync likewise verifies the LeetCode handle when the
+username LeetCode reports matches the connected one.
+
+## Verifying Codeforces and AtCoder
+
+CodeLogs syncs Codeforces and AtCoder itself from their public APIs, so the extension does not sync
+them. It only verifies the handle you connected on CodeLogs: the **Verify** button (also once after
+connecting, and on a visit to the site, at most every 6 hours) reads which user this browser is
+logged in as and sends that username to `POST /api/extension/verify`. CodeLogs marks the handle
+verified when it matches. Nothing else is read or sent.
+
+- Codeforces is behind a Cloudflare check, so it is read inside a codeforces.com tab, from the
+  header's profile link (`.lang-chooser a[href^='/profile/']`).
+- AtCoder: the `userScreenName` global that every atcoder.jp page defines (empty when logged out).
+- No tab is opened when the handle isn't connected on CodeLogs yet, or is already verified.
 
 ## How it reads these sites
 
@@ -102,8 +116,8 @@ the upload is dropped if the account changed.
   no CORS headers, so without its host access neither connecting nor uploading works.
 - Optional host access, asked when you click Connect (or on a platform's first Sync if declined),
   never at install: `www.codechef.com`, `www.naukri.com` (Code360), `www.hackerrank.com`,
-  `www.interviewbit.com`, `www.geeksforgeeks.org`, and `localhost` when the CodeLogs URL is a dev
-  server. No wildcard hosts: `tests/extension.test.ts` checks the manifest for them.
+  `www.interviewbit.com`, `www.geeksforgeeks.org`, `codeforces.com` and `atcoder.jp` (verification
+  only), and `localhost` when the CodeLogs URL is a dev server. No wildcard hosts: `tests/extension.test.ts` checks the manifest for them.
 
 Privacy policy: <https://codelogs.techsavy.space/privacy> (`app/privacy/page.tsx`).
 
