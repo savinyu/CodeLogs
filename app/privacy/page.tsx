@@ -30,7 +30,7 @@ export default function PrivacyPage() {
     <Page className="max-w-3xl">
       <PageHead
         title="Privacy policy"
-        description="What CodeLogs and the CodeLogs browser extension collect, and what they do with it. Last updated 19 October 2026."
+        description="What CodeLogs and the CodeLogs browser extension collect, and what they do with it. Last updated 22 October 2026."
       />
       <div className="grid gap-3.5">
         <Section title="Who we are">
@@ -80,6 +80,12 @@ export default function PrivacyPage() {
             you are already logged in to those sites. It runs once when you connect it, while you
             browse those sites (at most every 6 hours per site, LeetCode also once a day), and
             whenever you click Sync. You can turn automatic sync off in its popup.
+          </p>
+          <p className="text-muted-foreground">
+            On Codeforces and AtCoder, which CodeLogs reads from their public APIs, the extension
+            only checks which username you are logged in as, to verify your connected handle. It
+            does that when you connect it, when you click Verify, and while you browse those sites
+            until the handle is verified.
           </p>
           <p className="text-muted-foreground">It sends to CodeLogs, and nowhere else:</p>
           <List>

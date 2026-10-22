@@ -21,6 +21,8 @@ export type IngestResult =
       complete: boolean;
       known: number;
       lifetime: number | null;
+      /** This upload verified the handle (an extension upload is a login match). */
+      newlyVerified: boolean;
     }
   | { ok: false; error: string; status: 400 | 404 | 409 | 500 };
 
@@ -79,6 +81,18 @@ export async function ingestLeetcodeSolves(
   }
 
   try {
+    // The browser is logged in to LeetCode as the connected handle: a login match verifies it,
+    // as for the extension platforms (PLAN-v2.md §9). A JSON file proves nothing, so imports don't.
+    // Before the snapshot, whose cache invalidation then covers this write too.
+    const newlyVerified =
+      source === "extension" &&
+      (
+        await db
+          .update(platformAccounts)
+          .set({ verified: true, verifyToken: null })
+          .where(and(eq(platformAccounts.id, account.id), eq(platformAccounts.verified, false)))
+          .returning({ id: platformAccounts.id })
+      ).length > 0;
     const result = await applySnapshot(
       { accountId: account.id, userId, platform: "leetcode" },
       {
@@ -123,6 +137,7 @@ export async function ingestLeetcodeSolves(
       complete,
       known: known?.n ?? 0,
       lifetime,
+      newlyVerified,
     };
   } catch (err) {
     console.error(`LeetCode ${source} failed`, err);

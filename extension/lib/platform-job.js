@@ -41,7 +41,7 @@ async function waitForComplete(tabId) {
  * @param {(tabId: number) => Promise<T>} fn
  * @returns {Promise<T>}
  */
-async function withPlatformTab(reader, fn) {
+export async function withPlatformTab(reader, fn) {
   const open = await chrome.tabs.query({ url: `${reader.origin}/*`, discarded: false });
   const existing = open.find((t) => t.id !== undefined && t.status === "complete") ?? open[0];
   if (existing?.id !== undefined) {
@@ -88,7 +88,7 @@ async function withFreshTab(reader, fn) {
  * @param {number} tabId
  * @returns {(call: import("./job.js").PageCall) => Promise<unknown>}
  */
-function pageRunner(tabId) {
+export function pageRunner(tabId) {
   return async (call) => {
     const func = /** @type {Record<string, (...args: any[]) => unknown>} */ (INJECTED)[call.fn];
     if (!func) throw new Error(`unknown page function ${call.fn}`);
@@ -111,7 +111,7 @@ function pageRunner(tabId) {
  * @param {(tabId: number) => Promise<T>} fn
  * @returns {Promise<T>}
  */
-async function withVisitedTab(reader, tabId, fn) {
+export async function withVisitedTab(reader, tabId, fn) {
   const tab = await chrome.tabs.get(tabId).catch(() => null);
   if (!tab?.url || new URL(tab.url).origin !== reader.origin) {
     throw new ReaderError(`The ${reader.name} tab was closed or left the site.`);
