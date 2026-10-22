@@ -132,6 +132,22 @@ describe("buildPlatformSnapshot: solves", () => {
     expect(rejected).toBe(1);
     expect(snapshot.solves[0]?.firstSolvedAt).toEqual(new Date(1_700_000_000 * 1000));
   });
+
+  it("stores GFG problem links under /1, which older extensions left off", () => {
+    const url = (u: string, platform: ExtensionUpload["platform"] = "gfg") =>
+      buildPlatformSnapshot(upload({ platform, solves: [solve({ url: u })] })).snapshot.solves[0]
+        ?.problemFallback?.url;
+    const fixed = "https://www.geeksforgeeks.org/problems/number-of-islands/1";
+    expect(url("https://www.geeksforgeeks.org/problems/number-of-islands")).toBe(fixed);
+    expect(url("https://www.geeksforgeeks.org/problems/number-of-islands/")).toBe(fixed);
+    expect(url(fixed)).toBe(fixed);
+    expect(url("https://www.geeksforgeeks.org/problems/x/0")).toBe(
+      "https://www.geeksforgeeks.org/problems/x/0",
+    );
+    expect(url("https://www.interviewbit.com/problems/x/", "interviewbit")).toBe(
+      "https://www.interviewbit.com/problems/x/",
+    );
+  });
 });
 
 describe("buildPlatformSnapshot: ext_counts", () => {
