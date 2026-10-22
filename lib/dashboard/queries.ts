@@ -94,7 +94,7 @@ async function loadDashboard(
     .as("ranked");
   const solvedDay = sql<string>`to_char(${solves.firstSolvedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`;
 
-  // One HTTP round trip to Neon for all nine reads, instead of nine.
+  // One HTTP round trip to Neon for all ten reads, instead of ten.
   const [
     accounts,
     solveCounts,
@@ -104,6 +104,7 @@ async function loadDashboard(
     difficulty,
     recent,
     cfSolves,
+    ibSolves,
     contests,
   ] = await db.batch([
     db
@@ -172,6 +173,11 @@ async function loadDashboard(
       .innerJoin(problems, eq(problems.id, solves.problemId))
       .where(and(eq(solves.userId, userId), solvesFilter, eq(problems.platform, "codeforces"))),
     db
+      .select({ tags: problems.rawTags })
+      .from(solves)
+      .innerJoin(problems, eq(problems.id, solves.problemId))
+      .where(and(eq(solves.userId, userId), solvesFilter, eq(problems.platform, "interviewbit"))),
+    db
       .select({
         platform: platformAccounts.platform,
         contestKey: contestResults.contestKey,
@@ -187,10 +193,13 @@ async function loadDashboard(
   ]);
 
   // The CF catalog slice depends on the user's level, so it's a second (cached) round trip.
+  // InterviewBit's topic expectations borrow LeetCode's catalog (lib/topics/scoring.ts).
   const level = codeforcesLevel({ accounts, stats, cfSolves });
   const [cfCatalog, lcCatalog] = await Promise.all([
     level === null ? [] : getCatalogTagSets("codeforces", cfCatalogCap(level)),
-    accounts.some((a) => a.platform === "leetcode") ? getCatalogTagSets("leetcode", 0) : [],
+    accounts.some((a) => a.platform === "leetcode" || a.platform === "interviewbit")
+      ? getCatalogTagSets("leetcode", 0)
+      : [],
   ]);
 
   return buildDashboard(
@@ -205,6 +214,7 @@ async function loadDashboard(
       calendarDays,
       difficulty,
       cfSolves,
+      ibSolves,
       cfCatalog,
       lcCatalog,
       recent: recent.map((r) => ({

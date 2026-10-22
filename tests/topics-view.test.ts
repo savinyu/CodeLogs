@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { MacroTopicStat } from "@/lib/dashboard/types";
-import { coverageStep, publicStep, topicState, topicViews } from "@/lib/topics/view";
+import {
+  coverageStep,
+  noTopicMapReason,
+  publicStep,
+  topicState,
+  topicViews,
+} from "@/lib/topics/view";
 
 describe("topicState", () => {
   it("splits at WEAK_BELOW and 1.1", () => {
@@ -65,5 +71,28 @@ describe("topicViews", () => {
     expect(light!.state).toBe("weak");
     expect(light!.toLeaveWeak).toBe(6); // ceil(0.8 * 12 - 2 - 2) = 6 (5 only reach 0.75)
     expect(exact!.toLeaveWeak).toBe(4);
+  });
+});
+
+describe("noTopicMapReason", () => {
+  it("names the tagless platforms in site order", () => {
+    expect(noTopicMapReason(["gfg", "codechef"])).toBe(
+      "No topic map yet. CodeChef and GeeksforGeeks have no problem tags. Connect Codeforces or LeetCode to see one.",
+    );
+    expect(noTopicMapReason(["atcoder"])).toBe(
+      "No topic map yet. AtCoder has no problem tags. Connect Codeforces or LeetCode to see one.",
+    );
+  });
+
+  it("explains an InterviewBit list with no mapped topic", () => {
+    expect(noTopicMapReason(["interviewbit", "gfg"])).toBe(
+      "No topic map yet. GeeksforGeeks has no problem tags. None of your InterviewBit solves so far is in a topic the map tracks. Connect Codeforces or LeetCode to see one.",
+    );
+  });
+
+  it("waits for LeetCode's tag counts instead of asking to connect it", () => {
+    expect(noTopicMapReason(["leetcode", "atcoder"])).toBe(
+      "No topic map yet. AtCoder has no problem tags. LeetCode's topic counts haven't synced yet.",
+    );
   });
 });

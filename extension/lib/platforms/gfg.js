@@ -65,7 +65,8 @@ export function parseSubmissions(json) {
       bySlug.set(slug, {
         id: slug,
         title: typeof p.pname === "string" && p.pname.trim() !== "" ? p.pname.trim() : slug,
-        url: `https://www.geeksforgeeks.org/problems/${encodeURIComponent(slug)}`,
+        // Practice pages live under /1; the bare slug is a 404.
+        url: `https://www.geeksforgeeks.org/problems/${encodeURIComponent(slug)}/1`,
         difficulty: bucket,
         tags: [],
         solvedAt,

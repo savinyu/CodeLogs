@@ -21,6 +21,7 @@ function input(overrides: Partial<ScoringInput> = {}): ScoringInput {
     lcTagCounts: null,
     lcSolved: 0,
     lcCatalog: [],
+    ibSolves: null,
     ...overrides,
   };
 }
@@ -145,6 +146,48 @@ describe("buildTopicStats", () => {
     expect(micro(topics, "data-structures", "prefix-sums").platforms[0]!.expected).toBe(0);
     expect(micro(topics, "math", "number-theory").platforms[0]!.expected).toBe(0);
     expect(find(topics, "math").platforms[0]).toMatchObject({ solved: 5, expected: 5 });
+  });
+
+  it("scores InterviewBit solves against LeetCode's catalog, mapped problems only", () => {
+    const topics = buildTopicStats(
+      input({
+        ibSolves: [
+          { tags: ["Stacks And Queues", "Amazon"] },
+          { tags: ["Hashing"] },
+          { tags: ["Time Complexity"] },
+          { tags: ["Graph Data Structure & Algorithms"] },
+        ],
+        lcCatalog: [
+          { tags: ["stack"], count: 30 },
+          { tags: ["hash-table"], count: 30 },
+          { tags: ["graph"], count: 40 },
+          { tags: ["array"], count: 100 }, // maps to no topic, so not part of the baseline
+        ],
+      }),
+    );
+    // 3 mapped solves (Time Complexity has no topic) at the catalog's shares.
+    const ds = find(topics, "data-structures").platforms;
+    expect(ds).toEqual([
+      { platform: "interviewbit", solved: 2, weighted: 2, expected: (3 * 60) / 100 },
+    ]);
+    expect(micro(topics, "data-structures", "stacks-queues").platforms[0]).toMatchObject({
+      solved: 1,
+      expected: (3 * 30) / 100,
+    });
+    expect(find(topics, "graphs").platforms[0]).toMatchObject({
+      solved: 1,
+      expected: (3 * 40) / 100,
+    });
+  });
+
+  it("leaves InterviewBit out until a solve maps to a topic and the catalog is there", () => {
+    const catalog = [{ tags: ["stack"], count: 1 }];
+    const none = (ibSolves: ScoringInput["ibSolves"], lcCatalog = catalog) =>
+      buildTopicStats(input({ ibSolves, lcCatalog })).every((t) => t.platforms.length === 0);
+    expect(none(null)).toBe(true);
+    expect(none([{ tags: ["Time Complexity", "Amazon"] }])).toBe(true);
+    expect(none([{ tags: ["Hashing"] }], [])).toBe(true);
+    expect(none([{ tags: ["Hashing"] }])).toBe(false);
   });
 });
 

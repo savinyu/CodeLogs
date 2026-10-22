@@ -39,6 +39,8 @@ export interface DashboardRaw {
   recent: RecentSolve[];
   /** Every Codeforces solve with its tags and raw rating, for topic scoring. */
   cfSolves: { tags: string[]; rating: string | null }[];
+  /** Every InterviewBit solve with its tags, for topic scoring. */
+  ibSolves: { tags: string[] }[];
   /** CF catalog tag sets up to cfCatalogCap(level); LC catalog tag sets (free problems only). */
   cfCatalog: TagSetCount[];
   lcCatalog: TagSetCount[];
@@ -231,6 +233,7 @@ function buildTopics(raw: DashboardRaw, level: number | null) {
     lcTagCounts: lcTags?.map((t) => ({ tag: t.tagSlug, solved: t.problemsSolved })) ?? null,
     lcSolved: stat(raw, "leetcode", "lc_difficulty_counts", lcDifficultySchema)?.solved.all ?? 0,
     lcCatalog: raw.lcCatalog,
+    ibSolves: raw.accounts.some((a) => a.platform === "interviewbit") ? raw.ibSolves : null,
   });
 }
 

@@ -8,7 +8,9 @@
 // catalog is limited to problems up to your level + LEVEL_HEADROOM, so a newcomer isn't "weak"
 // at flows. LeetCode only publishes lifetime per-tag counts (never per problem), so a topic's
 // count is the sum of its tags' counts, scaled by how much those tags overlap in the catalog,
-// and only the tags LeetCode counts are used on both sides.
+// and only the tags LeetCode counts are used on both sides. InterviewBit works per problem like
+// Codeforces, but the server can't read its catalog (PLAN-v2.md §9), so its expectations borrow
+// LeetCode's catalog shares; both sides count only problems with a mapped topic.
 
 import type { PlatformId } from "@/lib/adapters/types";
 import type { MacroTopicStat, TopicPlatformStat, TopicStat } from "@/lib/dashboard/types";
@@ -44,8 +46,10 @@ export interface ScoringInput {
   lcTagCounts: { tag: string; solved: number }[] | null;
   /** LeetCode lifetime solved total. */
   lcSolved: number;
-  /** Free LeetCode catalog problems. */
+  /** Free LeetCode catalog problems (also InterviewBit's baseline). */
   lcCatalog: TagSetCount[];
+  /** InterviewBit solves with their tags; null when InterviewBit isn't connected. */
+  ibSolves: { tags: string[] }[] | null;
 }
 
 /**
@@ -163,18 +167,47 @@ function leetcodeContribution(input: ScoringInput): Contribution | null {
   return out;
 }
 
+/** Null until at least one InterviewBit solve maps to a topic and the LC catalog is there. */
+function interviewbitContribution(input: ScoringInput): Contribution | null {
+  if (!input.ibSolves) return null;
+  const mapped = input.ibSolves.map((s) => topicsOf("interviewbit", s.tags)).filter((t) => t.size);
+  const catalog = catalogShares(
+    "leetcode",
+    input.lcCatalog.filter(({ tags }) => topicsOf("leetcode", tags).size > 0),
+  );
+  if (mapped.length === 0 || catalog.size === 0) return null;
+  const solved = new Map<TopicSlug, number>();
+  for (const topics of mapped) {
+    for (const slug of topics) solved.set(slug, (solved.get(slug) ?? 0) + 1);
+  }
+  const out: Contribution = new Map();
+  for (const slug of allSlugs()) {
+    const n = solved.get(slug) ?? 0;
+    out.set(slug, {
+      platform: "interviewbit",
+      solved: n,
+      weighted: n,
+      expected: (mapped.length * (catalog.problems.get(slug) ?? 0)) / catalog.size,
+    });
+  }
+  return out;
+}
+
 function allSlugs(): TopicSlug[] {
   return TAXONOMY.flatMap((m) => [m.slug, ...m.micros.map((u) => u.slug)]);
 }
 
 /**
  * Every macro topic in taxonomy order, with micros, each carrying one entry per platform that
- * has topic data (CF solves, LC tag counts). AtCoder has no tags and never appears.
+ * has topic data (CF solves, LC tag counts, InterviewBit solves). AtCoder and the other extension
+ * platforms have no tags and never appear.
  */
 export function buildTopicStats(input: ScoringInput): MacroTopicStat[] {
-  const contributions = [codeforcesContribution(input), leetcodeContribution(input)].filter(
-    (c): c is Contribution => c !== null,
-  );
+  const contributions = [
+    codeforcesContribution(input),
+    leetcodeContribution(input),
+    interviewbitContribution(input),
+  ].filter((c): c is Contribution => c !== null);
   const stat = (slug: TopicSlug, name: string): TopicStat => ({
     slug,
     name,
