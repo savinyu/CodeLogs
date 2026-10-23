@@ -91,6 +91,7 @@ Other things to know:
 Needs Node 24+, pnpm, a Neon (or any Postgres) database, and a GitHub OAuth app with the callback `http://localhost:3000/api/auth/callback/github`. Google sign-in is optional (see `.env.example`).
 
 ```bash
+git clone https://github.com/savinyu/LogN.git && cd LogN
 pnpm install
 cp .env.example .env.local     # fill in the values
 pnpm db:migrate
