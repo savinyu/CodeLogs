@@ -1,6 +1,7 @@
 # LogN
 
-![LogN: all your solved problems, synced. Progress, weak topics and what to solve next.](docs/screenshots/banner.png)
+![LogN: all your solved problems, synced. Progress, weak topics and what to solve next.](<img width="1400" height="560" alt="banner" src="https://github.com/user-attachments/assets/fc5a645c-0d5a-4011-80aa-2e2847f4b2bb" />
+)
 
 **All your solved problems in one place.** LogN pulls your solves from **Codeforces, AtCoder and LeetCode**, plus **CodeChef, Code360, HackerRank, InterviewBit and GeeksforGeeks** through its browser extension. It maps them onto one topic list, shows where you're behind, and picks what to solve next.
 
